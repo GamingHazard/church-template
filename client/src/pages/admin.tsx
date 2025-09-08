@@ -517,7 +517,7 @@ export default function Admin() {
                         newsletters.map((subscriber) => (
                           <TableRow key={subscriber.id} data-testid={`subscriber-row-${subscriber.id}`}>
                             <TableCell>{subscriber.email}</TableCell>
-                            <TableCell>{format(new Date(subscriber.subscribedAt), "MMM d, yyyy")}</TableCell>
+                            <TableCell>{format(new Date(subscriber.subscribedAt || new Date()), "MMM d, yyyy")}</TableCell>
                             <TableCell>
                               <Badge variant={subscriber.active ? "default" : "secondary"}>
                                 {subscriber.active ? "Active" : "Inactive"}
@@ -594,7 +594,7 @@ export default function Admin() {
                                 {donation.status}
                               </Badge>
                             </TableCell>
-                            <TableCell>{format(new Date(donation.createdAt), "MMM d, yyyy")}</TableCell>
+                            <TableCell>{format(new Date(donation.createdAt || new Date()), "MMM d, yyyy")}</TableCell>
                           </TableRow>
                         ))
                       ) : (

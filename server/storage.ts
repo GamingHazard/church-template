@@ -132,7 +132,11 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id,
+      role: insertUser.role || "user"
+    };
     this.users.set(id, user);
     return user;
   }
@@ -155,7 +159,14 @@ export class MemStorage implements IStorage {
 
   async createEvent(insertEvent: InsertEvent): Promise<Event> {
     const id = randomUUID();
-    const event: Event = { ...insertEvent, id, createdAt: new Date() };
+    const event: Event = { 
+      ...insertEvent, 
+      id, 
+      createdAt: new Date(),
+      category: insertEvent.category || "general",
+      speaker: insertEvent.speaker || null,
+      imageUrl: insertEvent.imageUrl || null
+    };
     this.events.set(id, event);
     return event;
   }
@@ -189,7 +200,16 @@ export class MemStorage implements IStorage {
 
   async createSermon(insertSermon: InsertSermon): Promise<Sermon> {
     const id = randomUUID();
-    const sermon: Sermon = { ...insertSermon, id, createdAt: new Date() };
+    const sermon: Sermon = { 
+      ...insertSermon, 
+      id, 
+      createdAt: new Date(),
+      videoUrl: insertSermon.videoUrl || null,
+      audioUrl: insertSermon.audioUrl || null,
+      thumbnailUrl: insertSermon.thumbnailUrl || null,
+      scripture: insertSermon.scripture || null,
+      series: insertSermon.series || null
+    };
     this.sermons.set(id, sermon);
     return sermon;
   }
@@ -260,7 +280,13 @@ export class MemStorage implements IStorage {
   // Event Reminders
   async createEventReminder(insertReminder: InsertEventReminder): Promise<EventReminder> {
     const id = randomUUID();
-    const reminder: EventReminder = { ...insertReminder, id, createdAt: new Date() };
+    const reminder: EventReminder = { 
+      ...insertReminder, 
+      id, 
+      createdAt: new Date(),
+      email: insertReminder.email || null,
+      phone: insertReminder.phone || null
+    };
     this.eventReminders.set(id, reminder);
     return reminder;
   }
@@ -276,14 +302,20 @@ export class MemStorage implements IStorage {
       ...insertDonation, 
       id, 
       status: "pending",
-      createdAt: new Date() 
+      createdAt: new Date(),
+      donorName: insertDonation.donorName || null,
+      donorEmail: insertDonation.donorEmail || null,
+      purpose: insertDonation.purpose || "general",
+      transactionId: insertDonation.transactionId || null
     };
     this.donations.set(id, donation);
     return donation;
   }
 
   async getAllDonations(): Promise<Donation[]> {
-    return Array.from(this.donations.values()).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return Array.from(this.donations.values()).sort((a, b) => 
+      new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    );
   }
 
   async updateDonationStatus(id: string, status: string): Promise<Donation> {
@@ -297,7 +329,9 @@ export class MemStorage implements IStorage {
 
   // Gallery
   async getAllGalleryImages(): Promise<GalleryImage[]> {
-    return Array.from(this.galleryImages.values()).sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
+    return Array.from(this.galleryImages.values()).sort((a, b) => 
+      new Date(b.uploadedAt || 0).getTime() - new Date(a.uploadedAt || 0).getTime()
+    );
   }
 
   async getGalleryImagesByCategory(category: string): Promise<GalleryImage[]> {
@@ -306,7 +340,12 @@ export class MemStorage implements IStorage {
 
   async createGalleryImage(insertImage: InsertGalleryImage): Promise<GalleryImage> {
     const id = randomUUID();
-    const image: GalleryImage = { ...insertImage, id, uploadedAt: new Date() };
+    const image: GalleryImage = { 
+      ...insertImage, 
+      id, 
+      uploadedAt: new Date(),
+      category: insertImage.category || "general"
+    };
     this.galleryImages.set(id, image);
     return image;
   }
@@ -326,7 +365,14 @@ export class MemStorage implements IStorage {
 
   async createPastor(insertPastor: InsertPastor): Promise<Pastor> {
     const id = randomUUID();
-    const pastor: Pastor = { ...insertPastor, id };
+    const pastor: Pastor = { 
+      ...insertPastor, 
+      id,
+      order: insertPastor.order || 0,
+      email: insertPastor.email || null,
+      imageUrl: insertPastor.imageUrl || null,
+      isLead: insertPastor.isLead || false
+    };
     this.pastors.set(id, pastor);
     return pastor;
   }
