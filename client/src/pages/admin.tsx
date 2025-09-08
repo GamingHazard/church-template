@@ -20,6 +20,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import LoginForm from "@/components/login-form";
 
 // Form schemas with proper date handling
 const eventFormSchema = insertEventSchema.extend({
@@ -39,7 +41,25 @@ type GalleryForm = z.infer<typeof galleryFormSchema>;
 type PastorForm = z.infer<typeof pastorFormSchema>;
 
 export default function Admin() {
+  const { isAuthenticated, isAdmin, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState("events");
+
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login form if not authenticated or not admin
+  if (!isAuthenticated || !isAdmin) {
+    return <LoginForm />;
+  }
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [editingSermon, setEditingSermon] = useState<Sermon | null>(null);
   const [editingPastor, setEditingPastor] = useState<Pastor | null>(null);

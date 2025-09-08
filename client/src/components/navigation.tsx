@@ -2,11 +2,13 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Church, Menu } from "lucide-react";
+import { Church, Menu, LogOut, Settings } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Navigation() {
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const { isAuthenticated, isAdmin, logout } = useAuth();
 
   const navItems = [
     { href: "/", label: "Home" },
@@ -55,6 +57,20 @@ export default function Navigation() {
                 Give Online
               </Button>
             </Link>
+            {isAdmin && (
+              <Link href="/admin">
+                <Button variant="outline" size="sm" data-testid="button-admin">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Admin
+                </Button>
+              </Link>
+            )}
+            {isAuthenticated && (
+              <Button variant="ghost" size="sm" onClick={logout} data-testid="button-logout">
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            )}
           </div>
 
           {/* Mobile Navigation */}
@@ -78,6 +94,33 @@ export default function Navigation() {
                     Give Online
                   </Button>
                 </Link>
+                {isAdmin && (
+                  <Link href="/admin">
+                    <Button 
+                      variant="outline" 
+                      className="w-full" 
+                      onClick={() => setIsOpen(false)}
+                      data-testid="button-admin-mobile"
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Admin
+                    </Button>
+                  </Link>
+                )}
+                {isAuthenticated && (
+                  <Button 
+                    variant="ghost" 
+                    className="w-full" 
+                    onClick={() => {
+                      logout();
+                      setIsOpen(false);
+                    }}
+                    data-testid="button-logout-mobile"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </Button>
+                )}
               </nav>
             </SheetContent>
           </Sheet>

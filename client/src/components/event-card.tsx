@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar, MapPin, Clock, User } from "lucide-react";
 import { Event } from "@shared/schema";
-import { format } from "date-fns";
+import { format, isPast, isFuture } from "date-fns";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -22,6 +22,9 @@ export default function EventCard({ event }: EventCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Check if event is upcoming (not past)
+  const isUpcoming = isFuture(new Date(event.date));
 
   const reminderMutation = useMutation({
     mutationFn: async (data: { eventId: string; email?: string; phone?: string }) => {
@@ -107,15 +110,16 @@ export default function EventCard({ event }: EventCardProps) {
           )}
         </div>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button 
-              className="w-full bg-secondary text-secondary-foreground hover:opacity-90"
-              data-testid={`button-set-reminder-${event.id}`}
-            >
-              Set Reminder
-            </Button>
-          </DialogTrigger>
+        {isUpcoming && (
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                className="w-full bg-secondary text-secondary-foreground hover:opacity-90"
+                data-testid={`button-set-reminder-${event.id}`}
+              >
+                Set Reminder
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <form onSubmit={handleReminderSubmit}>
               <DialogHeader>
@@ -170,6 +174,17 @@ export default function EventCard({ event }: EventCardProps) {
             </form>
           </DialogContent>
         </Dialog>
+        )}
+        
+        {!isUpcoming && (
+          <Button 
+            className="w-full bg-muted text-muted-foreground cursor-not-allowed"
+            disabled
+            data-testid={`button-past-event-${event.id}`}
+          >
+            Past Event
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
