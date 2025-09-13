@@ -15,7 +15,6 @@ export default function Navigation() {
     { href: "/about", label: "About" },
     { href: "/sermons", label: "Sermons" },
     { href: "/events", label: "Events" },
-    { href: "/donations", label: "Contact" },
   ];
 
   const NavLink = ({ href, label, mobile = false }: { href: string; label: string; mobile?: boolean }) => (
@@ -43,7 +42,7 @@ export default function Navigation() {
           <Link href="/">
             <a className="flex items-center space-x-2 text-2xl font-bold text-primary" data-testid="logo">
               <Church className="h-8 w-8" />
-              <span>FaithLife</span>
+              <span style={{fontFamily:"Dancing Script"}} className="font-cold text-3xl">FaithLife Ministries</span>
             </a>
           </Link>
 

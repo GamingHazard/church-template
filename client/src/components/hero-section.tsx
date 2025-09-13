@@ -8,13 +8,13 @@ export default function HeroSection() {
       {/* Background image with overlay */}
       <div className="absolute inset-0 hero-gradient">
         <img
-          src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&h=1080"
+          src="https://assets.seobotai.com/architecturehelper.com/673bf7b50c149f48d61fa9d2-1731984576727.jpg"
           alt="Congregation worshipping with raised hands"
           className="w-full h-full object-cover mix-blend-multiply"
         />
       </div>
 
-      <div className="relative z-10 max-w-4xl mx-auto px-4">
+      <div className="relative z-10 max-w-4xl mx-auto px-4 bg-black bg-opacity-50 py-16 rounded-lg flex-1 flex-col items-center">
         <div className="mb-6">
           <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight" data-testid="hero-title">
             Welcome Home
@@ -40,7 +40,7 @@ export default function HeroSection() {
             <Button
               size="lg"
               variant="outline"
-              className="border-2 border-white text-white hover:bg-white hover:text-primary shadow-lg text-lg px-8 py-4"
+              className="border-2 border-white text-primary hover:bg-primary hover:text-white shadow-lg text-lg px-8 py-4"
               data-testid="button-watch-live"
             >
               <Play className="mr-2 h-5 w-5" />

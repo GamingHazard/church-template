@@ -43,7 +43,7 @@ export default function Home() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <img
-                src="https://pixabay.com/get/g5277b85086e398c32a1f927276a696030b252bc8f76a32c11a6a019dd55f70b8a1c115bb637b14806de864267affb2d3223c1d3f5252fc7ef50a70f108c9759f_1280.jpg"
+                src="https://answeredfaith.com/wp-content/uploads/2024/07/praise-and-worship-bible-study.jpg"
                 alt="Beautiful church interior with stained glass"
                 className="rounded-xl shadow-lg w-full h-auto"
                 data-testid="church-interior-image"
@@ -148,7 +148,7 @@ export default function Home() {
                 <Skeleton className="rounded-xl w-full h-[400px]" />
               ) : (
                 <img
-                  src={leadPastor?.imageUrl || "https://images.unsplash.com/photo-1556075798-4825dfaaf498?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400"}
+                  src={leadPastor?.imageUrl || "https://t4.ftcdn.net/jpg/09/59/90/05/360_F_959900529_TsWNG6lFpVUbHTd0KytLwKZ3SxBQNdkR.jpg"}
                   alt="Pastor delivering sermon from church pulpit"
                   className="rounded-xl shadow-lg w-full h-auto"
                   data-testid="pastor-image"

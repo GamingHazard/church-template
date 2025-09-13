@@ -10,7 +10,7 @@ export default function Footer() {
           <div className="md:col-span-2">
             <div className="flex items-center space-x-2 mb-4">
               <Church className="h-8 w-8 text-primary" />
-              <span className="text-2xl font-bold text-card-foreground">FaithLife Church</span>
+              <span className="text-2xl font-bold text-card-foreground" style={{fontFamily:"Dancing Script"}}>FaithLife Ministries</span>
             </div>
             <p className="text-muted-foreground mb-6">
               A place where everyone belongs, grows in faith, and discovers their purpose in God's love.
@@ -116,7 +116,7 @@ export default function Footer() {
           </div>
 
           <p className="text-muted-foreground text-sm" data-testid="copyright">
-            © 2024 FaithLife Church. All rights reserved.
+            © 2024 FaithLife Ministries. All rights reserved.
           </p>
         </div>
       </div>
