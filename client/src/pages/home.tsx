@@ -4,29 +4,91 @@ import EventCard from "@/components/event-card";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Clock, Play } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { Event, Sermon, Pastor } from "@shared/schema";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+
+// Mock Data
+const mockEvents = [
+  {
+    id: 1,
+    title: "Community BBQ",
+    date: "2025-09-20T17:00:00.000Z",
+    location: "Church Lawn",
+    description: "Join us for a fun evening of food, games, and fellowship.",
+    imageUrl: "https://st.depositphotos.com/1001959/1895/i/450/depositphotos_18952187-stock-photo-bbq-grill-with-various-kind.jpg",
+  },
+  {
+    id: 2,
+    title: "Youth Movie Night",
+    date: "2025-09-26T19:00:00.000Z",
+    location: "Youth Hall",
+    description: "A fun movie night for all our youth group members.",
+    imageUrl: "https://media.istockphoto.com/id/1299321783/photo/friends-watching-a-movie-in-a-home-theater.jpg?s=612x612&w=0&k=20&c=kS-0-s-11aZa-b-LgdnRkG85L-0uTih2dei29p3hG-s=",
+  },
+  {
+    id: 3,
+    title: "Worship Night",
+    date: "2025-10-04T18:30:00.000Z",
+    location: "Main Sanctuary",
+    description: "An evening of worship and prayer.",
+    imageUrl: "https://www.prochurchlights.com/wp-content/uploads/2022/03/pexels-luis-quintero-2774556.jpg",
+  },
+];
+
+const mockSermons = [
+  {
+    id: 1,
+    title: "The Power of Forgiveness",
+    preacher: "Pastor David Johnson",
+    series: "Core Values",
+    date: "2025-09-07T10:30:00.000Z",
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    audioUrl: "https://example.com/audio1.mp3",
+  },
+  {
+    id: 2,
+    title: "Living a Life of Purpose",
+    preacher: "Pastor David Johnson",
+    series: "Core Values",
+    date: "2025-08-31T10:30:00.000Z",
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    audioUrl: "https://example.com/audio2.mp3",
+  },
+];
+
+const mockPastor = {
+  id: 1,
+  name: "Pastor David Johnson",
+  title: "Lead Pastor",
+  bio: "Pastor David has been leading FaithLife Church for over 15 years...",
+  imageUrl: "https://t4.ftcdn.net/jpg/09/59/90/05/360_F_959900529_TsWNG6lFpVUbHTd0KytLwKZ3SxBQNdkR.jpg",
+};
 
 export default function Home() {
-  const { data: upcomingEvents, isLoading: eventsLoading } = useQuery<Event[]>({
-    queryKey: ["/api/events/upcoming"],
-  });
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+  const [recentSermons, setRecentSermons] = useState<any[]>([]);
+  const [leadPastor, setLeadPastor] = useState<any>(null);
+  const [eventsLoading, setEventsLoading] = useState(true);
+  const [sermonsLoading, setSermonsLoading] = useState(true);
+  const [pastorLoading, setPastorLoading] = useState(true);
 
-  const { data: recentSermons, isLoading: sermonsLoading } = useQuery<Sermon[]>({
-    queryKey: ["/api/sermons/recent"],
-  });
-
-  const { data: leadPastor, isLoading: pastorLoading } = useQuery<Pastor>({
-    queryKey: ["/api/pastors/lead"],
-  });
-
-   useEffect(() => {
+  useEffect(() => {
     window.scrollTo(0, 0);
-  }, []); // runs only once when the component mounts
+
+    // Simulate fetching data
+    const timer = setTimeout(() => {
+      setUpcomingEvents(mockEvents);
+      setRecentSermons(mockSermons);
+      setLeadPastor(mockPastor);
+      setEventsLoading(false);
+      setSermonsLoading(false);
+      setPastorLoading(false);
+    }, 1500); // 1.5 second delay
+
+    return () => clearTimeout(timer);
+  }, []);
 
 
   return (

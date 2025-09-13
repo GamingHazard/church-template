@@ -1,22 +1,60 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, MapPin, Users, Heart, Book, Music } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { Pastor, GalleryImage } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+
+// Define types locally
+export type Pastor = {
+  id: string;
+  name: string;
+  title: string;
+  bio: string;
+  imageUrl: string;
+  email?: string;
+};
+
+export type GalleryImage = {
+  id: string;
+  title: string;
+  imageUrl: string;
+  category: string;
+};
+
+// Mock Data
+const mockPastors: Pastor[] = [
+  { id: '1', name: 'Pastor John Doe', title: 'Lead Pastor', bio: 'Passionate about sharing God\'s love and building a strong community.', imageUrl: 'https://images.unsplash.com/photo-1556075798-4825dfaaf498?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300', email: 'pastor.john@faithlife.com' },
+  { id: '2', name: 'Pastor Jane Smith', title: 'Youth Pastor', bio: 'Dedicated to empowering the next generation with faith and purpose.', imageUrl: 'https://images.unsplash.com/photo-1580894732444-84cf8d37a1d3?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300', email: 'pastor.jane@faithlife.com' },
+  { id: '3', name: 'Pastor Mike Brown', title: 'Worship Pastor', bio: 'Leading the congregation in authentic and heartfelt worship experiences.', imageUrl: 'https://images.unsplash.com/photo-1593104547489-5cfb3839a3b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300', email: 'pastor.mike@faithlife.com' },
+];
+
+const mockGalleryImages: GalleryImage[] = [
+  { id: '1', title: 'Sunday Worship', imageUrl: 'https://images.unsplash.com/photo-1544383835-bda2bc62a388?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400', category: 'worship' },
+  { id: '2', title: 'Community Food Drive', imageUrl: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400', category: 'community' },
+  { id: '3', title: 'Youth Group Night', imageUrl: 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400', category: 'youth' },
+  { id: '4', title: 'Baptism Sunday', imageUrl: 'https://images.unsplash.com/photo-1580834835854-1b94b3101669?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400', category: 'service' },
+  { id: '5', title: 'Church Picnic', imageUrl: 'https://images.unsplash.com/photo-1519491050282-cf00c82424b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400', category: 'community' },
+  { id: '6', title: 'Christmas Service', imageUrl: 'https://images.unsplash.com/photo-1576289523032-3c974a4a1834?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400', category: 'service' },
+];
+
 
 export default function About() {
-  const { data: pastors, isLoading: pastorsLoading } = useQuery<Pastor[]>({
-    queryKey: ["/api/pastors"],
-  });
+  const [pastors, setPastors] = useState<Pastor[]>([]);
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
+  const [pastorsLoading, setPastorsLoading] = useState(true);
+  const [galleryLoading, setGalleryLoading] = useState(true);
 
-  const { data: galleryImages, isLoading: galleryLoading } = useQuery<GalleryImage[]>({
-    queryKey: ["/api/gallery"],
-  });
-
-   useEffect(() => {
+  useEffect(() => {
     window.scrollTo(0, 0);
-  }, []); // runs only once when the component mounts
+
+    const timer = setTimeout(() => {
+      setPastors(mockPastors);
+      setGalleryImages(mockGalleryImages);
+      setPastorsLoading(false);
+      setGalleryLoading(false);
+    }, 500); // Simulate network delay
+
+    return () => clearTimeout(timer);
+  }, []);
 
 
   return (

@@ -2,34 +2,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export default function NewsletterSignup() {
   const [email, setEmail] = useState("");
   const { toast } = useToast();
-
-  const subscribeMutation = useMutation({
-    mutationFn: async (email: string) => {
-      const response = await apiRequest("POST", "/api/newsletter/subscribe", { email });
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Successfully Subscribed!",
-        description: "Thank you for joining our newsletter. You'll receive weekly updates and encouragement.",
-      });
-      setEmail("");
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Subscription Failed",
-        description: error.message || "Please try again later.",
-        variant: "destructive",
-      });
-    },
-  });
+  const [isSubscribing, setIsSubscribing] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +19,29 @@ export default function NewsletterSignup() {
       });
       return;
     }
-    subscribeMutation.mutate(email);
+
+    setIsSubscribing(true);
+
+    // Simulate API call
+    setTimeout(() => {
+      // Simulate a successful subscription
+      toast({
+        title: "Successfully Subscribed!",
+        description: "Thank you for joining our newsletter. You'll receive weekly updates and encouragement.",
+      });
+      setEmail("");
+      setIsSubscribing(false);
+
+      // To simulate an error, you could do something like this:
+      /*
+      toast({
+        title: "Subscription Failed",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+      setIsSubscribing(false);
+      */
+    }, 1000);
   };
 
   return (
@@ -66,11 +66,11 @@ export default function NewsletterSignup() {
             />
             <Button
               type="submit"
-              disabled={subscribeMutation.isPending}
+              disabled={isSubscribing}
               className="bg-accent text-accent-foreground hover:opacity-90 flex items-center px-6"
               data-testid="button-newsletter-subscribe"
             >
-              <span>{subscribeMutation.isPending ? "Subscribing..." : "Subscribe"}</span>
+              <span>{isSubscribing ? "Subscribing..." : "Subscribe"}</span>
               <Send className="ml-2 h-4 w-4" />
             </Button>
           </div>

@@ -2,7 +2,13 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Church, Menu, LogOut, Settings } from "lucide-react";
+import {
+  Church,
+  Menu,
+  LogOut,
+  Settings,
+  Brush,
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function Navigation() {
@@ -57,12 +63,20 @@ export default function Navigation() {
               </Button>
             </Link>
             {isAdmin && (
-              <Link href="/admin">
-                <Button variant="outline" size="sm" data-testid="button-admin">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Admin
-                </Button>
-              </Link>
+              <>
+                <Link href="/admin">
+                  <Button variant="outline" size="sm" data-testid="button-admin">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Admin
+                  </Button>
+                </Link>
+                <Link href="/customize">
+                  <Button variant="outline" size="sm" data-testid="button-customize">
+                    <Brush className="h-4 w-4 mr-2" />
+                    Customize
+                  </Button>
+                </Link>
+              </>
             )}
             {isAuthenticated && (
               <Button variant="ghost" size="sm" onClick={logout} data-testid="button-logout">
@@ -94,17 +108,30 @@ export default function Navigation() {
                   </Button>
                 </Link>
                 {isAdmin && (
-                  <Link href="/admin">
-                    <Button 
-                      variant="outline" 
-                      className="w-full" 
-                      onClick={() => setIsOpen(false)}
-                      data-testid="button-admin-mobile"
-                    >
-                      <Settings className="h-4 w-4 mr-2" />
-                      Admin
-                    </Button>
-                  </Link>
+                  <>
+                    <Link href="/admin">
+                      <Button 
+                        variant="outline" 
+                        className="w-full" 
+                        onClick={() => setIsOpen(false)}
+                        data-testid="button-admin-mobile"
+                      >
+                        <Settings className="h-4 w-4 mr-2" />
+                        Admin
+                      </Button>
+                    </Link>
+                    <Link href="/customize">
+                      <Button 
+                        variant="outline" 
+                        className="w-full" 
+                        onClick={() => setIsOpen(false)}
+                        data-testid="button-customize-mobile"
+                      >
+                        <Brush className="h-4 w-4 mr-2" />
+                        Customize
+                      </Button>
+                    </Link>
+                  </>
                 )}
                 {isAuthenticated && (
                   <Button 

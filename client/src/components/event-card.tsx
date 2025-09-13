@@ -5,12 +5,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar, MapPin, Clock, User } from "lucide-react";
-import { Event } from "@shared/schema";
-import { format, isPast, isFuture } from "date-fns";
+import { format, isFuture } from "date-fns";
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+
+// Define Event type locally
+export type Event = {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  time: string;
+  location: string;
+  speaker?: string;
+  imageUrl?: string;
+  category: string;
+};
 
 interface EventCardProps {
   event: Event;
@@ -20,34 +30,11 @@ export default function EventCard({ event }: EventCardProps) {
   const [reminderEmail, setReminderEmail] = useState("");
   const [reminderPhone, setReminderPhone] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [isSettingReminder, setIsSettingReminder] = useState(false);
 
   // Check if event is upcoming (not past)
   const isUpcoming = isFuture(new Date(event.date));
-
-  const reminderMutation = useMutation({
-    mutationFn: async (data: { eventId: string; email?: string; phone?: string }) => {
-      const response = await apiRequest("POST", "/api/event-reminders", data);
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Reminder Set!",
-        description: "We'll remind you about this event.",
-      });
-      setIsDialogOpen(false);
-      setReminderEmail("");
-      setReminderPhone("");
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to set reminder",
-        variant: "destructive",
-      });
-    },
-  });
 
   const handleReminderSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,11 +47,19 @@ export default function EventCard({ event }: EventCardProps) {
       return;
     }
 
-    reminderMutation.mutate({
-      eventId: event.id,
-      email: reminderEmail || undefined,
-      phone: reminderPhone || undefined,
-    });
+    setIsSettingReminder(true);
+
+    // Simulate API call
+    setTimeout(() => {
+      toast({
+        title: "Reminder Set!",
+        description: "We'll remind you about this event.",
+      });
+      setIsDialogOpen(false);
+      setReminderEmail("");
+      setReminderPhone("");
+      setIsSettingReminder(false);
+    }, 1000);
   };
 
   return (
@@ -165,10 +160,10 @@ export default function EventCard({ event }: EventCardProps) {
                 </Button>
                 <Button 
                   type="submit" 
-                  disabled={reminderMutation.isPending}
+                  disabled={isSettingReminder}
                   data-testid="button-confirm-reminder"
                 >
-                  {reminderMutation.isPending ? "Setting..." : "Set Reminder"}
+                  {isSettingReminder ? "Setting..." : "Set Reminder"}
                 </Button>
               </DialogFooter>
             </form>
