@@ -13,7 +13,7 @@
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/client/index.html"
+      "destination": "/client/dist/index.html"
     }
   ]
 }
