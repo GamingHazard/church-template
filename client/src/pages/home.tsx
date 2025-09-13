@@ -9,6 +9,7 @@ import { Event, Sermon, Pastor } from "@shared/schema";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect } from "react";
 
 export default function Home() {
   const { data: upcomingEvents, isLoading: eventsLoading } = useQuery<Event[]>({
@@ -22,6 +23,11 @@ export default function Home() {
   const { data: leadPastor, isLoading: pastorLoading } = useQuery<Pastor>({
     queryKey: ["/api/pastors/lead"],
   });
+
+   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []); // runs only once when the component mounts
+
 
   return (
     <div>

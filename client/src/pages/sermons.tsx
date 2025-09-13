@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Sermon } from "@shared/schema";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect } from "react";
 
 export default function Sermons() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -20,6 +21,10 @@ export default function Sermons() {
     queryKey: ["/api/sermons/search", { q: searchQuery }],
     enabled: searchQuery.length > 0,
   });
+   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []); // runs only once when the component mounts
+
 
   const displaySermons = searchQuery ? searchResults : allSermons;
 

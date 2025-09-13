@@ -9,6 +9,8 @@ import { Event } from "@shared/schema";
 import { format, isPast } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import EventCard from "@/components/event-card";
+import { useEffect } from "react";
+
 
 export default function Events() {
   const [activeTab, setActiveTab] = useState("upcoming");
@@ -20,6 +22,10 @@ export default function Events() {
   const { data: upcomingEvents, isLoading: upcomingLoading } = useQuery<Event[]>({
     queryKey: ["/api/events/upcoming"],
   });
+   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []); // runs only once when the component mounts
+
 
   // Filter past events
   const pastEvents = allEvents?.filter(event => isPast(new Date(event.date))) || [];

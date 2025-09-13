@@ -14,6 +14,7 @@ import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 const donationFormSchema = insertDonationSchema.extend({
   amount: z.string().min(1, "Amount is required").transform((val) => parseFloat(val)),
@@ -38,6 +39,10 @@ export default function Donations() {
       purpose: "general",
     },
   });
+
+   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []); // runs only once when the component mounts
 
   const selectedPurpose = watch("purpose");
 

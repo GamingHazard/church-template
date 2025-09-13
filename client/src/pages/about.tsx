@@ -3,6 +3,7 @@ import { Clock, MapPin, Users, Heart, Book, Music } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Pastor, GalleryImage } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect } from "react";
 
 export default function About() {
   const { data: pastors, isLoading: pastorsLoading } = useQuery<Pastor[]>({
@@ -12,6 +13,11 @@ export default function About() {
   const { data: galleryImages, isLoading: galleryLoading } = useQuery<GalleryImage[]>({
     queryKey: ["/api/gallery"],
   });
+
+   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []); // runs only once when the component mounts
+
 
   return (
     <div className="min-h-screen">
