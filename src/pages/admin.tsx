@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import {
-  Plus, Edit, Trash2, Calendar, Users, DollarSign, Image, Mail, Eye, Bell, Settings as SettingsIcon, Phone, MessageSquare
+  Plus, Edit, Trash2, Calendar, Users, DollarSign, Image, Mail, Eye, Bell, Settings as SettingsIcon, Ban, MessageSquare
 } from "lucide-react";
 import { format } from "date-fns";
 import { useForm } from "react-hook-form";
@@ -122,8 +122,8 @@ const mockDonations: Donation[] = [
 ];
 
 const mockGalleryImages: GalleryImage[] = [
-  { id: '1', title: 'Worship Night', imageUrl: 'https://via.placeholder.com/300', category: 'worship' },
-  { id: '2', title: 'Community Outreach', imageUrl: 'https://via.placeholder.com/300', category: 'community' },
+  { id: '1', title: 'Worship Night', imageUrl: 'https://t3.ftcdn.net/jpg/06/55/03/10/360_F_655031012_ezp6y04yY161INy73UC1RDarJgSbVU5B.jpg', category: 'worship' },
+  { id: '2', title: 'Community Outreach', imageUrl: 'https://cocoutreach.org/wp-content/uploads/2025/09/website-1.jpg', category: 'community' },
 ];
 
 const mockPastors: Pastor[] = [
@@ -434,7 +434,15 @@ function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen "
+      // style={{
+        
+      //   backgroundImage: "url('https://png.pngtree.com/thumb_back/fh260/background/20250205/pngtree-soft-pastel-floral-design-light-blue-background-image_16896113.jpg')",
+      //   backgroundSize: "cover",
+      //   backgroundPosition: "center",
+      //   backgroundRepeat: "no-repeat",
+      // }}
+    >
       {/* Header */}
       <section className="py-12 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
@@ -861,14 +869,14 @@ function AdminDashboard() {
                                 <div className="flex items-center gap-3">
                                   <img src={user.avatarUrl} alt={user.name} className="h-10 w-10 rounded-full object-cover" />
                                   <div>
-                                    <p className="font-medium">{user.name}</p>
-                                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                                    <p className="font-medium ">{user.name}</p>
+                                    <p className="text-sm text-muted-foreground text-gray-400">{user.email.split("example.com")[0]}</p>
                                   </div>
                                 </div>
                               </TableCell>
-                              <TableCell>{user.phone}</TableCell>
-                              <TableCell>{format(new Date(user.subscribedAt), "MMM d, yyyy")}</TableCell>
-                              <TableCell className="text-center">{user.remindersCount}</TableCell>
+                              <TableCell className="text-gray-400">{user.phone}</TableCell>
+                              <TableCell className="text-gray-400  p-1">{format(new Date(user.subscribedAt), "MMM d, yyyy")}</TableCell>
+                              <TableCell className="text-center text-gray-400  ">{user.remindersCount}</TableCell>
                               <TableCell>
                                 <div className="flex gap-1">
                                   <Button variant="outline" size="icon" onClick={() => toast({ title: `Emailing ${user.name}` })}>
@@ -877,8 +885,8 @@ function AdminDashboard() {
                                   <Button variant="outline" size="icon" onClick={() => toast({ title: `Sending SMS to ${user.name}` })}>
                                     <MessageSquare className="h-4 w-4" />
                                   </Button>
-                                  <Button variant="outline" size="icon" onClick={() => toast({ title: `Calling ${user.name}` })}>
-                                    <Phone className="h-4 w-4" />
+                                  <Button  className="bg-red-200 hover:bg-red-300" size="icon" onClick={() => toast({ title: `Banning ${user.name}` })}>
+                                    <Ban className="h-4 w-4 text-red-600" />
                                   </Button>
                                 </div>
                               </TableCell>
@@ -901,21 +909,26 @@ function AdminDashboard() {
                       <form className="space-y-4" onSubmit={(e) => {
                         e.preventDefault();
                         const form = e.target as HTMLFormElement;
+                        const subject = (form.elements.namedItem('broadcast-subject') as HTMLInputElement).value;
                         const message = (form.elements.namedItem('broadcast-message') as HTMLTextAreaElement).value;
-                        if (message) {
+                        if (subject && message) {
                           toast({
                             title: "Broadcast Sent!",
-                            description: `Message sent to ${users.length} users.`,
+                            description: `Message with subject "${subject}" sent to ${users.length} users.`,
                           });
                           form.reset();
                         } else {
                           toast({
                             title: "Error",
-                            description: "Message cannot be empty.",
+                            description: "Subject and message cannot be empty.",
                             variant: "destructive"
                           });
                         }
                       }}>
+                        <div className="space-y-2">
+                          <Label htmlFor="broadcast-subject">Subject</Label>
+                          <Input id="broadcast-subject" placeholder="Enter subject..." />
+                        </div>
                         <div className="space-y-2">
                           <Label htmlFor="broadcast-message">Message</Label>
                           <Textarea id="broadcast-message" placeholder="Type your message to all users..." rows={5} />
