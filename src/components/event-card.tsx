@@ -1,13 +1,13 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
 import { Calendar, MapPin, Clock, User } from "lucide-react";
 import { format, isFuture } from "date-fns";
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "../hooks/use-toast";
 
 // Define Event type locally
 export type Event = {
@@ -89,7 +89,7 @@ export default function EventCard({ event }: EventCardProps) {
         </p>
 
         <div className="space-y-2 mb-4">
-          <div className="flex items-center text-muted-foreground text-sm">
+          <div className="flex items-center text-muted-foreground text-gray-400 text-sm">
             <Clock className="mr-2 h-4 w-4" />
             <span data-testid={`event-time-${event.id}`}>{event.time}</span>
           </div>

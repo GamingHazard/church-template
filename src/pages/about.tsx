@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Clock, MapPin, Users, Heart, Book, Music } from "lucide-react";
+import { Clock, MapPin, Users, Heart, Book, Music,ArrowRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useState } from "react";
 
@@ -22,18 +22,52 @@ export type GalleryImage = {
 
 // Mock Data
 const mockPastors: Pastor[] = [
-  { id: '1', name: 'Pastor John Doe', title: 'Lead Pastor', bio: 'Passionate about sharing God\'s love and building a strong community.', imageUrl: 'https://images.unsplash.com/photo-1556075798-4825dfaaf498?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300', email: 'pastor.john@faithlife.com' },
-  { id: '2', name: 'Pastor Jane Smith', title: 'Youth Pastor', bio: 'Dedicated to empowering the next generation with faith and purpose.', imageUrl: 'https://images.unsplash.com/photo-1580894732444-84cf8d37a1d3?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300', email: 'pastor.jane@faithlife.com' },
-  { id: '3', name: 'Pastor Mike Brown', title: 'Worship Pastor', bio: 'Leading the congregation in authentic and heartfelt worship experiences.', imageUrl: 'https://images.unsplash.com/photo-1593104547489-5cfb3839a3b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300', email: 'pastor.mike@faithlife.com' },
+  { id: '1', 
+    name: 'Pastor John Doe', 
+    title: 'Lead Pastor', 
+    bio: 'Passionate about sharing God\'s love and building a strong community.', 
+    imageUrl: 'https://www.thepottershouse.org/wp-content/uploads/bishop_jakesv24.png', 
+    email: 'pastor.john@faithlife.com' },
+  { id: '2', 
+    name: 'Pastor Jane Smith', 
+    title: 'Youth Pastor', 
+    bio: 'Dedicated to empowering the next generation with faith and purpose.', 
+    imageUrl: 'https://youthministryconversations.com/wp-content/uploads/2018/09/Kyle-photo-266x300.jpg', 
+    email: 'pastor.jane@faithlife.com' },
+  { id: '3', 
+    name: 'Pastor Mike Brown', 
+    title: 'Worship Pastor', 
+    bio: 'Leading the congregation in authentic and heartfelt worship experiences.', 
+    imageUrl: 'https://images.unsplash.com/photo-1593104547489-5cfb3839a3b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300', 
+    email: 'pastor.mike@faithlife.com' },
 ];
 
 const mockGalleryImages: GalleryImage[] = [
-  { id: '1', title: 'Sunday Worship', imageUrl: 'https://images.unsplash.com/photo-1544383835-bda2bc62a388?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400', category: 'worship' },
-  { id: '2', title: 'Community Food Drive', imageUrl: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400', category: 'community' },
-  { id: '3', title: 'Youth Group Night', imageUrl: 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400', category: 'youth' },
-  { id: '4', title: 'Baptism Sunday', imageUrl: 'https://images.unsplash.com/photo-1580834835854-1b94b3101669?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400', category: 'service' },
-  { id: '5', title: 'Church Picnic', imageUrl: 'https://images.unsplash.com/photo-1519491050282-cf00c82424b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400', category: 'community' },
-  { id: '6', title: 'Christmas Service', imageUrl: 'https://images.unsplash.com/photo-1576289523032-3c974a4a1834?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400', category: 'service' },
+  { id: '1', 
+    title: 'Sunday Worship', 
+    imageUrl: 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8d29yc2hpcHxlbnwwfHwwfHx8MA%3D%3D',
+    category: 'worship'
+  },
+  { id: '2', 
+    title: 'Community Food Drive', 
+    imageUrl: 'https://img.freepik.com/free-photo/volunteers-working-together-full-shot_23-2149181981.jpg?semt=ais_hybrid&w=740&q=80', 
+    category: 'community' },
+  { id: '3', 
+    title: 'Youth Group Night', 
+    imageUrl: 'https://images.squarespace-cdn.com/content/v1/5fcff01d9775bc77ef16b4da/1612554617663-QGOFG8UYWGFKOR94DC83/teen-night.jpg', 
+    category: 'youth' },
+  { id: '4', 
+    title: 'Baptism Sunday', 
+    imageUrl: 'https://www.shutterstock.com/editorial/image-editorial/N2T9g0z4McT5Aa28ODk0/archbishop-york-dr-john-sentamu---baptising-440nw-582190d.jpg', 
+    category: 'service' },
+  { id: '5', 
+    title: 'Church Picnic', 
+    imageUrl: 'https://blog.discountmugs.com/hs-fs/hubfs/blog-files/Great_Favors_for_your_Church_Picnic/church%20picnics%20games%20and%20ideas.jpg?width=901&name=church%20picnics%20games%20and%20ideas.jpg', 
+    category: 'community' },
+  { id: '6', 
+    title: 'Christmas Service', 
+    imageUrl: 'https://www.retailtherapylafayette.com/wp-content/uploads/2022/11/174416404_m-1024x683.jpg', 
+    category: 'service' },
 ];
 
 
@@ -301,8 +335,8 @@ export default function About() {
                   <div className="space-y-2" data-testid="church-address">
                     <p className="font-medium">FaithLife Church</p>
                     <p className="text-muted-foreground">123 Faith Avenue</p>
-                    <p className="text-muted-foreground">Cityville, ST 12345</p>
-                    <p className="text-muted-foreground">(555) 123-4567</p>
+                    <p className="text-muted-foreground">Kitetika, mutuba 1, wakiso, Uganda</p>
+                    <p className="text-muted-foreground">(+256) 7xx-xxx-xxx</p>
                   </div>
                 </CardContent>
               </Card>
@@ -346,7 +380,8 @@ export default function About() {
                 <Skeleton key={i} className="aspect-square rounded-lg" />
               ))
             ) : galleryImages && galleryImages.length > 0 ? (
-              galleryImages.slice(0, 6).map((image) => (
+                
+                  galleryImages.slice(0, 6).map((image) => (
                 <div key={image.id} className="relative group overflow-hidden rounded-lg" data-testid={`gallery-image-${image.id}`}>
                   <img
                     src={image.imageUrl}
@@ -358,9 +393,13 @@ export default function About() {
                     <p className="text-white font-medium" data-testid={`gallery-title-${image.id}`}>
                       {image.title}
                     </p>
-                  </div>
+                      </div>
+                      
                 </div>
-              ))
+                
+                  ))
+                 
+              
             ) : (
               <div className="col-span-full text-center py-12">
                 <p className="text-muted-foreground text-lg" data-testid="no-gallery">
@@ -369,6 +408,9 @@ export default function About() {
               </div>
             )}
           </div>
+          <p className="mt-10 justify-end flex flex-row flex-1 text-center cursor-pointer text-sm font-semibold hover:text-md">See More 
+            <ArrowRight className="ml-2 text-sm hover:text-lg" />
+           </p>
         </div>
       </section>
     </div>

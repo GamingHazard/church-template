@@ -1,62 +1,40 @@
-import HeroSection from "@/components/hero-section";
-import NewsletterSignup from "@/components/newsletter-signup";
-import EventCard from "@/components/event-card";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import HeroSection from "../components/hero-section";
+import NewsletterSignup from "../components/newsletter-signup";
+import EventCard from "../components/event-card";
+import { Card, CardContent } from "../components/ui/card";
+import { Button } from "../components/ui/button";
 import { Clock, Play } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "../components/ui/skeleton";
 import { useEffect, useState } from "react";
+import { mockEvents } from "../lib/Data";
+import { mockSermons } from "../lib/Data";
 
-// Mock Data
-const mockEvents = [
-  {
-    id: 1,
-    title: "Community BBQ",
-    date: "2025-09-20T17:00:00.000Z",
-    location: "Church Lawn",
-    description: "Join us for a fun evening of food, games, and fellowship.",
-    imageUrl: "https://st.depositphotos.com/1001959/1895/i/450/depositphotos_18952187-stock-photo-bbq-grill-with-various-kind.jpg",
-  },
-  {
-    id: 2,
-    title: "Youth Movie Night",
-    date: "2025-09-26T19:00:00.000Z",
-    location: "Youth Hall",
-    description: "A fun movie night for all our youth group members.",
-    imageUrl: "https://media.istockphoto.com/id/1299321783/photo/friends-watching-a-movie-in-a-home-theater.jpg?s=612x612&w=0&k=20&c=kS-0-s-11aZa-b-LgdnRkG85L-0uTih2dei29p3hG-s=",
-  },
-  {
-    id: 3,
-    title: "Worship Night",
-    date: "2025-10-04T18:30:00.000Z",
-    location: "Main Sanctuary",
-    description: "An evening of worship and prayer.",
-    imageUrl: "https://www.prochurchlights.com/wp-content/uploads/2022/03/pexels-luis-quintero-2774556.jpg",
-  },
-];
 
-const mockSermons = [
-  {
-    id: 1,
-    title: "The Power of Forgiveness",
-    preacher: "Pastor David Johnson",
-    series: "Core Values",
-    date: "2025-09-07T10:30:00.000Z",
-    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    audioUrl: "https://example.com/audio1.mp3",
-  },
-  {
-    id: 2,
-    title: "Living a Life of Purpose",
-    preacher: "Pastor David Johnson",
-    series: "Core Values",
-    date: "2025-08-31T10:30:00.000Z",
-    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    audioUrl: "https://example.com/audio2.mp3",
-  },
-];
+
+
+
+// const mockSermons = [
+//   {
+//     id: 1,
+//     title: "The Power of Forgiveness",
+//     preacher: "Pastor David Johnson",
+//     series: "Core Values",
+//     date: "2025-09-07T10:30:00.000Z",
+//     videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+//     audioUrl: "https://example.com/audio1.mp3",
+//   },
+//   {
+//     id: 2,
+//     title: "Living a Life of Purpose",
+//     preacher: "Pastor David Johnson",
+//     series: "Core Values",
+//     date: "2025-08-31T10:30:00.000Z",
+//     videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+//     audioUrl: "https://example.com/audio2.mp3",
+//   },
+// ];
 
 const mockPastor = {
   id: 1,
@@ -334,9 +312,10 @@ export default function Home() {
                   <div key={sermon.id} className="bg-card rounded-lg p-4 shadow hover:shadow-md transition-shadow duration-300" data-testid={`sermon-item-${sermon.id}`}>
                     <div className="flex items-start space-x-4">
                       <div className="flex-shrink-0">
-                        <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center">
-                          <Play className="text-primary-foreground h-6 w-6" />
-                        </div>
+                        <Link href="/sermons" className="w-16 h-16 bg-primary rounded-lg object-cover flex items-center justify-center">
+                          <img className="h-full w-full rounded-sm relative" src= {sermon.thumbnailUrl}/>
+                          <Play className="text-primary-foreground absolute h-6 w-6 cursor-pointer" />
+                        </Link>
                       </div>
                       <div className="flex-grow">
                         <h4 className="font-semibold text-card-foreground mb-1" data-testid={`sermon-title-${sermon.id}`}>

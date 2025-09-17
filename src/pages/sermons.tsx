@@ -1,47 +1,33 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
 import { Play, Search, Calendar, User } from "lucide-react";
 import { format } from "date-fns";
-import { Skeleton } from "@/components/ui/skeleton";
-
-// Define types locally
-export type Sermon = {
-  id: string;
-  title: string;
-  speaker: string;
-  date: string;
-  description: string;
-  videoUrl?: string;
-  audioUrl?: string;
-  thumbnailUrl?: string;
-  scripture?: string;
-  series?: string;
-};
+import { Skeleton } from "../components/ui/skeleton";
+import { mockSermons } from "../lib/Data";
+ 
 
 // Mock Data
-const mockSermons: Sermon[] = [
-  { id: '1', title: 'The Power of Forgiveness', speaker: 'Pastor John Doe', date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), description: 'An inspiring message on the freedom found in forgiveness.', videoUrl: '#', audioUrl: '#', thumbnailUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=225', scripture: 'Ephesians 4:32', series: 'Foundations' },
-  { id: '2', title: 'Living with Purpose', speaker: 'Pastor Jane Smith', date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(), description: 'Discover how to live a life full of meaning and purpose.', videoUrl: '#', thumbnailUrl: 'https://images.unsplash.com/photo-1580894732444-84cf8d37a1d3?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=225', scripture: 'Jeremiah 29:11' },
-  { id: '3', title: 'Hope in Hard Times', speaker: 'Pastor John Doe', date: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(), description: 'Finding strength and hope in God during life\'s challenges.', audioUrl: '#', thumbnailUrl: 'https://images.unsplash.com/photo-1593104547489-5cfb3839a3b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=225', scripture: 'Romans 15:13', series: 'Foundations' },
-  { id: '4', title: 'The Heart of Worship', speaker: 'Pastor Mike Brown', date: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(), description: 'A deep dive into what it means to worship God in spirit and truth.', videoUrl: '#', audioUrl: '#', thumbnailUrl: 'https://images.unsplash.com/photo-1544383835-bda2bc62a388?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=225', scripture: 'John 4:24' },
-];
 
 export default function Sermons() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [allSermons, setAllSermons] = useState<Sermon[]>([]);
+  const [allSermons, setAllSermons] = useState(mockSermons || []);
   const [sermonsLoading, setSermonsLoading] = useState(true);
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    const timer = setTimeout(() => {
-      setAllSermons(mockSermons);
-      setSermonsLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
+
+    
+    if (sermonsLoading) {
+      const timer = setTimeout(() => {
+        setAllSermons(mockSermons);
+        setSermonsLoading(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  });
 
   const filteredSermons = allSermons.filter(sermon =>
     sermon.title.toLowerCase().includes(searchQuery.toLowerCase()) ||

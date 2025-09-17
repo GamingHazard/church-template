@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Badge } from "../components/ui/badge";
 import { Calendar, MapPin, Clock, User, Users } from "lucide-react";
 import { format, isPast } from "date-fns";
-import { Skeleton } from "@/components/ui/skeleton";
-import EventCard from "@/components/event-card";
+import { Skeleton } from "../components/ui/skeleton";
+import EventCard from "../components/event-card";
+import { mockEvents } from "../lib/Data";
 
 interface Event {
   id: string;
@@ -20,56 +21,11 @@ interface Event {
   category: string;
 }
 
-// Mock Data
-const mockEvents: Event[] = [
-  {
-    id: "1",
-    title: "Community BBQ",
-    date: new Date("2025-09-20T17:00:00.000Z").toISOString(),
-    location: "Church Lawn",
-    description: "Join us for a fun evening of food, games, and fellowship.",
-    imageUrl: "https://st.depositphotos.com/1001959/1895/i/450/depositphotos_18952187-stock-photo-bbq-grill-with-various-kind.jpg",
-    category: "community",
-    time: "5:00 PM",
-    speaker: "John Doe",
-  },
-  {
-    id: "2",
-    title: "Youth Movie Night",
-    date: new Date("2025-09-26T19:00:00.000Z").toISOString(),
-    location: "Youth Hall",
-    description: "A fun movie night for all our youth group members.",
-    imageUrl: "https://media.istockphoto.com/id/1299321783/photo/friends-watching-a-movie-in-a-home-theater.jpg?s=612x612&w=0&k=20&c=kS-0-s-11aZa-b-LgdnRkG85L-0uTih2dei29p3hG-s=",
-    category: "youth",
-    time: "7:00 PM",
-  },
-  {
-    id: "3",
-    title: "Worship Night",
-    date: new Date("2025-10-04T18:30:00.000Z").toISOString(),
-    location: "Main Sanctuary",
-    description: "An evening of worship and prayer.",
-    imageUrl: "https://www.prochurchlights.com/wp-content/uploads/2022/03/pexels-luis-quintero-2774556.jpg",
-    category: "service",
-    time: "6:30 PM",
-    speaker: "Worship Team",
-  },
-  {
-    id: "4",
-    title: "Men's Breakfast",
-    date: new Date("2025-08-16T08:00:00.000Z").toISOString(),
-    location: "Fellowship Hall",
-    description: "A time for men to connect and grow together.",
-    imageUrl: "https://media.istockphoto.com/id/1302423033/photo/the-perfect-start-to-a-productive-day.jpg?s=612x612&w=0&k=20&c=X0-s-1-1aZa-b-LgdnRkG85L-0uTih2dei29p3hG-s=",
-    category: "community",
-    time: "8:00 AM",
-    speaker: "Guest Speaker",
-  },
-];
+ 
 
 export default function Events() {
 	const [activeTab, setActiveTab] = useState("upcoming");
-	const [allEvents, setAllEvents] = useState<Event[]>([]);
+	const [allEvents, setAllEvents] = useState(mockEvents || []);
 	const [eventsLoading, setEventsLoading] = useState(true);
 
 	useEffect(() => {
