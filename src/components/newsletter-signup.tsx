@@ -3,13 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import Axios from "axios"
+import { Configs } from "../lib/Configs";
 
 export default function NewsletterSignup() {
   const [email, setEmail] = useState("");
   const { toast } = useToast();
   const [isSubscribing, setIsSubscribing] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
       toast({
@@ -22,26 +24,32 @@ export default function NewsletterSignup() {
 
     setIsSubscribing(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      // Simulate a successful subscription
-      toast({
+    try {
+      const Res = await Axios.post(`${Configs.url}/news-letter/register`, { email })
+      if (Res.status===201) {
+        toast({
         title: "Successfully Subscribed!",
-        description: "Thank you for joining our newsletter. You'll receive weekly updates and encouragement.",
-      });
-      setEmail("");
-      setIsSubscribing(false);
+          description: "Please Check your Emails for a verification link to verify your email",
+        });
 
-      // To simulate an error, you could do something like this:
-      /*
-      toast({
-        title: "Subscription Failed",
-        description: "Please try again later.",
+         setEmail("");
+     setIsSubscribing(false)
+      }
+    } catch (error: any) {
+      
+       toast({
+        title: "Subscription Error!",
+        description: `Error,${error.response.data.message|| "Failed to register Email, try again!"}`,
         variant: "destructive",
       });
-      setIsSubscribing(false);
-      */
-    }, 1000);
+    
+    }finally{setIsSubscribing(false)}
+      
+    
+    
+     
+  
+    
   };
 
   return (
