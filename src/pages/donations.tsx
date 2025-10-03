@@ -74,7 +74,7 @@ export default function Donations() {
         payment_options: "card,mobilemoney,ussd",
         customer: {
           email: donation.donorEmail || "donor@faithlifechurch.org",
-          phone_number: "555-123-4567",
+          phone_number: "+256-7xx-xxx-xxx",
           name: donation.donorName || "Anonymous Donor",
         },
         customizations: {
@@ -288,7 +288,7 @@ export default function Donations() {
                   <p className="flex items-start">
                     <Mail className="h-5 w-5 mr-3 mt-1 text-primary" />
                     <span>
-                      <strong>By Mail:</strong> Mail checks to FaithLife Church, 123 Faith Ave, Anytown, USA 12345.
+                      <strong>By Mail:</strong> Mail checks to FaithLife Church, 123 Faith Ave, kitetika, UG 12345.
                     </span>
                   </p>
                 </CardContent>
@@ -301,7 +301,7 @@ export default function Donations() {
                 <CardContent className="space-y-4">
                   <p className="flex items-center">
                     <Phone className="h-5 w-5 mr-3 text-primary" />
-                    <span>(123) 456-7890</span>
+                    <span>(+256)-7xx-xxx-xxx</span>
                   </p>
                   <p className="flex items-center">
                     <Mail className="h-5 w-5 mr-3 text-primary" />
