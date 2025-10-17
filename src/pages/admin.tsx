@@ -1,25 +1,27 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Badge } from "../components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../components/ui/alert-dialog";
+import { Skeleton } from "../components/ui/skeleton";
+import { Switch } from "../components/ui/switch";
 import {
-  Plus, Edit, Trash2, Calendar, Users, DollarSign, Image, Mail, Eye, Bell, Settings as SettingsIcon, Ban, MessageSquare
+  Plus, Edit, Trash2, Calendar, Users, DollarSign, Image, Mail, Eye, Bell, Settings as SettingsIcon, Ban, MessageSquare,PlayCircleIcon
 } from "lucide-react";
 import { format } from "date-fns";
 import { useForm } from "react-hook-form";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import LoginForm from "@/components/login-form";
+import { useToast } from "../hooks/use-toast";
+import { useAuth } from "../hooks/useAuth";
+import LoginForm from "../components/login-form";
+import axios from "axios";
+import { Configs } from "../lib/utils";
 
 // Define types locally since shared/schema is removed
 export type Event = {
@@ -85,7 +87,7 @@ export type Notification = {
   id: string;
   title: string;
   description: string;
-  type: 'donation' | 'event' | 'system' | 'user';
+  type: 'donation' | 'event' | 'system' | 'user'|'sermon';
   createdAt: string;
   read: boolean;
 };
@@ -136,6 +138,7 @@ const mockNotifications: Notification[] = [
   { id: '2', title: 'Event Reminder', description: 'The "Community BBQ" event is scheduled for tomorrow at 12:00 PM.', type: 'event', createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), read: false },
   { id: '3', title: 'New Subscriber', description: 'A new user (user@example.com) subscribed to the newsletter.', type: 'user', createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), read: true },
   { id: '4', title: 'System Maintenance', description: 'Scheduled system maintenance will occur tonight at midnight. The admin panel may be temporarily unavailable.', type: 'system', createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), read: true },
+  { id: '5', title: 'New Sermon', description: 'A new sermon has been created successfully!', type: 'sermon', createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), read: true },
 ];
 
 const mockUsers: User[] = [
@@ -264,12 +267,43 @@ function AdminDashboard() {
   };
 
   // Mutations replaced with state updates
-  const createEvent = (data: EventForm) => {
-    const newEvent: Event = { ...data, id: Date.now().toString() };
-    setEvents(prev => [...prev, newEvent]);
-    toast({ title: "Event created successfully!" });
-    setShowEventDialog(false);
-    eventForm.reset();
+  const createEvent = async (data: EventForm) => {
+     
+  try {
+    const response =  await axios.post(`${Configs.url}/api/events/new-event`, data, {
+  headers: {
+    "Content-Type": "application/x-www-form-urlencoded"
+  },
+});
+    if (response.status === 201) {
+
+
+      const newEvent: Event = { ...data, id: response.data.id };
+      setEvents(prev => [...prev, newEvent]);
+      toast({ title: "Event created successfully!" });
+      // setShowEventDialog(false); 
+      // eventForm.reset();
+
+      console.log('====================================');
+      console.log(response.data);
+      console.log('====================================');
+    }
+
+   
+  } catch (err:any) {
+    if (err.response && err.response.data) {
+    toast({ title: "Error!", description: err.response.data.err || err.response.data.error, variant: "destructive" });
+      
+    console.error("Error:", err.response.data.err || err.response.data.error);
+  } else {
+    toast({ title: "Error!", description: err.message, variant: "destructive" });
+
+    console.error("Network error:", err);
+  }
+  }
+
+
+   
   };
 
   const updateEvent = (id: string, data: Partial<EventForm>) => {
@@ -285,12 +319,48 @@ function AdminDashboard() {
     toast({ title: "Event deleted successfully!" });
   };
 
-  const createSermon = (data: SermonForm) => {
-    const newSermon: Sermon = { ...data, id: Date.now().toString() };
+  const createSermon = async (data: SermonForm) => {
+   
+   try {
+    const response =  await axios.post(`${Configs.url}/api/sermons/new-sermon`, data, {
+  headers: {
+    "Content-Type": "application/x-www-form-urlencoded"
+  },
+});
+    if (response.status === 201) {
+
+
+       const newSermon: Sermon = { ...data,  id: response.data.id  };
     setSermons(prev => [...prev, newSermon]);
     toast({ title: "Sermon created successfully!" });
     setShowSermonDialog(false);
     sermonForm.reset();
+     
+    }
+
+   
+  } catch (err:any) {
+    if (err.response && err.response.data) {
+    toast({ title: "Error!", description: err.response.data.err || err.response.data.error, variant: "destructive" });
+      
+    console.error("Error:", err.response.data.err || err.response.data.error);
+  } else {
+    toast({ title: "Error!", description: err.message, variant: "destructive" });
+
+    console.error("Network error:", err);
+  }
+  }
+
+
+
+
+
+
+
+
+
+
+   
   };
 
   const updateSermon = (id: string, data: Partial<SermonForm>) => {
@@ -463,7 +533,7 @@ function AdminDashboard() {
               <TabsTrigger value="events" data-testid="tab-events">Events</TabsTrigger>
               <TabsTrigger value="sermons" data-testid="tab-sermons">Sermons</TabsTrigger>
               <TabsTrigger value="users" data-testid="tab-users">Users</TabsTrigger>
-              <TabsTrigger value="newsletters" data-testid="tab-newsletters">Newsletter</TabsTrigger>
+              <TabsTrigger value="newsletters" className="hidden" data-testid="tab-newsletters">Newsletter</TabsTrigger>
               <TabsTrigger value="donations" data-testid="tab-donations">Donations</TabsTrigger>
               <TabsTrigger value="gallery" data-testid="tab-gallery">Gallery</TabsTrigger>
               <TabsTrigger value="pastors" data-testid="tab-pastors">Pastors</TabsTrigger>
@@ -944,7 +1014,7 @@ function AdminDashboard() {
             </TabsContent>
 
             {/* Newsletter Tab */}
-            <TabsContent value="newsletters">
+            <TabsContent value="newsletters" className="hidden">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
@@ -1376,12 +1446,13 @@ function AdminDashboard() {
                       ))
                     ) : notifications.length > 0 ? (
                       notifications.map(notification => (
-                        <div key={notification.id} className={`flex items-start gap-4 p-4 rounded-lg border ${!notification.read ? 'bg-muted/50' : 'bg-background'}`}>
+                        <div key={notification.id} className={`flex items-start gap-4 p-4 rounded-lg border ${notification.read ? 'bg-muted/50' : 'bg-background'}`}>
                           <div className="flex-shrink-0 mt-1">
                             {notification.type === 'donation' && <DollarSign className="h-5 w-5 text-green-500" />}
                             {notification.type === 'event' && <Calendar className="h-5 w-5 text-blue-500" />}
                             {notification.type === 'system' && <SettingsIcon className="h-5 w-5 text-gray-500" />}
                             {notification.type === 'user' && <Users className="h-5 w-5 text-purple-500" />}
+                            {notification.type === 'sermon' && <PlayCircleIcon className="h-5 w-5 text-amber-500" />}
                           </div>
                           <div className="flex-1">
                             <div className="flex justify-between items-start">
@@ -1389,7 +1460,7 @@ function AdminDashboard() {
                                 <p className="font-semibold text-black">{notification.title}</p>
                                 <p className="text-sm text-muted-foreground">{notification.description}</p>
                               </div>
-                              {!notification.read && (
+                              {notification.read === false && (
                                 <Badge variant="solid" className="text-xs bg-purple-100 text-purple-600">New</Badge>
                               )}
                             </div>
