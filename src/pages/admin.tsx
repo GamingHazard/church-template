@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect,useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Skeleton } from "../components/ui/skeleton";
 import { Switch } from "../components/ui/switch";
 import {
-  Plus, Edit, Trash2, Calendar, Users, DollarSign, Image, Mail, Eye, Bell, Settings as SettingsIcon, Ban, MessageSquare,PlayCircleIcon
+  Plus, Edit, Trash2, Calendar, Users, DollarSign, Image, Mail, Eye, Bell, Settings as SettingsIcon, Ban, MessageSquare,PlayCircleIcon,Loader2
 } from "lucide-react";
 import { format, set } from "date-fns";
 import { useForm } from "react-hook-form";
@@ -24,10 +24,11 @@ import axios from "axios";
 import { Configs } from "../lib/utils";
 import { log } from "node:console";
 import { errorMonitor } from "node:events";
+import { get } from "node:http";
 
 // Define types locally since shared/schema is removed
 export type Event = {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   date: string;
@@ -39,7 +40,7 @@ export type Event = {
 };
 
 export type Sermon = {
-  id: string;
+  _id: string;
   title: string;
   speaker: string;
   date: string;
@@ -187,6 +188,13 @@ function AdminDashboard() {
   const [notificationsLoading, setNotificationsLoading] = useState(true);
   const [usersLoading, setUsersLoading] = useState(true);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<any | null>(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [Loading, setLoading] = useState(false);
+  
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setEventsLoading(false);
@@ -255,43 +263,79 @@ function AdminDashboard() {
     },
   });
 
-  const handleImageUpload = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    setValue: (name: any, value: string) => void,
-    fieldName: "imageUrl" | "thumbnailUrl"
-  ) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const localUrl = URL.createObjectURL(file);
-      setValue(fieldName, localUrl);
-      toast({
-        title: "Image Uploaded",
-        description: "A local preview of the image is now available.",
-      });
+ 
+
+   // 1) File picker open
+  const handleSelectClick = () => fileInputRef.current?.click();
+
+  // 2) File chosen
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sel = e.target.files?.[0];
+    if (!sel || !sel.type.startsWith("image/")) {
+      return toast({ title: "Select a valid image", variant: "destructive" });
     }
+    setFile(sel);
+    setPreviewUrl(URL.createObjectURL(sel));
   };
+
+  // 3) Upload helper
+  const uploadFileToServer = async (file: File) => {
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("image", file);
+      const { data } = await axios.post(
+        `${Configs.url}/api/events/upload/image`,
+        fd,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      return data;
+    } catch (error) {
+      toast({
+        title: "Error!",
+        description: "Image upload failed, please try again!",
+        variant: "destructive",
+      });
+    }finally{setUploading(false);}
+  };
+
+  //get Events from server
+  const getEvents = async () => {
+    try {
+      const response = await axios.get(`${Configs.url}/api/events/all`);
+      if (response.status === 200) {
+        setEvents(response.data.events);
+      }
+    } catch (error) {
+      toast({ title: "Error", variant: "destructive", description: "Failed to fetch events." });
+      console.log('====================================');
+      console.log(error);
+      console.log('====================================');
+    }
+  }
 
   // Mutations replaced with state updates
   const createEvent = async (data: EventForm) => {
-     
   try {
-    const response =  await axios.post(`${Configs.url}/api/events/new-event`, data, {
+  
+
+    const { url, public_id } = await uploadFileToServer(file);
+    const eventData = { ...data,  url,public_id };
+  
+    const response =  await axios.post(`${Configs.url}/api/events/new-event`, eventData, {
   headers: {
     "Content-Type": "application/x-www-form-urlencoded"
   },
 });
     if (response.status === 201) {
-
-
-      const newEvent: Event = { ...data, id: response.data.id };
+      const newEvent: Event = { ...data, _id: response.data.id };
       setEvents(prev => [...prev, newEvent]);
       toast({ title: "Event created successfully!" });
       // setShowEventDialog(false); 
       // eventForm.reset();
 
-      console.log('====================================');
-      console.log(response.data);
-      console.log('====================================');
+      
     }
 
    
@@ -311,23 +355,48 @@ function AdminDashboard() {
    
   };
 
-  const updateEvent = (id: string, data: Partial<EventForm>) => {
-    setEvents(prev => prev.map(e => e.id === id ? { ...e, ...data } : e));
-    toast({ title: "Event updated successfully!" });
-    setShowEventDialog(false);
-    setEditingEvent(null);
-    eventForm.reset();
+  // Update Event
+  const updateEvent = async (id: string, data: Partial<EventForm>) => {
+ setLoading(true);
+    try {
+      const res = await axios.put(`${Configs.url}/api/events/update-event/${id}`, data);  
+      if (res.status === 200) {
+        setEvents(prev => prev.map(e => e._id === id ? { ...e, ...data } : e));
+        toast({ title: "Event updated successfully!" });
+        setShowEventDialog(false);
+        setEditingEvent(null);
+        eventForm.reset();
+      }
+    } catch (error:any) {
+      toast({ title: "Error", variant: "destructive" , description: `Failed to update event: ${error.response?.data?.err || error.message}`});
+    }finally{setLoading(false);}
+    
   };
-
-  const deleteEvent = (id: string) => {
-    setEvents(prev => prev.filter(e => e.id !== id));
+// Delete Event
+  const deleteEvent = async (id: string) => {
+     
+    try {
+      const res = await axios.delete(`${Configs.url}/api/events/delete-event/${id}`);
+      if (res.status === 200) {
+        setEvents(res.data.events);
+      }
+    } catch (error) {
+      toast({ title: "Error", variant: "destructive" , description: `Failed to delete event: ${error}`});
+    }
+    setEvents(prev => prev.filter(e => e._id !== id));
     toast({ title: "Event deleted successfully!" });
   };
 
+
+
+  // Create Sermon
   const createSermon = async (data: SermonForm) => {
-   
+    setUploading(true);
    try {
-    const response =  await axios.post(`${Configs.url}/api/sermons/new-sermon`, data, {
+     const { url, public_id } = await uploadFileToServer(file);
+    const eventData = { ...data,  url,public_id };
+    
+    const response =  await axios.post(`${Configs.url}/api/sermons/new-sermon`, eventData, {
   headers: {
     "Content-Type": "application/x-www-form-urlencoded"
   },
@@ -335,7 +404,7 @@ function AdminDashboard() {
     if (response.status === 201) {
 
 
-       const newSermon: Sermon = { ...data,  id: response.data.id  };
+       const newSermon: Sermon = { ...data,  _id: response.data.id  };
     setSermons(prev => [...prev, newSermon]);
     toast({ title: "Sermon created successfully!" });
     setShowSermonDialog(false);
@@ -354,22 +423,37 @@ function AdminDashboard() {
 
     console.error("Network error:", err);
   }
+  }finally{setUploading(false);}
+  };
+
+  // Get Sermons
+  const getSermons = async () => {
+  try {
+    const response = await axios.get(`${Configs.url}/api/sermons/all`);
+    if (response.status === 200) {
+      setSermons(response.data.sermons);
+    }
+  } catch (error) {
+    toast({ title: "Error", variant: "destructive", description: "Failed to fetch sermons." });
+  }
+}
+// Update Sermon
+  const updateSermon = async (id: string, data: Partial<SermonForm>) => {
+  try {
+    const res = await axios.put(`${Configs.url}/api/sermons/update-sermon/${id}`, data);
+    if (res.status === 200) {
+      setSermons(prev => prev.map(s => s._id === id ? { ...s, ...data } : s));
+      toast({ title: "Sermon updated successfully!" });
+      setShowSermonDialog(false);
+      setEditingSermon(null);
+      sermonForm.reset();
+    }
+  } catch (error) {
+    toast({ title: "Error", variant: "destructive" , description: `Failed to update sermon: ${error}`});
   }
 
 
-
-
-
-
-
-
-
-
-   
-  };
-
-  const updateSermon = (id: string, data: Partial<SermonForm>) => {
-    setSermons(prev => prev.map(s => s.id === id ? { ...s, ...data } : s));
+    setSermons(prev => prev.map(s => s._id === id ? { ...s, ...data } : s));
     toast({ title: "Sermon updated successfully!" });
     setShowSermonDialog(false);
     setEditingSermon(null);
@@ -417,9 +501,7 @@ function AdminDashboard() {
         setNotifications(response.data.notifications);
       }
     } catch (error) {
-      console.log('====================================');
-      console.log(error);
-      console.log('====================================');
+      toast({ title: "Error", variant: "destructive", description: "Failed to fetch notifications." });
     }
   }
 
@@ -433,9 +515,7 @@ function AdminDashboard() {
       }
     } catch (error) {
     toast({ title: "Error", variant: "destructive", description: "Failed to archive notification." });
-    console.log('====================================');
-    console.log(error);
-    console.log('====================================');
+    
     }
 
     
@@ -450,9 +530,7 @@ function AdminDashboard() {
     setNotifications(prev => prev.filter(n => n._id !== id));
    }
    } catch (error:any) {
-    console.log('====================================');
-    console.log(error);
-    console.log('====================================');
+    toast({ title: "Error", variant: "destructive", description: error.message || "Failed to delete notification." });
    }
 
     // setNotifications(prev => prev.filter(n => n.id !== id));
@@ -467,9 +545,7 @@ function AdminDashboard() {
         toast({ title: "All notifications unarchived." });
       }
     } catch (error) {
-      console.log('====================================');
-      console.log(error);
-      console.log('====================================');
+      toast({ title: "Error", variant: "destructive", description: "Failed to unarchive notifications." });
     }
 
      
@@ -498,9 +574,9 @@ function AdminDashboard() {
     setShowEventDialog(true);
   };
 
-  const handleSubmitEvent = (data: EventForm) => {
+  const handleSubmitEvent = async (data: EventForm) => {
     if (editingEvent) {
-      updateEvent(editingEvent.id, data);
+     await updateEvent(editingEvent._id, data);
     } else {
       createEvent(data);
     }
@@ -508,7 +584,7 @@ function AdminDashboard() {
 
   const handleSubmitSermon = (data: SermonForm) => {
     if (editingSermon) {
-      updateSermon(editingSermon.id, data);
+      updateSermon(editingSermon._id, data);
     } else {
       createSermon(data);
     }
@@ -561,6 +637,8 @@ function AdminDashboard() {
 
   useEffect(() => {
     getNotifications();
+    getEvents()
+     getSermons()
   }, []);
 
   return (
@@ -706,7 +784,7 @@ function AdminDashboard() {
                             type="submit"
                             data-testid="button-save-event"
                           >
-                            {editingEvent ? "Update Event" : "Create Event"}
+                            {uploading ? "Creating..." :( editingEvent ? "Update Event" : "Create Event")}
                           </Button>
                         </DialogFooter>
                       </form>
@@ -774,7 +852,7 @@ function AdminDashboard() {
                                     <AlertDialogFooter>
                                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                                       <AlertDialogAction
-                                        onClick={() => deleteEvent(event.id)}
+                                        onClick={() => deleteEvent(event._id)}
                                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                       >
                                         Delete
@@ -884,7 +962,7 @@ function AdminDashboard() {
                             Cancel
                           </Button>
                           <Button type="submit">
-                            {editingSermon ? "Update Sermon" : "Create Sermon"}
+                            {uploading ? "Creating..." :( editingSermon ? "Update Sermon" : "Create Sermon")}
                           </Button>
                         </DialogFooter>
                       </form>
