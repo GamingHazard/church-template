@@ -15,13 +15,15 @@ import { Switch } from "../components/ui/switch";
 import {
   Plus, Edit, Trash2, Calendar, Users, DollarSign, Image, Mail, Eye, Bell, Settings as SettingsIcon, Ban, MessageSquare,PlayCircleIcon
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, set } from "date-fns";
 import { useForm } from "react-hook-form";
 import { useToast } from "../hooks/use-toast";
 import { useAuth } from "../hooks/useAuth";
 import LoginForm from "../components/login-form";
 import axios from "axios";
 import { Configs } from "../lib/utils";
+import { log } from "node:console";
+import { errorMonitor } from "node:events";
 
 // Define types locally since shared/schema is removed
 export type Event = {
@@ -84,12 +86,13 @@ export type Pastor = {
 };
 
 export type Notification = {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   type: 'donation' | 'event' | 'system' | 'user'|'sermon';
   createdAt: string;
   read: boolean;
+  archived?: boolean;
 };
 
 export type User = {
@@ -133,13 +136,13 @@ const mockPastors: Pastor[] = [
     { id: '2', name: 'Pastor Jane Smith', title: 'Youth Pastor', bio: 'Pastor Jane has a gift for connecting with young people and helping them grow in their faith.', imageUrl: 'https://i.pravatar.cc/150?u=pastorjane', email: 'pastor.jane@church.com', isLead: false, order: 2 },
 ];
 
-const mockNotifications: Notification[] = [
-  { id: '1', title: 'New Donation', description: 'A donation of $100.00 was received from Jane Doe for the missions fund.', type: 'donation', createdAt: new Date().toISOString(), read: false },
-  { id: '2', title: 'Event Reminder', description: 'The "Community BBQ" event is scheduled for tomorrow at 12:00 PM.', type: 'event', createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), read: false },
-  { id: '3', title: 'New Subscriber', description: 'A new user (user@example.com) subscribed to the newsletter.', type: 'user', createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), read: true },
-  { id: '4', title: 'System Maintenance', description: 'Scheduled system maintenance will occur tonight at midnight. The admin panel may be temporarily unavailable.', type: 'system', createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), read: true },
-  { id: '5', title: 'New Sermon', description: 'A new sermon has been created successfully!', type: 'sermon', createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), read: true },
-];
+// const mockNotifications: Notification[] = [
+//   { id: '1', title: 'New Donation', description: 'A donation of $100.00 was received from Jane Doe for the missions fund.', type: 'donation', createdAt: new Date().toISOString(), read: false },
+//   { id: '2', title: 'Event Reminder', description: 'The "Community BBQ" event is scheduled for tomorrow at 12:00 PM.', type: 'event', createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), read: false },
+//   { id: '3', title: 'New Subscriber', description: 'A new user (user@example.com) subscribed to the newsletter.', type: 'user', createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), read: true },
+//   { id: '4', title: 'System Maintenance', description: 'Scheduled system maintenance will occur tonight at midnight. The admin panel may be temporarily unavailable.', type: 'system', createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), read: true },
+//   { id: '5', title: 'New Sermon', description: 'A new sermon has been created successfully!', type: 'sermon', createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), read: true },
+// ];
 
 const mockUsers: User[] = [
   { id: '1', name: 'John Doe', email: 'john.doe@example.com', phone: '123-456-7890', subscribedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), remindersCount: 5, avatarUrl: 'https://i.pravatar.cc/150?u=user1' },
@@ -172,7 +175,7 @@ function AdminDashboard() {
   const [donations, setDonations] = useState(mockDonations);
   const [galleryImages, setGalleryImages] = useState(mockGalleryImages);
   const [pastors, setPastors] = useState(mockPastors);
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const [notifications, setNotifications] = useState<Notification []>([]);
   const [users, setUsers] = useState(mockUsers);
 
   const [eventsLoading, setEventsLoading] = useState(true);
@@ -196,6 +199,8 @@ function AdminDashboard() {
       setUsersLoading(false);
     }, 500);
     return () => clearTimeout(timer);
+
+    
   }, []);
 
 
@@ -405,19 +410,70 @@ function AdminDashboard() {
     toast({ title: "Pastor deleted successfully!" });
   };
 
-  const archiveNotification = (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  const getNotifications = async () => {
+    try {
+      const response = await axios.get(`${Configs.url}/api/notifications/get-notifications`);
+      if (response.status === 200) {
+        setNotifications(response.data.notifications);
+      }
+    } catch (error) {
+      console.log('====================================');
+      console.log(error);
+      console.log('====================================');
+    }
+  }
+
+  const archiveNotification = async (id: string) => {
+    try {
+      const res = await axios.put(`${Configs.url}/api/notifications/archive-notification/${id}`);
+      if (res.status === 200) {
+ 
+        setNotifications(res.data.notifications);
     toast({ title: "Notification archived." });
+      }
+    } catch (error) {
+    toast({ title: "Error", variant: "destructive", description: "Failed to archive notification." });
+    console.log('====================================');
+    console.log(error);
+    console.log('====================================');
+    }
+
+    
   };
 
-  const deleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+  const deleteNotification = async (id: string) => {
+
+   try {
+   const res = await axios.delete(`${Configs.url}/api/notifications/delete-notification/${id}`);
+   if (res.status===200) {
     toast({ title: "Notification deleted." });
+    setNotifications(prev => prev.filter(n => n._id !== id));
+   }
+   } catch (error:any) {
+    console.log('====================================');
+    console.log(error);
+    console.log('====================================');
+   }
+
+    // setNotifications(prev => prev.filter(n => n.id !== id));
+    
   };
 
-  const archiveAllNotifications = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    toast({ title: "All notifications archived." });
+  const UnArchiveNotifications = async() => {
+    try {
+      const res = await axios.put(`${Configs.url}/api/notifications/unarchive-notifications`);
+      if (res.status === 200) {
+        setNotifications(res.data.notifications);
+        toast({ title: "All notifications unarchived." });
+      }
+    } catch (error) {
+      console.log('====================================');
+      console.log(error);
+      console.log('====================================');
+    }
+
+     
+    
   };
 
   const clearAllNotifications = () => {
@@ -503,6 +559,10 @@ function AdminDashboard() {
     pastorForm.reset();
   };
 
+  useEffect(() => {
+    getNotifications();
+  }, []);
+
   return (
     <div className="min-h-screen "
       // style={{
@@ -537,7 +597,7 @@ function AdminDashboard() {
               <TabsTrigger value="donations" data-testid="tab-donations">Donations</TabsTrigger>
               <TabsTrigger value="gallery" data-testid="tab-gallery">Gallery</TabsTrigger>
               <TabsTrigger value="pastors" data-testid="tab-pastors">Pastors</TabsTrigger>
-              <TabsTrigger value="notifications" data-testid="tab-notifications">Notifications</TabsTrigger>
+              <TabsTrigger value="notifications" data-testid="tab-notifications">Notifications  {notifications.filter(n=>!n.read && !n.archived).length>0 &&(<span className="ml-2 text-primary ">{notifications.filter(n => !n.read).length}</span>)}</TabsTrigger>
               <TabsTrigger value="settings" data-testid="tab-settings">Settings</TabsTrigger>
             </TabsList>
 
@@ -1404,10 +1464,11 @@ function AdminDashboard() {
                   <CardTitle className="flex items-center">
                     <Bell className="mr-2 h-5 w-5" />
                     Notifications
+                   
                   </CardTitle>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={archiveAllNotifications}>
-                      Archive All
+                  {notifications.filter(n=>n.archived).length > 0 && (<div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={UnArchiveNotifications}>
+                      {`Unarchive All (${notifications.filter(n => n.archived ).length})`}
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -1430,7 +1491,7 @@ function AdminDashboard() {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-                  </div>
+                  </div>)}
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -1444,9 +1505,9 @@ function AdminDashboard() {
                           </div>
                         </div>
                       ))
-                    ) : notifications.length > 0 ? (
-                      notifications.map(notification => (
-                        <div key={notification.id} className={`flex items-start gap-4 p-4 rounded-lg border ${notification.read ? 'bg-muted/50' : 'bg-background'}`}>
+                    ) : notifications.filter(n=>!n.read && !n.archived).length > 0 ? (
+                      notifications.filter(n=>!n.read && !n.archived).map(notification => (
+                        <div key={notification._id} className={`flex items-start gap-4 p-4 rounded-lg border ${notification.read ? 'bg-muted/50' : 'bg-background'}`}>
                           <div className="flex-shrink-0 mt-1">
                             {notification.type === 'donation' && <DollarSign className="h-5 w-5 text-green-500" />}
                             {notification.type === 'event' && <Calendar className="h-5 w-5 text-blue-500" />}
@@ -1454,13 +1515,14 @@ function AdminDashboard() {
                             {notification.type === 'user' && <Users className="h-5 w-5 text-purple-500" />}
                             {notification.type === 'sermon' && <PlayCircleIcon className="h-5 w-5 text-amber-500" />}
                           </div>
+                          
                           <div className="flex-1">
                             <div className="flex justify-between items-start">
                               <div>
                                 <p className="font-semibold text-black">{notification.title}</p>
                                 <p className="text-sm text-muted-foreground">{notification.description}</p>
                               </div>
-                              {notification.read === false && (
+                              {!notification.read  && (
                                 <Badge variant="solid" className="text-xs bg-purple-100 text-purple-600">New</Badge>
                               )}
                             </div>
@@ -1469,8 +1531,9 @@ function AdminDashboard() {
                                 {format(new Date(notification.createdAt), "MMM d, yyyy 'at' h:mm a")}
                               </p>
                               <div className="flex gap-2">
-                                <Button variant="outline" size="sm" onClick={() => archiveNotification(notification.id)} disabled={notification.read}>
-                                  Archive
+                                <Button variant="outline" size="sm" onClick={() => archiveNotification(notification._id)} disabled={notification.read}>
+                                  {notification.archived ? 'Archived' : 'Archive'}
+                                  
                                 </Button>
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
@@ -1487,7 +1550,7 @@ function AdminDashboard() {
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => deleteNotification(notification.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                      <AlertDialogAction onClick={() => deleteNotification(notification._id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                                         Delete
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
