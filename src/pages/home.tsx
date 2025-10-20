@@ -10,31 +10,13 @@ import { Skeleton } from "../components/ui/skeleton";
 import { useEffect, useState } from "react";
 import { mockEvents } from "../lib/Data";
 import { mockSermons } from "../lib/Data";
+import { useAppData } from "../hooks/use-AppData";
 
 
 
 
 
-// const mockSermons = [
-//   {
-//     id: 1,
-//     title: "The Power of Forgiveness",
-//     preacher: "Pastor David Johnson",
-//     series: "Core Values",
-//     date: "2025-09-07T10:30:00.000Z",
-//     videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-//     audioUrl: "https://example.com/audio1.mp3",
-//   },
-//   {
-//     id: 2,
-//     title: "Living a Life of Purpose",
-//     preacher: "Pastor David Johnson",
-//     series: "Core Values",
-//     date: "2025-08-31T10:30:00.000Z",
-//     videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-//     audioUrl: "https://example.com/audio2.mp3",
-//   },
-// ];
+ 
 
 const mockPastor = {
   id: 1,
@@ -45,8 +27,10 @@ const mockPastor = {
 };
 
 export default function Home() {
-  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
-  const [recentSermons, setRecentSermons] = useState<any[]>([]);
+  const { events, sermons, loading, error, refresh } = useAppData();
+
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>(events||[]);
+  const [recentSermons, setRecentSermons] = useState<any[]>(sermons||[]);
   const [leadPastor, setLeadPastor] = useState<any>(null);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [sermonsLoading, setSermonsLoading] = useState(true);
@@ -157,9 +141,9 @@ export default function Home() {
                   </CardContent>
                 </Card>
               ))
-            ) : upcomingEvents && upcomingEvents.length > 0 ? (
-              upcomingEvents.slice(0, 3).map((event) => (
-                <EventCard key={event.id} event={event} />
+            ) : events && events.length > 0 ? (
+              events.slice(0, 3).map((event) => (
+                <EventCard key={event._id} event={event} />
               ))
             ) : (
               <div className="col-span-full text-center py-12">
@@ -170,7 +154,7 @@ export default function Home() {
             )}
           </div>
 
-          {upcomingEvents && upcomingEvents.length > 3 && (
+          {events && events.length > 3 && (
             <div className="text-center mt-8">
               <Link href="/events">
                 <Button 
@@ -307,9 +291,9 @@ export default function Home() {
                     </div>
                   </div>
                 ))
-              ) : recentSermons && recentSermons.length > 0 ? (
-                recentSermons.slice(0, 3).map((sermon) => (
-                  <div key={sermon.id} className="bg-card rounded-lg p-4 shadow hover:shadow-md transition-shadow duration-300" data-testid={`sermon-item-${sermon.id}`}>
+              ) : sermons && sermons.length > 0 ? (
+                sermons.slice(0, 3).map((sermon) => (
+                  <div key={sermon._id} className="bg-card rounded-lg p-4 shadow hover:shadow-md transition-shadow duration-300" data-testid={`sermon-item-${sermon._id}`}>
                     <div className="flex items-start space-x-4">
                       <div className="flex-shrink-0">
                         <Link href="/sermons" className="w-16 h-16 bg-primary rounded-lg object-cover flex items-center justify-center">
@@ -318,13 +302,13 @@ export default function Home() {
                         </Link>
                       </div>
                       <div className="flex-grow">
-                        <h4 className="font-semibold text-card-foreground mb-1" data-testid={`sermon-title-${sermon.id}`}>
+                        <h4 className="font-semibold text-card-foreground mb-1" data-testid={`sermon-title-${sermon._id}`}>
                           {sermon.title}
                         </h4>
-                        <p className="text-muted-foreground text-sm mb-2" data-testid={`sermon-meta-${sermon.id}`}>
+                        <p className="text-muted-foreground text-sm mb-2" data-testid={`sermon-meta-${sermon._id}`}>
                           {sermon.speaker} • {format(new Date(sermon.date), "MMM d, yyyy")}
                         </p>
-                        <p className="text-muted-foreground text-sm" data-testid={`sermon-description-${sermon.id}`}>
+                        <p className="text-muted-foreground text-sm" data-testid={`sermon-description-${sermon._id}`}>
                           {sermon.description}
                         </p>
                       </div>

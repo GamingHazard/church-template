@@ -7,22 +7,24 @@ import { Play, Search, Calendar, User } from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "../components/ui/skeleton";
 import { mockSermons } from "../lib/Data";
+import { useAppData } from "../hooks/use-AppData";
  
 
 // Mock Data
 
 export default function Sermons() {
+  const { sermons } = useAppData();
   const [searchQuery, setSearchQuery] = useState("");
-  const [allSermons, setAllSermons] = useState(mockSermons || []);
+  const [allSermons, setAllSermons] = useState(sermons || []);
   const [sermonsLoading, setSermonsLoading] = useState(true);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // window.scrollTo(0, 0);
 
     
     if (sermonsLoading) {
       const timer = setTimeout(() => {
-        setAllSermons(mockSermons);
+        setAllSermons(sermons);
         setSermonsLoading(false);
       }, 500);
       return () => clearTimeout(timer);
@@ -152,50 +154,50 @@ export default function Sermons() {
               ))
             ) : displaySermons && displaySermons.length > 0 ? (
               displaySermons.map((sermon) => (
-                <Card key={sermon.id} className="overflow-hidden hover:shadow-xl transition-shadow duration-300" data-testid={`sermon-card-${sermon.id}`}>
+                <Card key={sermon._id} className="overflow-hidden hover:shadow-xl transition-shadow duration-300" data-testid={`sermon-card-${sermon._id}`}>
                   <div className="relative">
                     <img
                       src={sermon.thumbnailUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=225"}
                       alt={sermon.title}
                       className="w-full aspect-video object-cover"
-                      data-testid={`sermon-thumbnail-${sermon.id}`}
+                      data-testid={`sermon-thumbnail-${sermon._id}`}
                     />
                     <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
-                      <Button size="lg" className="rounded-full" data-testid={`button-play-sermon-${sermon.id}`}>
+                      <Button size="lg" className="rounded-full" data-testid={`button-play-sermon-${sermon._id}`}>
                         <Play className="h-6 w-6" />
                       </Button>
                     </div>
                     {sermon.series && (
-                      <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground" data-testid={`sermon-series-${sermon.id}`}>
+                      <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground" data-testid={`sermon-series-${sermon._id}`}>
                         {sermon.series}
                       </Badge>
                     )}
                   </div>
                   
                   <CardContent className="p-6">
-                    <h3 className="text-xl font-semibold text-card-foreground mb-2 line-clamp-2" data-testid={`sermon-title-${sermon.id}`}>
+                    <h3 className="text-xl font-semibold text-card-foreground mb-2 line-clamp-2" data-testid={`sermon-title-${sermon._id}`}>
                       {sermon.title}
                     </h3>
                     
                     <div className="flex items-center text-muted-foreground text-sm mb-2">
                       <User className="mr-2 h-4 w-4" />
-                      <span data-testid={`sermon-speaker-${sermon.id}`}>{sermon.speaker}</span>
+                      <span data-testid={`sermon-speaker-${sermon._id}`}>{sermon.speaker}</span>
                     </div>
                     
                     <div className="flex items-center text-muted-foreground text-sm mb-4">
                       <Calendar className="mr-2 h-4 w-4" />
-                      <span data-testid={`sermon-date-${sermon.id}`}>
+                      <span data-testid={`sermon-date-${sermon._id}`}>
                         {format(new Date(sermon.date), "EEEE, MMMM d, yyyy")}
                       </span>
                     </div>
                     
-                    <p className="text-muted-foreground text-sm mb-4 line-clamp-3" data-testid={`sermon-description-${sermon.id}`}>
+                    <p className="text-muted-foreground text-sm mb-4 line-clamp-3" data-testid={`sermon-description-${sermon._id}`}>
                       {sermon.description}
                     </p>
                     
                     {sermon.scripture && (
                       <div className="mb-4">
-                        <Badge variant="outline" data-testid={`sermon-scripture-${sermon.id}`}>
+                        <Badge variant="outline" data-testid={`sermon-scripture-${sermon._id}`}>
                           {sermon.scripture}
                         </Badge>
                       </div>
@@ -206,7 +208,7 @@ export default function Sermons() {
                         <Button 
                           size="sm" 
                           className="flex-1"
-                          data-testid={`button-watch-video-${sermon.id}`}
+                          data-testid={`button-watch-video-${sermon._id}`}
                         >
                           <Play className="mr-2 h-4 w-4" />
                           Watch
@@ -217,7 +219,7 @@ export default function Sermons() {
                           size="sm" 
                           variant="outline" 
                           className="flex-1"
-                          data-testid={`button-listen-audio-${sermon.id}`}
+                          data-testid={`button-listen-audio-${sermon._id}`}
                         >
                           Listen
                         </Button>

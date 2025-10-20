@@ -97,6 +97,7 @@ export type Notification = {
 };
 
 export type User = {
+  reminder: unknown;
   id: string;
   name: string;
   email: string;
@@ -106,16 +107,7 @@ export type User = {
   avatarUrl: string;
 };
 
-// Mock Data
-const mockEvents: Event[] = [
-  { id: '1', title: 'Community BBQ', description: 'Join us for a fun-filled day of food and fellowship.', date: new Date().toISOString(), time: '12:00 PM', location: 'Church Lawn', category: 'community', speaker: 'Pastor John' },
-  { id: '2', title: 'Youth Night', description: 'Games, worship, and a powerful message for our youth.', date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), time: '7:00 PM', location: 'Youth Hall', category: 'youth' },
-];
 
-const mockSermons: Sermon[] = [
-    { id: '1', title: 'The Power of Forgiveness', speaker: 'Pastor John', date: new Date().toISOString(), description: 'A sermon on the importance of forgiveness.', videoUrl: 'https://youtube.com/watch?v=123', audioUrl: 'https://spotify.com/track/123', thumbnailUrl: 'https://via.placeholder.com/150', scripture: 'Matthew 6:14-15', series: 'Foundations of Faith' },
-    { id: '2', title: 'Living a Life of Purpose', speaker: 'Pastor Jane', date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), description: 'Discovering your God-given purpose.', videoUrl: 'https://youtube.com/watch?v=456', audioUrl: 'https://spotify.com/track/456', thumbnailUrl: 'https://via.placeholder.com/150', scripture: 'Jeremiah 29:11', series: 'Life Application' },
-];
 
 const mockNewsletters: Newsletter[] = [
   { id: '1', email: 'test1@example.com', subscribedAt: new Date().toISOString(), active: true },
@@ -137,19 +129,9 @@ const mockPastors: Pastor[] = [
     { id: '2', name: 'Pastor Jane Smith', title: 'Youth Pastor', bio: 'Pastor Jane has a gift for connecting with young people and helping them grow in their faith.', imageUrl: 'https://i.pravatar.cc/150?u=pastorjane', email: 'pastor.jane@church.com', isLead: false, order: 2 },
 ];
 
-// const mockNotifications: Notification[] = [
-//   { id: '1', title: 'New Donation', description: 'A donation of $100.00 was received from Jane Doe for the missions fund.', type: 'donation', createdAt: new Date().toISOString(), read: false },
-//   { id: '2', title: 'Event Reminder', description: 'The "Community BBQ" event is scheduled for tomorrow at 12:00 PM.', type: 'event', createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), read: false },
-//   { id: '3', title: 'New Subscriber', description: 'A new user (user@example.com) subscribed to the newsletter.', type: 'user', createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), read: true },
-//   { id: '4', title: 'System Maintenance', description: 'Scheduled system maintenance will occur tonight at midnight. The admin panel may be temporarily unavailable.', type: 'system', createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), read: true },
-//   { id: '5', title: 'New Sermon', description: 'A new sermon has been created successfully!', type: 'sermon', createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), read: true },
-// ];
+ 
 
-const mockUsers: User[] = [
-  { id: '1', name: 'John Doe', email: 'john.doe@example.com', phone: '123-456-7890', subscribedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), remindersCount: 5, avatarUrl: 'https://i.pravatar.cc/150?u=user1' },
-  { id: '2', name: 'Jane Smith', email: 'jane.smith@example.com', phone: '098-765-4321', subscribedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), remindersCount: 2, avatarUrl: 'https://i.pravatar.cc/150?u=user2' },
-  { id: '3', name: 'Sam Wilson', email: 'sam.wilson@example.com', phone: '555-555-5555', subscribedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), remindersCount: 0, avatarUrl: 'https://i.pravatar.cc/150?u=user3' },
-];
+
 
 
 type EventForm = Omit<Event, 'id'>;
@@ -170,14 +152,14 @@ function AdminDashboard() {
   const { toast } = useToast();
 
   // State management for mock data
-  const [events, setEvents] = useState(mockEvents);
-  const [sermons, setSermons] = useState(mockSermons);
+  const [events, setEvents] = useState([]);
+  const [sermons, setSermons] = useState([]);
   const [newsletters, setNewsletters] = useState(mockNewsletters);
   const [donations, setDonations] = useState(mockDonations);
   const [galleryImages, setGalleryImages] = useState(mockGalleryImages);
   const [pastors, setPastors] = useState(mockPastors);
   const [notifications, setNotifications] = useState<Notification []>([]);
-  const [users, setUsers] = useState(mockUsers);
+  const [users, setUsers] = useState([]);
 
   const [eventsLoading, setEventsLoading] = useState(true);
   const [sermonsLoading, setSermonsLoading] = useState(true);
@@ -317,10 +299,32 @@ function AdminDashboard() {
 
   // Mutations replaced with state updates
   const createEvent = async (data: EventForm) => {
+    
   try {
   
 
-    const { url, public_id } = await uploadFileToServer(file);
+    if(file === null){
+      setLoading(true);
+    const eventData = { ...data };
+  
+    const response =  await axios.post(`${Configs.url}/api/events/new-event`, eventData, {
+  headers: {
+    "Content-Type": "application/x-www-form-urlencoded"
+  },
+});
+    if (response.status === 201) {
+      setEvents(response.data.events);
+      
+      toast({ title: "Event created successfully!" });
+      // setShowEventDialog(false); 
+      eventForm.reset();
+
+      
+    }
+
+    }else{
+      setLoading(true);
+      const { url, public_id } = await uploadFileToServer(file);
     const eventData = { ...data,  url,public_id };
   
     const response =  await axios.post(`${Configs.url}/api/events/new-event`, eventData, {
@@ -329,15 +333,16 @@ function AdminDashboard() {
   },
 });
     if (response.status === 201) {
-      const newEvent: Event = { ...data, _id: response.data.id };
-      setEvents(prev => [...prev, newEvent]);
+     setEvents(response.data.events);
       toast({ title: "Event created successfully!" });
       // setShowEventDialog(false); 
-      // eventForm.reset();
+      eventForm.reset();
 
-      
     }
 
+    }
+
+    
    
   } catch (err:any) {
     if (err.response && err.response.data) {
@@ -349,7 +354,7 @@ function AdminDashboard() {
 
     console.error("Network error:", err);
   }
-  }
+  }finally{setLoading(false);}
 
 
    
@@ -379,12 +384,13 @@ function AdminDashboard() {
       const res = await axios.delete(`${Configs.url}/api/events/delete-event/${id}`);
       if (res.status === 200) {
         setEvents(res.data.events);
+        setEvents(prev => prev.filter(e => e._id !== id));
+        toast({ title: "Event deleted successfully!" });
       }
     } catch (error) {
       toast({ title: "Error", variant: "destructive" , description: `Failed to delete event: ${error}`});
     }
-    setEvents(prev => prev.filter(e => e._id !== id));
-    toast({ title: "Event deleted successfully!" });
+    
   };
 
 
@@ -393,9 +399,11 @@ function AdminDashboard() {
   const createSermon = async (data: SermonForm) => {
     setUploading(true);
    try {
-     const { url, public_id } = await uploadFileToServer(file);
+     if(file!==null){
+      const { url, public_id } = await uploadFileToServer(file)
     const eventData = { ...data,  url,public_id };
     
+    console.log('Sermon Data:', eventData);
     const response =  await axios.post(`${Configs.url}/api/sermons/new-sermon`, eventData, {
   headers: {
     "Content-Type": "application/x-www-form-urlencoded"
@@ -410,7 +418,27 @@ function AdminDashboard() {
     setShowSermonDialog(false);
     sermonForm.reset();
      
+    }}else{
+      const eventData = { ...data };
+    
+    console.log('Sermon Data:', eventData);
+    const response =  await axios.post(`${Configs.url}/api/sermons/new-sermon`, eventData, {
+  headers: {
+    "Content-Type": "application/x-www-form-urlencoded"
+  },
+});
+    if (response.status === 201) {
+    setSermons(response.data.sermons);
+
+        
+    toast({ title: "Sermon created successfully!" });
+    // setShowSermonDialog(false);
+    sermonForm.reset();
+     
     }
+    }
+     
+    
 
    
   } catch (err:any) {
@@ -439,6 +467,7 @@ function AdminDashboard() {
 }
 // Update Sermon
   const updateSermon = async (id: string, data: Partial<SermonForm>) => {
+    setLoading(true);
   try {
     const res = await axios.put(`${Configs.url}/api/sermons/update-sermon/${id}`, data);
     if (res.status === 200) {
@@ -447,22 +476,34 @@ function AdminDashboard() {
       setShowSermonDialog(false);
       setEditingSermon(null);
       sermonForm.reset();
+      
+      setNotifications(res.data.notifications);
+
     }
   } catch (error) {
     toast({ title: "Error", variant: "destructive" , description: `Failed to update sermon: ${error}`});
-  }
+  }finally{setLoading(false);}
+  
 
 
-    setSermons(prev => prev.map(s => s._id === id ? { ...s, ...data } : s));
-    toast({ title: "Sermon updated successfully!" });
-    setShowSermonDialog(false);
-    setEditingSermon(null);
-    sermonForm.reset();
+     
   };
 
-  const deleteSermon = (id: string) => {
-    setSermons(prev => prev.filter(s => s.id !== id));
-    toast({ title: "Sermon deleted successfully!" });
+  // Delete Sermon
+  const deleteSermon = async (id: string) => {
+
+    try {
+      const res = await axios.delete(`${Configs.url}/api/sermons/delete-sermon/${id}`);
+      if (res.status === 200) {
+        setEvents(res.data.events);
+        setEvents(prev => prev.filter(e => e._id !== id));
+        toast({ title: "Sermon deleted successfully!" });
+      }
+    } catch (error) {
+      toast({ title: "Error", variant: "destructive" , description: `Failed to delete event: ${error}`});
+    }
+
+     
   };
 
   const createGalleryImage = (data: GalleryForm) => {
@@ -557,6 +598,21 @@ function AdminDashboard() {
     toast({ title: "All notifications cleared." });
   };
 
+// Get Users
+  const getSubscribers = async () => {
+    try {
+      const response = await axios.get(`${Configs.url}/api/news-letter/subscribers`);
+      if (response.status === 200) {
+        // console.log('====================================');
+        // console.log(response.data.subscribers);
+        // console.log('====================================');
+        setUsers(response.data.subscribers);
+      }
+    } catch (error) {
+      toast({ title: "Error", variant: "destructive", description: "Failed to fetch users." });
+    }
+  }
+
 
   // Event handlers
   const handleEditEvent = (event: Event) => {
@@ -639,17 +695,19 @@ function AdminDashboard() {
     getNotifications();
     getEvents()
      getSermons()
+     
+      const interval = setInterval(() => {
+      
+       getSubscribers()
+    }, 5000);  
+
+     
+    return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="min-h-screen "
-      // style={{
-        
-      //   backgroundImage: "url('https://png.pngtree.com/thumb_back/fh260/background/20250205/pngtree-soft-pastel-floral-design-light-blue-background-image_16896113.jpg')",
-      //   backgroundSize: "cover",
-      //   backgroundPosition: "center",
-      //   backgroundRepeat: "no-repeat",
-      // }}
+   
     >
       {/* Header */}
       <section className="py-12 bg-primary text-primary-foreground">
@@ -784,7 +842,7 @@ function AdminDashboard() {
                             type="submit"
                             data-testid="button-save-event"
                           >
-                            {uploading ? "Creating..." :( editingEvent ? "Update Event" : "Create Event")}
+                            {uploading || Loading ? "Creating..." :( editingEvent ? Loading ? "Updating Event...":"Update Event" : "Create Event")}
                           </Button>
                         </DialogFooter>
                       </form>
@@ -962,7 +1020,7 @@ function AdminDashboard() {
                             Cancel
                           </Button>
                           <Button type="submit">
-                            {uploading ? "Creating..." :( editingSermon ? "Update Sermon" : "Create Sermon")}
+                            {uploading || Loading ? "Creating..." :( editingSermon ? Loading?"Updating Sermon...":"Update Sermon" : "Create Sermon")}
                           </Button>
                         </DialogFooter>
                       </form>
@@ -1015,7 +1073,7 @@ function AdminDashboard() {
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => deleteSermon(sermon.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                      <AlertDialogAction onClick={() => deleteSermon(sermon._id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                                         Delete
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
@@ -1053,11 +1111,17 @@ function AdminDashboard() {
                       <Table>
                         <TableHeader>
                           <TableRow>
+
+                            
                             <TableHead>User</TableHead>
-                            <TableHead>Contact</TableHead>
+                            {/* <TableHead>Contact</TableHead> */}
                             <TableHead>Subscribed</TableHead>
-                            <TableHead>Reminders</TableHead>
+                            
                             <TableHead>Actions</TableHead>
+
+                            {users.filter(u=>u.reminder).length>0 &&(
+                             <TableHead>Reminders</TableHead>
+                            )}
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1071,20 +1135,25 @@ function AdminDashboard() {
                                 <TableCell><Skeleton className="h-8 w-24" /></TableCell>
                               </TableRow>
                             ))
-                          ) : users.map(user => (
+                          ) : users.map((user,index) => (
                             <TableRow key={user.id}>
                               <TableCell>
                                 <div className="flex items-center gap-3">
-                                  <img src={user.avatarUrl} alt={user.name} className="h-10 w-10 rounded-full object-cover" />
+                                  <img src={user.avatarUrl || "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740&q=80"} alt={user.name} className="h-10 w-10 rounded-full object-cover" />
                                   <div>
-                                    <p className="font-medium ">{user.name}</p>
-                                    <p className="text-sm text-muted-foreground text-gray-400">{user.email.split("example.com")[0]}</p>
+                                    <p className="font-medium ">{user.name||`Sheep: ${index}`}</p>
+                                    <p className="text-sm text-muted-foreground text-gray-400">{user.email}</p>
                                   </div>
                                 </div>
                               </TableCell>
-                              <TableCell className="text-gray-400">{user.phone}</TableCell>
+                              {/* <TableCell className="text-gray-400">{user.phone}</TableCell> */}
+                              {user.subscribedAt &&(
                               <TableCell className="text-gray-400  p-1">{format(new Date(user.subscribedAt), "MMM d, yyyy")}</TableCell>
-                              <TableCell className="text-center text-gray-400  ">{user.remindersCount}</TableCell>
+                              )}
+                              {user.remindersCount && (
+                                <TableCell className="text-center text-gray-400  ">{user.remindersCount||user?.reminder}</TableCell>
+                              )}
+                              
                               <TableCell>
                                 <div className="flex gap-1">
                                   <Button variant="outline" size="icon" onClick={() => toast({ title: `Emailing ${user.name}` })}>

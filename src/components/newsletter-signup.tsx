@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 import { Send } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import Axios from "axios"
-import { Configs } from "../lib/Configs";
+import { useToast } from "../hooks/use-toast";
+import Axios from "axios";
+import { Configs } from "../lib/utils";
 
 export default function NewsletterSignup() {
   const [email, setEmail] = useState("");
@@ -25,31 +25,40 @@ export default function NewsletterSignup() {
     setIsSubscribing(true);
 
     try {
-      const Res = await Axios.post(`${Configs.url}/news-letter/register`, { email })
-      if (Res.status===201) {
+      const Res = await Axios.post(
+        `${Configs.url}/api/news-letter/register`,
+        { email }, // body
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        }
+      );
+      if (Res.status === 201) {
         toast({
-        title: "Successfully Subscribed!",
-          description: "Please Check your Emails for a verification link to verify your email",
+          title: "Successfully Subscribed!",
+          description:
+            "Please Check your Emails for a verification link to verify your email",
         });
 
-         setEmail("");
-     setIsSubscribing(false)
+        setEmail("");
+        setIsSubscribing(false);
       }
     } catch (error: any) {
-      
-       toast({
+      toast({
         title: "Subscription Error!",
-        description: `Error,${error.response.data.message|| "Failed to register Email, try again!"}`,
+        description: `Error,${
+          error.response.data.message || "Failed to register Email, try again!"
+        }`,
         variant: "destructive",
       });
-    
-    }finally{setIsSubscribing(false)}
-      
-    
-    
-     
-  
-    
+
+      console.log("====================================");
+      console.log(error);
+      console.log("====================================");
+    } finally {
+      setIsSubscribing(false);
+    }
   };
 
   return (
@@ -58,8 +67,12 @@ export default function NewsletterSignup() {
         <h2 className="text-4xl font-bold mb-4" data-testid="newsletter-title">
           Stay Connected
         </h2>
-        <p className="text-xl mb-8 opacity-90" data-testid="newsletter-description">
-          Get weekly encouragement, event updates, and prayer requests delivered to your inbox.
+        <p
+          className="text-xl mb-8 opacity-90"
+          data-testid="newsletter-description"
+        >
+          Get weekly encouragement, event updates, and prayer requests delivered
+          to your inbox.
         </p>
 
         <form onSubmit={handleSubmit} className="max-w-md mx-auto">

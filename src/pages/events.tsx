@@ -8,31 +8,34 @@ import { format, isPast } from "date-fns";
 import { Skeleton } from "../components/ui/skeleton";
 import EventCard from "../components/event-card";
 import { mockEvents } from "../lib/Data";
+import { useAppData } from "../hooks/use-AppData";
+
 
 interface Event {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   date: string;
   time: string;
   location: string;
   speaker?: string;
-  imageUrl?: string;
+  thumbnailUrl?: string;
   category: string;
 }
 
  
 
 export default function Events() {
+	const {events, } = useAppData();
 	const [activeTab, setActiveTab] = useState("upcoming");
-	const [allEvents, setAllEvents] = useState(mockEvents || []);
+	const [allEvents, setAllEvents] = useState(events || []);
 	const [eventsLoading, setEventsLoading] = useState(true);
 
 	useEffect(() => {
 		window.scrollTo(0, 0);
 		// Simulate fetching data
 		const timer = setTimeout(() => {
-			setAllEvents(mockEvents);
+			setAllEvents(events);
 			setEventsLoading(false);
 		}, 1000);
 		return () => clearTimeout(timer);
@@ -79,7 +82,7 @@ export default function Events() {
 					</Card>
 				))
 			) : events && events.length > 0 ? (
-				events.map((event) => <EventCard key={event.id} event={event} />)
+				events.map((event) => <EventCard key={event._id} event={event} />)
 			) : (
 				<div className="col-span-full text-center py-12">
 					<p
@@ -144,7 +147,7 @@ export default function Events() {
 									<img
 										src={
 											upcomingEvents[0].imageUrl ||
-											"https://images.unsplash.com/photo-1577303935007-0d306ee638cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400"
+											"https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/1665px-No-Image-Placeholder.svg.png"
 										}
 										alt={upcomingEvents[0].title}
 										className="w-full h-64 md:h-full object-cover"

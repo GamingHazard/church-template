@@ -11,14 +11,14 @@ import { useToast } from "../hooks/use-toast";
 
 // Define Event type locally
 export type Event = {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   date: string;
   time: string;
   location: string;
   speaker?: string;
-  imageUrl?: string;
+  thumbnailUrl?: string;
   category: string;
 };
 
@@ -63,44 +63,44 @@ export default function EventCard({ event }: EventCardProps) {
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-xl transition-shadow duration-300" data-testid={`event-card-${event.id}`}>
-      {event.imageUrl && (
+    <Card className="overflow-hidden hover:shadow-xl transition-shadow duration-300" data-testid={`event-card-${event._id}`}>
+      {event.thumbnailUrl && (
         <img
-          src={event.imageUrl}
+          src={event.thumbnailUrl || "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/1665px-No-Image-Placeholder.svg.png"}
           alt={event.title}
           className="w-full h-48 object-cover"
-          data-testid={`event-image-${event.id}`}
+          data-testid={`event-image-${event._id}`}
         />
       )}
       <CardContent className="p-6">
         <div className="flex items-center text-primary mb-2">
           <Calendar className="mr-2 h-4 w-4" />
-          <span className="text-sm font-medium" data-testid={`event-date-${event.id}`}>
+          <span className="text-sm font-medium" data-testid={`event-date-${event._id}`}>
             {format(new Date(event.date), "EEEE, MMMM d")}
           </span>
         </div>
         
-        <h3 className="text-xl font-semibold text-card-foreground mb-2" data-testid={`event-title-${event.id}`}>
+        <h3 className="text-xl font-semibold text-card-foreground mb-2" data-testid={`event-title-${event._id}`}>
           {event.title}
         </h3>
         
-        <p className="text-muted-foreground mb-4" data-testid={`event-description-${event.id}`}>
+        <p className="text-gray-400 mb-4" data-testid={`event-description-${event._id}`}>
           {event.description}
         </p>
 
         <div className="space-y-2 mb-4">
           <div className="flex items-center text-muted-foreground text-gray-400 text-sm">
             <Clock className="mr-2 h-4 w-4" />
-            <span data-testid={`event-time-${event.id}`}>{event.time}</span>
+            <span data-testid={`event-time-${event._id}`}>{event.time}</span>
           </div>
           <div className="flex items-center text-muted-foreground text-sm">
             <MapPin className="mr-2 h-4 w-4" />
-            <span data-testid={`event-location-${event.id}`}>{event.location}</span>
+            <span data-testid={`event-location-${event._id}`}>{event.location}</span>
           </div>
           {event.speaker && (
             <div className="flex items-center text-muted-foreground text-sm">
               <User className="mr-2 h-4 w-4" />
-              <span data-testid={`event-speaker-${event.id}`}>{event.speaker}</span>
+              <span data-testid={`event-speaker-${event._id}`}>{event.speaker}</span>
             </div>
           )}
         </div>
@@ -110,7 +110,7 @@ export default function EventCard({ event }: EventCardProps) {
             <DialogTrigger asChild>
               <Button 
                 className="w-full bg-secondary text-secondary-foreground hover:opacity-90"
-                data-testid={`button-set-reminder-${event.id}`}
+                data-testid={`button-set-reminder-${event._id}`}
               >
                 Set Reminder
               </Button>
@@ -175,7 +175,7 @@ export default function EventCard({ event }: EventCardProps) {
           <Button 
             className="w-full bg-muted text-muted-foreground cursor-not-allowed"
             disabled
-            data-testid={`button-past-event-${event.id}`}
+            data-testid={`button-past-event-${event._id}`}
           >
             Past Event
           </Button>
