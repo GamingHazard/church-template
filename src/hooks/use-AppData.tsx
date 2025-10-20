@@ -29,7 +29,7 @@ interface Sermon {
 }
 
 interface AppData {
-  Events: Event[];
+  events: Event[];
   Sermons: Sermon[];
   loading: boolean;
   error: string | null;
@@ -38,7 +38,7 @@ interface AppData {
 
  
 export const useAppData = (): AppData => {
-  const [Events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [Sermons, setSermons] = useState<Sermon[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,5 +73,5 @@ setLoading(true);
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  return { Events, Sermons, loading, error, refresh: fetchData };
+  return { events, Sermons, loading, error, refresh: fetchData };
 };

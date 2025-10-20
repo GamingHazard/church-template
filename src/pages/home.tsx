@@ -27,9 +27,9 @@ const mockPastor = {
 };
 
 export default function Home() {
-  const { Events, Sermons, loading, error, refresh } = useAppData();
+  const { events, Sermons, loading, error, refresh } = useAppData();
 
-  const [upcomingEvents, setUpcomingEvents] = useState<any[]>(Events );
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>(events );
   const [recentSermons, setRecentSermons] = useState<any[]>(Sermons );
   const [leadPastor, setLeadPastor] = useState<any>(null);
   const [eventsLoading, setEventsLoading] = useState(true);
@@ -141,8 +141,8 @@ export default function Home() {
                   </CardContent>
                 </Card>
               ))
-            ) : Events && Events.length > 0 ? (
-              Events.slice(0, 3).map((event) => (
+            ) : events && events.length > 0 ? (
+              events.slice(0, 3).map((event) => (
                 <EventCard key={event._id} event={event} />
               ))
             ) : (
@@ -154,7 +154,7 @@ export default function Home() {
             )}
           </div>
 
-          {Events && Events.length > 3 && (
+          {events && events.length > 3 && (
             <div className="text-center mt-8">
               <Link href="/events">
                 <Button 
