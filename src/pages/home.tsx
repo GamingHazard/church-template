@@ -215,14 +215,14 @@ export default function Home() {
                     </p>
                   </div>
 
-                  <Link href="/about">
+                  {/* <Link href="/about">
                     <Button 
                       className="bg-primary text-primary-foreground hover:opacity-90"
                       data-testid="button-read-full-message"
                     >
                       Read Full Message
                     </Button>
-                  </Link>
+                  </Link> */}
                 </>
               )}
             </div>
