@@ -7,7 +7,6 @@ import { Calendar, MapPin, Clock, User, Users } from "lucide-react";
 import { format, isPast } from "date-fns";
 import { Skeleton } from "../components/ui/skeleton";
 import EventCard from "../components/event-card";
-import { mockEvents } from "../lib/Data";
 import { useAppData } from "../hooks/use-AppData";
 
 
@@ -26,19 +25,24 @@ interface Event {
  
 
 export default function Events() {
-	const {events, } = useAppData();
+	const {Events,loading } = useAppData();
 	const [activeTab, setActiveTab] = useState("upcoming");
-	const [allEvents, setAllEvents] = useState(events || []);
+	const [allEvents, setAllEvents] = useState(Events);
 	const [eventsLoading, setEventsLoading] = useState(true);
 
 	useEffect(() => {
 		window.scrollTo(0, 0);
 		// Simulate fetching data
-		const timer = setTimeout(() => {
-			setAllEvents(events);
+
+		if (eventsLoading && !loading) {
+			const timer = setTimeout(() => {
+			setAllEvents(Events);
 			setEventsLoading(false);
 		}, 1000);
 		return () => clearTimeout(timer);
+		}
+		
+		
 	}, []);
 
 	const upcomingEvents = allEvents.filter(
@@ -60,10 +64,10 @@ export default function Events() {
 	};
 
 	const EventsGrid = ({
-		events,
+		Events,
 		loading,
 	}: {
-		events?: Event[];
+		Events?: Event[];
 		loading: boolean;
 	}) => (
 		<div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -81,8 +85,8 @@ export default function Events() {
 						</CardContent>
 					</Card>
 				))
-			) : events && events.length > 0 ? (
-				events.map((event) => <EventCard key={event._id} event={event} />)
+			) : Events && Events.length > 0 ? (
+				Events.map((event) => <EventCard key={event._id} event={event} />)
 			) : (
 				<div className="col-span-full text-center py-12">
 					<p
@@ -146,7 +150,7 @@ export default function Events() {
 								<div>
 									<img
 										src={
-											upcomingEvents[0].imageUrl ||
+											upcomingEvents[0].thumbnailUrl ||
 											"https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/1665px-No-Image-Placeholder.svg.png"
 										}
 										alt={upcomingEvents[0].title}

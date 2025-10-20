@@ -84,7 +84,7 @@ export default function EventCard({ event }: EventCardProps) {
           {event.title}
         </h3>
         
-        <p className="text-gray-400 mb-4" data-testid={`event-description-${event._id}`}>
+        <p className="text-gray-400 mb-4 flex-wrap" data-testid={`event-description-${event._id}`}>
           {event.description}
         </p>
 

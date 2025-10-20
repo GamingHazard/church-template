@@ -13,18 +13,18 @@ import { useAppData } from "../hooks/use-AppData";
 // Mock Data
 
 export default function Sermons() {
-  const { sermons } = useAppData();
+  const { Sermons,loading } = useAppData();
   const [searchQuery, setSearchQuery] = useState("");
-  const [allSermons, setAllSermons] = useState(sermons || []);
+  const [allSermons, setAllSermons] = useState(Sermons);
   const [sermonsLoading, setSermonsLoading] = useState(true);
 
   useEffect(() => {
     // window.scrollTo(0, 0);
 
     
-    if (sermonsLoading) {
+    if (sermonsLoading && !loading) {
       const timer = setTimeout(() => {
-        setAllSermons(sermons);
+        setAllSermons(Sermons);
         setSermonsLoading(false);
       }, 500);
       return () => clearTimeout(timer);

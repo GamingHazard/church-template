@@ -27,10 +27,10 @@ const mockPastor = {
 };
 
 export default function Home() {
-  const { events, sermons, loading, error, refresh } = useAppData();
+  const { Events, Sermons, loading, error, refresh } = useAppData();
 
-  const [upcomingEvents, setUpcomingEvents] = useState<any[]>(events||[]);
-  const [recentSermons, setRecentSermons] = useState<any[]>(sermons||[]);
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>(Events );
+  const [recentSermons, setRecentSermons] = useState<any[]>(Sermons );
   const [leadPastor, setLeadPastor] = useState<any>(null);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [sermonsLoading, setSermonsLoading] = useState(true);
@@ -129,7 +129,7 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {eventsLoading ? (
+            {eventsLoading  ? (
               Array.from({ length: 3 }).map((_, i) => (
                 <Card key={i} className="overflow-hidden">
                   <Skeleton className="w-full h-48" />
@@ -141,8 +141,8 @@ export default function Home() {
                   </CardContent>
                 </Card>
               ))
-            ) : events && events.length > 0 ? (
-              events.slice(0, 3).map((event) => (
+            ) : Events && Events.length > 0 ? (
+              Events.slice(0, 3).map((event) => (
                 <EventCard key={event._id} event={event} />
               ))
             ) : (
@@ -154,7 +154,7 @@ export default function Home() {
             )}
           </div>
 
-          {events && events.length > 3 && (
+          {Events && Events.length > 3 && (
             <div className="text-center mt-8">
               <Link href="/events">
                 <Button 
@@ -278,7 +278,7 @@ export default function Home() {
                 Recent Messages
               </h3>
 
-              {sermonsLoading ? (
+              {sermonsLoading  ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="bg-card rounded-lg p-4 shadow">
                     <div className="flex items-start space-x-4">
@@ -291,8 +291,8 @@ export default function Home() {
                     </div>
                   </div>
                 ))
-              ) : sermons && sermons.length > 0 ? (
-                sermons.slice(0, 3).map((sermon) => (
+              ) : Sermons && Sermons.length > 0 ? (
+                Sermons.slice(0, 3).map((sermon) => (
                   <div key={sermon._id} className="bg-card rounded-lg p-4 shadow hover:shadow-md transition-shadow duration-300" data-testid={`sermon-item-${sermon._id}`}>
                     <div className="flex items-start space-x-4">
                       <div className="flex-shrink-0">

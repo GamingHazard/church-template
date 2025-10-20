@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { Configs } from "../lib/utils";
+import { set } from "date-fns";
 
 interface Event {
    _id: string;
@@ -10,7 +11,7 @@ interface Event {
   time: string;
   location: string;
   speaker?: string;
-  imageUrl?: string;
+  thumbnailUrl?: string;
   category: 'general' | 'service' | 'youth' | 'community';
 }
 
@@ -28,8 +29,8 @@ interface Sermon {
 }
 
 interface AppData {
-  events: Event[];
-  sermons: Sermon[];
+  Events: Event[];
+  Sermons: Sermon[];
   loading: boolean;
   error: string | null;
   refresh: () => void;
@@ -37,13 +38,13 @@ interface AppData {
 
  
 export const useAppData = (): AppData => {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [sermons, setSermons] = useState<Sermon[]>([]);
+  const [Events, setEvents] = useState<Event[]>([]);
+  const [Sermons, setSermons] = useState<Sermon[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
+   
     setError(null);
 
     try {
@@ -58,22 +59,19 @@ export const useAppData = (): AppData => {
     } catch (err: any) {
       console.error("API Error:", err);
       setError(err.response?.data?.message || "Failed to load data");
-    } finally {
-      setLoading(false);
-    }
+    }  
   }, []);
 
   // Automatically fetch on mount
   useEffect(() => {
-    
-
+setLoading(true);
    const interval = setInterval(() => {
-      fetchData();
+     fetchData();
+     
+      setLoading(false);
     }, 3000);  
-
-    
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  return { events, sermons, loading, error, refresh: fetchData };
+  return { Events, Sermons, loading, error, refresh: fetchData };
 };
