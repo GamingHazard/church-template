@@ -255,10 +255,7 @@ function AdminDashboard() {
   // 2) File chosen
   // handleImageUpload accepts optional react-hook-form setValue and field name to populate forms when uploading
   const handleImageUpload = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    // react-hook-form's setValue has a narrower first param type; accept any to be flexible
-    setValue?: any,
-    fieldName?: string
+    e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const sel = e.target.files?.[0];
     if (!sel || !sel.type.startsWith("image/")) {
@@ -267,12 +264,6 @@ function AdminDashboard() {
     setFile(sel);
     const preview = URL.createObjectURL(sel);
     setPreviewUrl(preview);
-    // if a form setValue and fieldName were provided, set a temporary preview value
-    try {
-      if (setValue && fieldName) setValue(fieldName, preview);
-    } catch (err) {
-      // ignore if setValue is not compatible
-    }
   };
 
   // 3) Upload helper
@@ -931,7 +922,7 @@ try {
                                 id="event-image-upload"
                                 className="hidden"
                                 accept="image/*"
-                                onChange={(e) => handleImageUpload(e, eventForm.setValue, "imageUrl")}
+                                onChange={handleImageUpload}
                               />
                               <Button
                                 type="button"
@@ -1141,7 +1132,7 @@ try {
                               id="sermon-thumb-upload"
                               className="hidden"
                               accept="image/*"
-                              onChange={(e) => handleImageUpload(e, sermonForm.setValue, "thumbnailUrl")}
+                              onChange={handleImageUpload}
                             />
                             <Button
                               type="button"
@@ -1550,7 +1541,7 @@ try {
                               id="gallery-image-upload"
                               className="hidden"
                               accept="image/*"
-                              onChange={(e) => handleImageUpload(e, galleryForm.setValue, "imageUrl")}
+                              onChange={handleImageUpload}
                             />
                             <Button
                               type="button"
@@ -1711,7 +1702,7 @@ try {
                                 id="pastor-image-upload"
                                 className="hidden"
                                 accept="image/*"
-                                onChange={(e) => handleImageUpload(e, pastorForm.setValue, "imageUrl")}
+                                onChange={handleImageUpload}
                               />
                               <Button
                                 type="button"
