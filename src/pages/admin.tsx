@@ -22,10 +22,8 @@ import { useAuth } from "../hooks/useAuth";
 import LoginForm from "../components/login-form";
 import axios from "axios";
 import { Configs } from "../lib/utils";
-import { log } from "node:console";
-import { errorMonitor } from "node:events";
-import { get } from "node:http";
-
+import { log } from "console";
+import { get } from "http";
 // Define types locally since shared/schema is removed
 export type Event = {
   _id: string;
@@ -76,11 +74,11 @@ export type GalleryImage = {
 };
 
 export type Pastor = {
-  id: string;
+  _id: string;
   name: string;
   title: string;
   bio: string;
-  imageUrl: string;
+  profileImg: {url?:string,public_id?:string};
   email: string;
   isLead: boolean;
   order: number;
@@ -97,14 +95,18 @@ export type Notification = {
 };
 
 export type User = {
-  reminder: unknown;
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  subscribedAt: string;
-  remindersCount: number;
-  avatarUrl: string;
+  _id: string;
+  name?: string;
+  email?: string;
+  // profile image url (optional)
+  profileImage?:{url?:string,public_id?:string};
+  // normalized count of reminders (optional)
+  remindersCount?: number;
+  // legacy boolean flag some responses may include
+  reminder?: boolean;
+  // banned flag (optional)
+  banned?: boolean;
+  subscribedAt?: string | null;
 };
 
 
@@ -120,7 +122,7 @@ const mockDonations: Donation[] = [
 ];
 
 const mockGalleryImages: GalleryImage[] = [
-  { id: '1', title: 'Worship Night', imageUrl: 'https://t3.ftcdn.net/jpg/06/55/03/10/360_F_655031012_ezp6y04yY161INy73UC1RDarJgSbVU5B.jpg', category: 'worship' },
+  { id: '1', title: 'Worship Night', imageUrl: 'https://t3.ftcdn.net/jpg/06/55/03/10/360_F_65503108_yz1Yp3jXgWkOQ8huq1k1aYt7u0rH2X6.jpg', category: 'worship' },
   { id: '2', title: 'Community Outreach', imageUrl: 'https://cocoutreach.org/wp-content/uploads/2025/09/website-1.jpg', category: 'community' },
 ];
 
@@ -152,14 +154,14 @@ function AdminDashboard() {
   const { toast } = useToast();
 
   // State management for mock data
-  const [events, setEvents] = useState([]);
-  const [sermons, setSermons] = useState([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [sermons, setSermons] = useState<Sermon[]>([]);
   const [newsletters, setNewsletters] = useState(mockNewsletters);
   const [donations, setDonations] = useState(mockDonations);
   const [galleryImages, setGalleryImages] = useState(mockGalleryImages);
-  const [pastors, setPastors] = useState(mockPastors);
+  const [pastors, setPastors] = useState<Pastor[]>([]);
   const [notifications, setNotifications] = useState<Notification []>([]);
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
 
   const [eventsLoading, setEventsLoading] = useState(true);
   const [sermonsLoading, setSermonsLoading] = useState(true);
@@ -171,10 +173,10 @@ function AdminDashboard() {
   const [usersLoading, setUsersLoading] = useState(true);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [file, setFile] = useState<any | null>(null);
-  const [previewUrl, setPreviewUrl] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [Loading, setLoading] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [Loading, setLoading] = useState<boolean>(false);
   
 
   useEffect(() => {
@@ -251,13 +253,26 @@ function AdminDashboard() {
   const handleSelectClick = () => fileInputRef.current?.click();
 
   // 2) File chosen
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // handleImageUpload accepts optional react-hook-form setValue and field name to populate forms when uploading
+  const handleImageUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    // react-hook-form's setValue has a narrower first param type; accept any to be flexible
+    setValue?: any,
+    fieldName?: string
+  ) => {
     const sel = e.target.files?.[0];
     if (!sel || !sel.type.startsWith("image/")) {
       return toast({ title: "Select a valid image", variant: "destructive" });
     }
     setFile(sel);
-    setPreviewUrl(URL.createObjectURL(sel));
+    const preview = URL.createObjectURL(sel);
+    setPreviewUrl(preview);
+    // if a form setValue and fieldName were provided, set a temporary preview value
+    try {
+      if (setValue && fieldName) setValue(fieldName, preview);
+    } catch (err) {
+      // ignore if setValue is not compatible
+    }
   };
 
   // 3) Upload helper
@@ -289,11 +304,13 @@ function AdminDashboard() {
       if (response.status === 200) {
         setEvents(response.data.events);
       }
-    } catch (error) {
-      toast({ title: "Error", variant: "destructive", description: "Failed to fetch events." });
-      console.log('====================================');
-      console.log(error);
-      console.log('====================================');
+    } catch (error: any) {
+      toast({ 
+        title: "Error", 
+        variant: "destructive", 
+        description: error.response?.data?.message || "Failed to fetch events." 
+      });
+      console.error('Error fetching events:', error);
     }
   }
 
@@ -333,7 +350,7 @@ function AdminDashboard() {
   },
 });
     if (response.status === 201) {
-     setEvents(response.data.events);
+     setEvents(response.data.events); 
       toast({ title: "Event created successfully!" });
       // setShowEventDialog(false); 
       eventForm.reset();
@@ -409,11 +426,11 @@ function AdminDashboard() {
     "Content-Type": "application/x-www-form-urlencoded"
   },
 });
-    if (response.status === 201) {
+  if (response.status === 201) {
 
 
-       const newSermon: Sermon = { ...data,  _id: response.data.id  };
-    setSermons(prev => [...prev, newSermon]);
+     const newSermon: Sermon = { ...data,  _id: response.data.id  };
+  setSermons(prev => [...prev, newSermon]);
     toast({ title: "Sermon created successfully!" });
     setShowSermonDialog(false);
     sermonForm.reset();
@@ -495,12 +512,12 @@ function AdminDashboard() {
     try {
       const res = await axios.delete(`${Configs.url}/api/sermons/delete-sermon/${id}`);
       if (res.status === 200) {
-        setEvents(res.data.events);
-        setEvents(prev => prev.filter(e => e._id !== id));
+        // server returns remaining sermons or success; remove locally by id
+        setSermons(prev => prev.filter(s => s._id !== id));
         toast({ title: "Sermon deleted successfully!" });
       }
     } catch (error) {
-      toast({ title: "Error", variant: "destructive" , description: `Failed to delete event: ${error}`});
+      toast({ title: "Error", variant: "destructive" , description: `Failed to delete sermon: ${error}`});
     }
 
      
@@ -514,25 +531,98 @@ function AdminDashboard() {
     galleryForm.reset();
   };
 
-  const createPastor = (data: PastorForm) => {
-    const newPastor: Pastor = { ...data, id: Date.now().toString() };
-    setPastors(prev => [...prev, newPastor]);
-    toast({ title: "Pastor added successfully!" });
-    setShowPastorDialog(false);
-    pastorForm.reset();
+
+  const getPastors = async () => {
+    try {
+      const response = await axios.get(`${Configs.url}/api/pastors/all`);
+      if (response.status === 200) {
+        setPastors(response.data.pastors);
+      }
+    } catch (error) {
+      // log({title:"Error", variant:"destructive",description:"Failed to fetch pastors."});
+ 
+    }
+  }
+// Create Pastor
+  const createPastor = async (data: PastorForm) => {
+    setLoading(true);
+    try {
+      if(file === null) {
+        const res = await axios.post(`${Configs.url}/api/pastors/new-pastor`, data);
+        if (res.status === 201) {
+          setPastors(res.data.pastors);
+          setNotifications(res.data.notifications);
+          toast({ title: "Pastor added successfully!" });
+          setShowPastorDialog(false);
+          pastorForm.reset();
+        }
+      } else {
+
+        
+        const { url, public_id } = await uploadFileToServer(file);
+        const pastorData = { ...data, profileImage: { url, public_id } };
+    
+        const res = await axios.post(`${Configs.url}/api/pastors/new-pastor`, pastorData);
+        if (res.status === 201) {
+          setPastors(res.data.pastors);
+          toast({ title: "Pastor added successfully!" });
+          setShowPastorDialog(false);
+          pastorForm.reset();
+        }
+      }
+    } catch (err: any) {
+      if (err.response && err.response.data) {
+        toast({ 
+          title: "Error!", 
+          description: err.response.data.err || err.response.data.error, 
+          variant: "destructive" 
+        });
+      } else {
+        toast({ 
+          title: "Error!", 
+          description: "Failed to add pastor", 
+          variant: "destructive" 
+        });
+      }
+    }finally{setLoading(false);}
   };
 
-  const updatePastor = (id: string, data: Partial<PastorForm>) => {
-    setPastors(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
+  // Update Pastor
+  const updatePastor = async(id: string, data: Partial<PastorForm>) => {
+    setLoading(true);
+try {
+  const res = await axios.put(`${Configs.url}/api/pastors/update-profile/${id}`, data);
+  if (res.status === 200) {
+    setPastors(res.data.pastors);
+    setNotifications(res.data.notifications);
+    setPastors(prev => prev.map(p => p._id === id ? { ...p, ...data } : p));
     toast({ title: "Pastor updated successfully!" });
     setShowPastorDialog(false);
     setEditingPastor(null);
     pastorForm.reset();
+  }
+} catch (error:any) {
+  toast({ title: "Error", variant: "destructive" , description: `Failed to update pastor: ${error.response?.data?.err || error.message}`});
+}finally{setLoading(false);}
+
+    
   };
 
-  const deletePastor = (id: string) => {
-    setPastors(prev => prev.filter(p => p.id !== id));
+  // Delete Pastor
+  const deletePastor = async (id: string) => {
+try {
+  const res = await axios.delete(`${Configs.url}/api/pastors/delete-pastor/${id}`);
+  if (res.status === 200) {
+    setPastors(res.data.pastors);
+    setNotifications(res.data.notifications);
+    setPastors(prev => prev.filter(p => p._id !== id));
     toast({ title: "Pastor deleted successfully!" });
+  }
+} catch (error:any) {
+  toast({ title: "Error", variant: "destructive" , description: `Failed to delete pastor: ${error.response?.data?.err || error.message}`});
+}
+
+    
   };
 
   const getNotifications = async () => {
@@ -603,10 +693,19 @@ function AdminDashboard() {
     try {
       const response = await axios.get(`${Configs.url}/api/news-letter/subscribers`);
       if (response.status === 200) {
-        // console.log('====================================');
-        // console.log(response.data.subscribers);
-        // console.log('====================================');
-        setUsers(response.data.subscribers);
+        // Normalize subscriber objects to a consistent shape for the UI.
+        const subs = Array.isArray(response.data.subscribers) ? response.data.subscribers : [];
+        const normalized: User[] = subs.map((s: any, i: number) => ({
+          _id: s._id || s.id || `${s.email || 'user'}-${i}`,
+          name: s.name || s.fullName || s.displayName || s.email?.split('@')?.[0] || `User ${i}`,
+          email: s.email || '',
+          profileImage: s.profileImage || s.pr || s.avatarUrl || '',
+          remindersCount: typeof s.remindersCount === 'number' ? s.remindersCount : (s.reminderCount || (s.reminder ? 1 : 0)),
+          reminder: !!(s.reminder || (s.remindersCount && s.remindersCount > 0)),
+          subscribedAt: s.subscribedAt || s.createdAt || null,
+          banned: !!s.banned,
+        }));
+        setUsers(normalized);
       }
     } catch (error) {
       toast({ title: "Error", variant: "destructive", description: "Failed to fetch users." });
@@ -661,7 +760,7 @@ function AdminDashboard() {
 
   const handleSubmitPastor = (data: PastorForm) => {
     if (editingPastor) {
-      updatePastor(editingPastor.id, data);
+      updatePastor(editingPastor._id, data);
     } else {
       createPastor(data);
     }
@@ -676,18 +775,24 @@ function AdminDashboard() {
   const resetEventDialog = () => {
     setShowEventDialog(false);
     setEditingEvent(null);
+    setFile(null);
+    setPreviewUrl("");
     eventForm.reset();
   };
 
   const resetSermonDialog = () => {
     setShowSermonDialog(false);
     setEditingSermon(null);
+    setFile(null);
+    setPreviewUrl("");
     sermonForm.reset();
   };
 
   const resetPastorDialog = () => {
     setShowPastorDialog(false);
     setEditingPastor(null);
+    setFile(null);
+    setPreviewUrl("");
     pastorForm.reset();
   };
 
@@ -695,6 +800,7 @@ function AdminDashboard() {
     getNotifications();
     getEvents()
      getSermons()
+     getPastors()
      
       const interval = setInterval(() => {
       
@@ -745,7 +851,7 @@ function AdminDashboard() {
                     <Calendar className="mr-2 h-5 w-5" />
                     Events Management
                   </CardTitle>
-                  <Dialog open={showEventDialog} onOpenChange={setShowEventDialog}>
+                  <Dialog open={showEventDialog} onOpenChange={(open) => !open && resetEventDialog()}>
                     <DialogTrigger asChild>
                       <Button onClick={() => setEditingEvent(null)} data-testid="button-add-event">
                         <Plus className="mr-2 h-4 w-4" />
@@ -831,6 +937,29 @@ function AdminDashboard() {
                                 Upload
                               </Button>
                             </div>
+                            {(previewUrl || eventForm.watch("imageUrl")) && (
+                              <div className="mt-2 space-y-2">
+                                <div className="relative w-full rounded-lg overflow-hidden border">
+                                  <img
+                                    src={previewUrl || eventForm.watch("imageUrl")}
+                                    alt="Event preview"
+                                    className="w-full object-contain"
+                                  />
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="w-full"
+                                  onClick={() => {
+                                    setPreviewUrl("");
+                                    setFile(null);
+                                    eventForm.setValue("imageUrl", "");
+                                  }}
+                                >
+                                  Change Image
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -873,7 +1002,7 @@ function AdminDashboard() {
                         ))
                       ) : events && events.length > 0 ? (
                         events.map((event) => (
-                          <TableRow key={event.id} data-testid={`event-row-${event.id}`}>
+                          <TableRow key={event._id} data-testid={`event-row-${event._id}`}>
                             <TableCell className="font-medium">{event.title}</TableCell>
                             <TableCell>{format(new Date(event.date), "MMM d, yyyy")}</TableCell>
                             <TableCell>
@@ -886,7 +1015,7 @@ function AdminDashboard() {
                                   size="sm" 
                                   variant="outline" 
                                   onClick={() => handleEditEvent(event)}
-                                  data-testid={`button-edit-event-${event.id}`}
+                                  data-testid={`button-edit-event-${event._id}`}
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
@@ -895,7 +1024,7 @@ function AdminDashboard() {
                                     <Button
                                       size="sm"
                                       variant="destructive"
-                                      data-testid={`button-delete-event-${event.id}`}
+                                      data-testid={`button-delete-event-${event._id}`}
                                     >
                                       <Trash2 className="h-4 w-4" />
                                     </Button>
@@ -943,7 +1072,7 @@ function AdminDashboard() {
                     <Eye className="mr-2 h-5 w-5" />
                     Sermons Management
                   </CardTitle>
-                  <Dialog open={showSermonDialog} onOpenChange={setShowSermonDialog}>
+                  <Dialog open={showSermonDialog} onOpenChange={(open) => !open && resetSermonDialog()}>
                     <DialogTrigger asChild>
                       <Button onClick={() => setEditingSermon(null)} data-testid="button-add-sermon">
                         <Plus className="mr-2 h-4 w-4" />
@@ -1014,6 +1143,29 @@ function AdminDashboard() {
                               Upload
                             </Button>
                           </div>
+                          {(previewUrl || sermonForm.watch("thumbnailUrl")) && (
+                            <div className="mt-2 space-y-2">
+                              <div className="relative w-full rounded-lg overflow-hidden border">
+                                <img
+                                  src={previewUrl || sermonForm.watch("thumbnailUrl")}
+                                  alt="Sermon thumbnail preview"
+                                  className="w-full object-contain"
+                                />
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => {
+                                  setPreviewUrl("");
+                                  setFile(null);
+                                  sermonForm.setValue("thumbnailUrl", "");
+                                }}
+                              >
+                                Change Thumbnail
+                              </Button>
+                            </div>
+                          )}
                         </div>
                         <DialogFooter>
                           <Button type="button" variant="outline" onClick={resetSermonDialog}>
@@ -1049,7 +1201,7 @@ function AdminDashboard() {
                         ))
                       ) : sermons && sermons.length > 0 ? (
                         sermons.map((sermon) => (
-                          <TableRow key={sermon.id}>
+                          <TableRow key={sermon._id}>
                             <TableCell className="font-medium">{sermon.title}</TableCell>
                             <TableCell>{sermon.speaker}</TableCell>
                             <TableCell>{format(new Date(sermon.date), "MMM d, yyyy")}</TableCell>
@@ -1136,10 +1288,10 @@ function AdminDashboard() {
                               </TableRow>
                             ))
                           ) : users.map((user,index) => (
-                            <TableRow key={user.id}>
+                            <TableRow key={user._id}>
                               <TableCell>
                                 <div className="flex items-center gap-3">
-                                  <img src={user.avatarUrl || "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740&q=80"} alt={user.name} className="h-10 w-10 rounded-full object-cover" />
+                                    <img src={user.profileImage?.url || "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740&q=80"} alt={user.name || 'User'} className="h-10 w-10 rounded-full object-cover" />
                                   <div>
                                     <p className="font-medium ">{user.name||`Sheep: ${index}`}</p>
                                     <p className="text-sm text-muted-foreground text-gray-400">{user.email}</p>
@@ -1147,11 +1299,11 @@ function AdminDashboard() {
                                 </div>
                               </TableCell>
                               {/* <TableCell className="text-gray-400">{user.phone}</TableCell> */}
-                              {user.subscribedAt &&(
-                              <TableCell className="text-gray-400  p-1">{format(new Date(user.subscribedAt), "MMM d, yyyy")}</TableCell>
+                              {user.subscribedAt && (
+                              <TableCell className="text-gray-400  p-1">{format(new Date(user.subscribedAt || new Date()), "MMM d, yyyy")}</TableCell>
                               )}
-                              {user.remindersCount && (
-                                <TableCell className="text-center text-gray-400  ">{user.remindersCount||user?.reminder}</TableCell>
+                              {(user.remindersCount || user.reminder) && (
+                                <TableCell className="text-center text-gray-400  ">{user.remindersCount || (user.reminder ? 1 : 0)}</TableCell>
                               )}
                               
                               <TableCell>
@@ -1364,7 +1516,11 @@ function AdminDashboard() {
                         Add Image
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent onOpenAutoFocus={() => {
+                      setPreviewUrl("");
+                      setFile(null);
+                      galleryForm.reset();
+                    }}>
                       <DialogHeader>
                         <DialogTitle>Add Gallery Image</DialogTitle>
                       </DialogHeader>
@@ -1396,6 +1552,29 @@ function AdminDashboard() {
                               Upload
                             </Button>
                           </div>
+                          {(previewUrl || galleryForm.watch("imageUrl")) && (
+                            <div className="mt-2 space-y-2">
+                              <div className="relative w-full rounded-lg overflow-hidden border">
+                                <img
+                                  src={previewUrl || galleryForm.watch("imageUrl")}
+                                  alt="Gallery image preview"
+                                  className="w-full object-contain"
+                                />
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => {
+                                  setPreviewUrl("");
+                                  setFile(null);
+                                  galleryForm.setValue("imageUrl", "");
+                                }}
+                              >
+                                Change Image
+                              </Button>
+                            </div>
+                          )}
                         </div>
                         <div>
                           <Label htmlFor="category">Category</Label>
@@ -1415,7 +1594,16 @@ function AdminDashboard() {
                           </Select>
                         </div>
                         <DialogFooter>
-                          <Button type="button" variant="outline" onClick={() => setShowGalleryDialog(false)}>
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={() => {
+                              setShowGalleryDialog(false);
+                              setPreviewUrl("");
+                              setFile(null);
+                              galleryForm.reset();
+                            }}
+                          >
                             Cancel
                           </Button>
                           <Button type="submit">
@@ -1466,9 +1654,9 @@ function AdminDashboard() {
                     <Users className="mr-2 h-5 w-5" />
                     Pastors Management
                   </CardTitle>
-                  <Dialog open={showPastorDialog} onOpenChange={setShowPastorDialog}>
+                  <Dialog open={showPastorDialog} onOpenChange={(open) => !open && resetPastorDialog()}>
                     <DialogTrigger asChild>
-                      <Button onClick={() => setEditingPastor(null)} data-testid="button-add-pastor">
+                      <Button onClick={() => {setEditingPastor(null),pastorForm.reset();}} data-testid="button-add-pastor">
                         <Plus className="mr-2 h-4 w-4" />
                         Add Pastor
                       </Button>
@@ -1521,6 +1709,29 @@ function AdminDashboard() {
                                 Upload
                               </Button>
                             </div>
+                            {(previewUrl || pastorForm.watch("imageUrl")) && (
+                              <div className="mt-2 w-full space-y-2">
+                                <div className="relative  rounded-lg overflow-hidden border">
+                                  <img
+                                    src={previewUrl || pastorForm.watch("imageUrl")}
+                                    alt="Pastor profile preview"
+                                    className="w-full flex-1 object-contain"
+                                  />
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="w-full"
+                                  onClick={() => {
+                                    setPreviewUrl("");
+                                    setFile(null);
+                                    pastorForm.setValue("imageUrl", "");
+                                  }}
+                                >
+                                  Change Profile Image
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <DialogFooter>
@@ -1528,7 +1739,7 @@ function AdminDashboard() {
                             Cancel
                           </Button>
                           <Button type="submit">
-                            {editingPastor ? "Update Pastor" : "Add Pastor"}
+                            {editingPastor ?( Loading?"Updating Pastor...":"Update Pastor" ):( Loading ?"Adding Pastor...":"Add Pastor")}
                           </Button>
                         </DialogFooter>
                       </form>
@@ -1557,7 +1768,9 @@ function AdminDashboard() {
                         ))
                       ) : pastors && pastors.length > 0 ? (
                         pastors.map((pastor) => (
-                          <TableRow key={pastor.id}>
+                          <TableRow key={pastor._id}>
+                         <img src={pastor.profileImg.url|| "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740&q=80"} alt={pastor.name} className="size-20 mt-5 shadow-md rounded-full object-cover" />
+
                             <TableCell className="font-medium">{pastor.name}</TableCell>
                             <TableCell>{pastor.title}</TableCell>
                             <TableCell>{pastor.email}</TableCell>
@@ -1581,7 +1794,7 @@ function AdminDashboard() {
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => deletePastor(pastor.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                      <AlertDialogAction onClick={() => deletePastor(pastor._id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                                         Delete
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
@@ -1670,7 +1883,7 @@ function AdminDashboard() {
                                 <p className="text-sm text-muted-foreground">{notification.description}</p>
                               </div>
                               {!notification.read  && (
-                                <Badge variant="solid" className="text-xs bg-purple-100 text-purple-600">New</Badge>
+                                <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-600">New</Badge>
                               )}
                             </div>
                             <div className="flex items-center justify-between mt-2">
