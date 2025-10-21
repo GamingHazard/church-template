@@ -853,7 +853,11 @@ try {
                   </CardTitle>
                   <Dialog open={showEventDialog} onOpenChange={(open) => !open && resetEventDialog()}>
                     <DialogTrigger asChild>
-                      <Button onClick={() => setEditingEvent(null)} data-testid="button-add-event">
+                      <Button onClick={() => {
+                        setEditingEvent(null);
+                        eventForm.reset();
+                        setShowEventDialog(true);
+                      }} data-testid="button-add-event">
                         <Plus className="mr-2 h-4 w-4" />
                         Add Event
                       </Button>
@@ -1074,7 +1078,11 @@ try {
                   </CardTitle>
                   <Dialog open={showSermonDialog} onOpenChange={(open) => !open && resetSermonDialog()}>
                     <DialogTrigger asChild>
-                      <Button onClick={() => setEditingSermon(null)} data-testid="button-add-sermon">
+                      <Button onClick={() => {
+                        setEditingSermon(null);
+                        sermonForm.reset();
+                        setShowSermonDialog(true);
+                      }} data-testid="button-add-sermon">
                         <Plus className="mr-2 h-4 w-4" />
                         Add Sermon
                       </Button>
@@ -1656,7 +1664,11 @@ try {
                   </CardTitle>
                   <Dialog open={showPastorDialog} onOpenChange={(open) => !open && resetPastorDialog()}>
                     <DialogTrigger asChild>
-                      <Button onClick={() => {setEditingPastor(null),pastorForm.reset();}} data-testid="button-add-pastor">
+                      <Button onClick={() => {
+                        setEditingPastor(null);
+                        pastorForm.reset();
+                        setShowPastorDialog(true);
+                      }} data-testid="button-add-pastor">
                         <Plus className="mr-2 h-4 w-4" />
                         Add Pastor
                       </Button>
