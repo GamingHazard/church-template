@@ -10,101 +10,33 @@ import {
 } from "lucide-react";
 import { Skeleton } from "../components/ui/skeleton";
 import { useEffect, useState } from "react";
+import { useAppData } from "../hooks/use-AppData";
 
 // Define types locally
 export type Pastor = {
-  id: string;
+  _id: string;
   name: string;
   title: string;
   bio: string;
-  imageUrl: string;
-  email?: string;
+  profileImg: { url?: string; public_id?: string };
+  email: string;
+  isLead: boolean;
+  order: number;
+  imageUrl?: string;
 };
 
 export type GalleryImage = {
-  id: string;
+ _id: string;
   title: string;
   imageUrl: string;
-  category: string;
+  category: "general" | "events" | "worship" | "community";
+  image: { url?: string; public_id?: string };
 };
 
-// Mock Data
-const mockPastors: Pastor[] = [
-  {
-    id: "1",
-    name: "Pastor John Doe",
-    title: "Lead Pastor",
-    bio: "Passionate about sharing God's love and building a strong community.",
-    imageUrl:
-      "https://www.thepottershouse.org/wp-content/uploads/bishop_jakesv24.png",
-    email: "pastor.john@faithlife.com",
-  },
-  {
-    id: "2",
-    name: "Pastor Jane Smith",
-    title: "Youth Pastor",
-    bio: "Dedicated to empowering the next generation with faith and purpose.",
-    imageUrl:
-      "https://youthministryconversations.com/wp-content/uploads/2018/09/Kyle-photo-266x300.jpg",
-    email: "pastor.jane@faithlife.com",
-  },
-  {
-    id: "3",
-    name: "Pastor Mike Brown",
-    title: "Worship Pastor",
-    bio: "Leading the congregation in authentic and heartfelt worship experiences.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1593104547489-5cfb3839a3b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300",
-    email: "pastor.mike@faithlife.com",
-  },
-];
-
-const mockGalleryImages: GalleryImage[] = [
-  {
-    id: "1",
-    title: "Sunday Worship",
-    imageUrl:
-      "https://images.unsplash.com/photo-1438232992991-995b7058bbb3?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8d29yc2hpcHxlbnwwfHwwfHx8MA%3D%3D",
-    category: "worship",
-  },
-  {
-    id: "2",
-    title: "Community Food Drive",
-    imageUrl:
-      "https://img.freepik.com/free-photo/volunteers-working-together-full-shot_23-2149181981.jpg?semt=ais_hybrid&w=740&q=80",
-    category: "community",
-  },
-  {
-    id: "3",
-    title: "Youth Group Night",
-    imageUrl:
-      "https://images.squarespace-cdn.com/content/v1/5fcff01d9775bc77ef16b4da/1612554617663-QGOFG8UYWGFKOR94DC83/teen-night.jpg",
-    category: "youth",
-  },
-  {
-    id: "4",
-    title: "Baptism Sunday",
-    imageUrl:
-      "https://www.shutterstock.com/editorial/image-editorial/N2T9g0z4McT5Aa28ODk0/archbishop-york-dr-john-sentamu---baptising-440nw-582190d.jpg",
-    category: "service",
-  },
-  {
-    id: "5",
-    title: "Church Picnic",
-    imageUrl:
-      "https://blog.discountmugs.com/hs-fs/hubfs/blog-files/Great_Favors_for_your_Church_Picnic/church%20picnics%20games%20and%20ideas.jpg?width=901&name=church%20picnics%20games%20and%20ideas.jpg",
-    category: "community",
-  },
-  {
-    id: "6",
-    title: "Christmas Service",
-    imageUrl:
-      "https://www.retailtherapylafayette.com/wp-content/uploads/2022/11/174416404_m-1024x683.jpg",
-    category: "service",
-  },
-];
+ 
 
 export default function About() {
+  const {Pastors,Gallery} = useAppData()
   const [pastors, setPastors] = useState<Pastor[]>([]);
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
   const [pastorsLoading, setPastorsLoading] = useState(true);
@@ -114,8 +46,8 @@ export default function About() {
     window.scrollTo(0, 0);
 
     const timer = setTimeout(() => {
-      setPastors(mockPastors);
-      setGalleryImages(mockGalleryImages);
+      setPastors(Pastors);
+      setGalleryImages(Gallery);
       setPastorsLoading(false);
       setGalleryLoading(false);
     }, 500); // Simulate network delay
@@ -355,42 +287,42 @@ export default function About() {
             ) : pastors && pastors.length > 0 ? (
               pastors.map((pastor) => (
                 <Card
-                  key={pastor.id}
+                  key={pastor._id}
                   className="text-center"
-                  data-testid={`pastor-card-${pastor.id}`}
+                  data-testid={`pastor-card-${pastor._id}`}
                 >
                   <CardContent className="pt-6">
                     <img
                       src={
                         pastor.imageUrl ||
-                        "https://images.unsplash.com/photo-1556075798-4825dfaaf498?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=300"
+                        "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740&q=80"
                       }
                       alt={pastor.name}
                       className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
-                      data-testid={`pastor-image-${pastor.id}`}
+                      data-testid={`pastor-image-${pastor._id}`}
                     />
                     <h3
                       className="text-xl font-semibold text-card-foreground mb-2"
-                      data-testid={`pastor-name-${pastor.id}`}
+                      data-testid={`pastor-name-${pastor._id}`}
                     >
                       {pastor.name}
                     </h3>
                     <p
                       className="text-primary font-medium mb-4"
-                      data-testid={`pastor-title-${pastor.id}`}
+                      data-testid={`pastor-title-${pastor._id}`}
                     >
                       {pastor.title}
                     </p>
                     <p
                       className="text-muted-foreground text-sm"
-                      data-testid={`pastor-bio-${pastor.id}`}
+                      data-testid={`pastor-bio-${pastor._id}`}
                     >
                       {pastor.bio}
                     </p>
                     {pastor.email && (
                       <p
                         className="text-primary text-sm mt-2"
-                        data-testid={`pastor-email-${pastor.id}`}
+                        data-testid={`pastor-email-${pastor._id}`}
                       >
                         {pastor.email}
                       </p>
@@ -519,12 +451,12 @@ export default function About() {
             ) : galleryImages && galleryImages.length > 0 ? (
               galleryImages.slice(0, 6).map((image) => (
                 <div
-                  key={image.id}
+                  key={image._id}
                   className="relative group overflow-hidden rounded-lg"
-                  data-testid={`gallery-image-${image.id}`}
+                  data-testid={`gallery-image-${image._id}`}
                 >
                   <img
-                    src={image.imageUrl}
+                    src={image?.image?.url||image?.imageUrl || "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg" }
                     alt={image.title}
                     className="w-full aspect-square object-cover transition-transform duration-300 group-hover:scale-110"
                   />
@@ -532,7 +464,7 @@ export default function About() {
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
                     <p
                       className="text-white font-medium"
-                      data-testid={`gallery-title-${image.id}`}
+                      data-testid={`gallery-title-${image._id}`}
                     >
                       {image.title}
                     </p>
@@ -550,10 +482,10 @@ export default function About() {
               </div>
             )}
           </div>
-          <p className="mt-10 justify-end flex flex-row flex-1 text-center cursor-pointer text-sm font-semibold hover:text-md">
+          {/* <p className="mt-10 justify-end flex flex-row flex-1 text-center cursor-pointer text-sm font-semibold hover:text-md">
             See More
             <ArrowRight className="ml-2 text-sm hover:text-lg" />
-          </p>
+          </p> */}
         </div>
       </section>
     </div>

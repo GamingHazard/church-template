@@ -35,12 +35,34 @@ interface AppData {
   loading: boolean;
   error: string | null;
   refresh: () => void;
-}
 
+
+}
+  export type GalleryImage = {
+  _id: string;
+  title: string;
+  imageUrl: string;
+  category: "general" | "events" | "worship" | "community";
+  image: { url?: string; public_id?: string };
+};
+
+export type Pastor = {
+  _id: string;
+  name: string;
+  title: string;
+  bio: string;
+  profileImg: { url?: string; public_id?: string };
+  email: string;
+  isLead: boolean;
+  order: number;
+  imageUrl?: string;
+};
  
 export const useAppData = (): AppData => {
   const [events, setEvents] = useState<Event[]>([]);
   const [Sermons, setSermons] = useState<Sermon[]>([]);
+  const [Gallery, setGallery] = useState<GalleryImage[]>([]);
+  const [Pastors, setPastors] = useState<Pastor[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,13 +72,17 @@ export const useAppData = (): AppData => {
 
     try {
       // Fetch both endpoints in parallel
-      const [eventsRes, sermonsRes] = await Promise.all([
+      const [eventsRes, sermonsRes,galleryRes,pastorsRes] = await Promise.all([
         axios.get(`${Configs.url}/api/events/all`),
         axios.get(`${Configs.url}/api/sermons/all`),
+        axios.get(`${Configs.url}/api/gallery/all`),
+        axios.get(`${Configs.url}/api/pastors/all`),
       ]);
 
       setEvents(eventsRes.data.events || []);
       setSermons(sermonsRes.data.sermons || []);
+      setGallery(galleryRes.data.gallery || []);
+      setGallery(pastorsRes.data.pastors || []);
     } catch (err: any) {
       console.error("API Error:", err);
       setError(err.response?.data?.message || "Failed to load data");
@@ -74,5 +100,5 @@ setLoading(true);
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  return { events, Sermons, loading, error, refresh: fetchData };
+  return { events, Sermons,Gallery,Pastors, loading, error, refresh: fetchData };
 };
