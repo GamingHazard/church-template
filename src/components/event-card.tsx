@@ -63,16 +63,20 @@ export default function EventCard({ event }: EventCardProps) {
     }, 1000);
   };
 
-  const ImgUrl = event.thumbnail.url || event.thumbnailUrl || "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/1665px-No-Image-Placeholder.svg.png";
+   
 
   return (
     <Card className="overflow-hidden hover:shadow-xl transition-shadow duration-300" data-testid={`event-card-${event._id}`}>
-      {ImgUrl && (
+      {(event?.thumbnail?.url || event?.thumbnailUrl) && (
         <img
-          src={ ImgUrl }
+          src={event?.thumbnail?.url || event?.thumbnailUrl || 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'}
           alt={event.title}
           className="w-full h-48 object-cover"
           data-testid={`event-image-${event._id}`}
+          onError={(e) => {
+            e.currentTarget.src = '/placeholder-event.jpg';
+            e.currentTarget.alt = 'Event placeholder image';
+          }}
         />
       )}
       <CardContent className="p-6">

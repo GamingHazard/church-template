@@ -10,15 +10,16 @@ import EventCard from "../components/event-card";
 import { useAppData } from "../hooks/use-AppData"; // <- ensure this path/name matches your hook file
 
 interface EventItem {
-  _id: string;
+     _id: string;
   title: string;
   description: string;
-  date: string; // ISO string preferred
-  time?: string;
-  location?: string;
+  date: string;
+  time: string;
+  location: string;
   speaker?: string;
   thumbnailUrl?: string;
-  category: string;
+  category: "general" | "service" | "youth" | "community";
+  thumbnail: { url?: string; public_id?: string }
 }
 
 export default function Events() {
@@ -149,7 +150,7 @@ export default function Events() {
               <div className="grid md:grid-cols-2">
                 <div>
                   <img
-                    src={upcomingEvents[0].thumbnailUrl || "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/1665px-No-Image-Placeholder.svg.png"}
+                    src={upcomingEvents[0].thumbnail.url||upcomingEvents[0].thumbnailUrl || "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/1665px-No-Image-Placeholder.svg.png"}
                     alt={upcomingEvents[0].title}
                     className="w-full h-64 md:h-full object-cover"
                     data-testid="featured-event-image"

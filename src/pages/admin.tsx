@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Redirect } from "wouter";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import {
   Card,
   CardContent,
@@ -95,8 +97,7 @@ export type Event = {
   speaker?: string;
   thumbnailUrl?: string;
   category: "general" | "service" | "youth" | "community";
-  thumbnail: { url?: string; public_id?: string }
-  
+  thumbnail: { url?: string; public_id?: string };
 };
 
 export type Sermon = {
@@ -110,8 +111,8 @@ export type Sermon = {
   thumbnailUrl?: string;
   scripture?: string;
   series?: string;
-  thumbnail: { url?: string; public_id?: string }
-
+  thumbnail: { url?: string; public_id?: string };
+  isLive?: boolean;
 };
 
 export type Newsletter = {
@@ -154,7 +155,7 @@ export type Notification = {
   _id: string;
   title: string;
   description: string;
-  type: "donation" | "event" | "system" | "user" | "sermon";
+  type: "donation" | "event" | "system" | "user" | "sermon" | "gallery";
   createdAt: string;
   read: boolean;
   archived?: boolean;
@@ -293,6 +294,16 @@ function AdminDashboard() {
       thumbnailUrl: "",
       category: "general",
     },
+    resolver: zodResolver(z.object({
+      title: z.string().min(1, "Title is required").max(100, "Title is too long"),
+      description: z.string().min(1, "Description is required"),
+      date: z.string().min(1, "Date is required").regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
+      time: z.string().min(1, "Time is required").regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
+      location: z.string().min(1, "Location is required"),
+      speaker: z.string().optional(),
+      thumbnailUrl: z.string().optional(),
+      category: z.enum(["general", "service", "youth", "community"]),
+    })),
   });
 
   // Sermon form
@@ -307,7 +318,20 @@ function AdminDashboard() {
       thumbnailUrl: "",
       scripture: "",
       series: "",
+      isLive: false,
     },
+    resolver: zodResolver(z.object({
+      title: z.string().min(1, "Title is required").max(100, "Title is too long"),
+      speaker: z.string().min(1, "Speaker is required"),
+      date: z.string().min(1, "Date is required").regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
+      description: z.string().min(1, "Description is required"),
+      videoUrl: z.string().url("Invalid video URL").optional().or(z.literal("")),
+      audioUrl: z.string().url("Invalid audio URL").optional().or(z.literal("")),
+      thumbnailUrl: z.string().url("Invalid thumbnail URL").optional().or(z.literal("")),
+      scripture: z.string().optional(),
+      series: z.string().optional(),
+      isLive: z.boolean(),
+    })),
   });
 
   // Gallery form
@@ -317,6 +341,13 @@ function AdminDashboard() {
       imageUrl: "",
       category: "general",
     },
+    resolver: zodResolver(z.object({
+      title: z.string().min(1, "Title is required").max(100, "Title is too long"),
+      imageUrl: z.string().url("Invalid image URL").optional().or(z.literal("")),
+      category: z.enum(["general", "events", "worship", "community"], {
+        required_error: "Please select a category",
+      }),
+    })),
   });
 
   // Pastor form
@@ -330,9 +361,17 @@ function AdminDashboard() {
       isLead: false,
       order: 0,
     },
+    resolver: zodResolver(z.object({
+      name: z.string().min(1, "Name is required").max(100, "Name is too long"),
+      title: z.string().min(1, "Title is required"),
+      bio: z.string().min(1, "Bio is required").max(1000, "Bio is too long"),
+      imageUrl: z.string().url("Invalid image URL").optional().or(z.literal("")),
+      email: z.string().min(1, "Email is required").email("Invalid email format"),
+      isLead: z.boolean(),
+      order: z.number().int().min(0, "Order must be 0 or greater"),
+    })),
   });
 
- 
   // 2) File chosen
   // handleImageUpload accepts optional react-hook-form setValue and field name to populate forms when uploading
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -386,9 +425,26 @@ function AdminDashboard() {
     }
   };
 
-// Create Event
+  // Create Event
   const createEvent = async (data: EventForm) => {
     try {
+      // Form validation
+      const result = await eventForm.trigger();
+      if (!result) {
+        // Get all form errors
+        const errors = eventForm.formState.errors;
+        Object.entries(errors).forEach(([field, error]) => {
+          if (error?.message) {
+            toast({
+              title: `Invalid ${field}`,
+              description: error.message,
+              variant: "destructive",
+            });
+          }
+        });
+        return;
+      }
+
       if (file === null) {
         setLoading(true);
         const eventData = { ...data };
@@ -408,6 +464,7 @@ function AdminDashboard() {
           toast({ title: "Event created successfully!" });
           // setShowEventDialog(false);
           eventForm.reset();
+          setPreviewUrl("");
         }
       } else {
         setLoading(true);
@@ -428,6 +485,7 @@ function AdminDashboard() {
           toast({ title: "Event created successfully!" });
           // setShowEventDialog(false);
           eventForm.reset();
+          setPreviewUrl("");
         }
       }
     } catch (err: any) {
@@ -464,33 +522,30 @@ function AdminDashboard() {
         const { url, public_id } = await uploadFileToServer(file, "events");
         const eventData = { ...data, url, public_id };
 
-        
         const res = await axios.put(
-        `${Configs.url}/api/events/update-event/${id}`,
-        eventData
-      );
-      if (res.status === 200) {
-        setEvents(res.data.events);
-         
-        toast({ title: "Event updated successfully!" });
-        setShowEventDialog(false);
-        setEditingEvent(null);
-        eventForm.reset();
-      }
-      }else{
-        const res = await axios.put(
-        `${Configs.url}/api/events/update-event/${id}`,
-        data
-      );
-      if (res.status === 200) {
-        setEvents((prev) =>
-          prev.map((e) => (e._id === id ? { ...e, ...data } : e))
+          `${Configs.url}/api/events/update-event/${id}`,
+          eventData
         );
-        toast({ title: "Event updated successfully!" });
-        setShowEventDialog(false);
-        setEditingEvent(null);
-        eventForm.reset();
-      }
+        if (res.status === 200) {
+          setEvents(res.data.events);
+
+          toast({ title: "Event updated successfully!" });
+          resetEventDialog();
+          setEditingEvent(null);
+        }
+      } else {
+        const res = await axios.put(
+          `${Configs.url}/api/events/update-event/${id}`,
+          data
+        );
+        if (res.status === 200) {
+          setEvents((prev) =>
+            prev.map((e) => (e._id === id ? { ...e, ...data } : e))
+          );
+          toast({ title: "Event updated successfully!" });
+          resetEventDialog();
+          setEditingEvent(null);
+        }
       }
     } catch (error: any) {
       toast({
@@ -527,15 +582,27 @@ function AdminDashboard() {
     }
   };
 
-
-
-
-
-
   // Create Sermon
   const createSermon = async (data: SermonForm) => {
-    setUploading(true);
     try {
+      // Form validation
+      const result = await sermonForm.trigger();
+      if (!result) {
+        // Get all form errors
+        const errors = sermonForm.formState.errors;
+        Object.entries(errors).forEach(([field, error]) => {
+          if (error?.message) {
+            toast({
+              title: `Invalid ${field}`,
+              description: error.message,
+              variant: "destructive",
+            });
+          }
+        });
+        return;
+      }
+
+      setUploading(true);
       if (file !== null) {
         const { url, public_id } = await uploadFileToServer(file, "sermons");
         const eventData = { ...data, url, public_id };
@@ -554,8 +621,7 @@ function AdminDashboard() {
           const newSermon: Sermon = { ...data, _id: response.data.id };
           setSermons((prev) => [...prev, newSermon]);
           toast({ title: "Sermon created successfully!" });
-          setShowSermonDialog(false);
-          sermonForm.reset();
+          resetSermonDialog();
         }
       } else {
         const eventData = { ...data };
@@ -623,58 +689,55 @@ function AdminDashboard() {
   const updateSermon = async (id: string, data: Partial<SermonForm>) => {
     setLoading(true);
     try {
+      // Start with a copy of the form data
       let sermonData = { ...data };
 
       if (file !== null) {
+        // Upload the file to the server (Cloudinary)
         const uploadResponse = await uploadFileToServer(file, "sermons");
         if (uploadResponse) {
           const { url, public_id } = uploadResponse;
+
+          // Replace thumbnailUrl with Cloudinary object
           sermonData = {
-            ...data,
-            thumbnail: { url, public_id }  // Match the Sermon type structure
+            ...sermonData, // keep other fields
+            thumbnail: { url, public_id }, // Cloudinary
+            thumbnailUrl: "", // override any existing thumbnailUrl
           };
         }
       }
 
-      console.log("Updating sermon with data:", sermonData);
-      
       const res = await axios.put(
         `${Configs.url}/api/sermons/update-sermon/${id}`,
         sermonData,
         {
           headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-          }
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
         }
       );
 
-      if (res.status === 200) {
+        if (res.status === 200) {
         if (res.data.sermons) {
           setSermons(res.data.sermons);
         } else {
-          // Fallback to updating local state if server doesn't return full list
-          setSermons(prev => 
-            prev.map(sermon => 
-              sermon._id === id 
-                ? { ...sermon, ...sermonData }
-                : sermon
+          setSermons((prev) =>
+            prev.map((sermon) =>
+              sermon._id === id ? { ...sermon, ...sermonData } : sermon
             )
           );
         }
-        
+
         toast({ title: "Sermon updated successfully!" });
-        setShowSermonDialog(false);
-        setEditingSermon(null);
-        sermonForm.reset();
-        setFile(null);
-        setPreviewUrl("");
+          resetSermonDialog();
+          setEditingSermon(null);
       }
     } catch (error: any) {
       console.error("Error updating sermon:", error);
       toast({
         title: "Error",
         variant: "destructive",
-        description: error.response?.data?.message || "Failed to update sermon"
+        description: error.response?.data?.message || "Failed to update sermon",
       });
     } finally {
       setLoading(false);
@@ -704,16 +767,27 @@ function AdminDashboard() {
     }
   };
 
-
-
-
-
-
-
   // Create Gallery Image
   const createGalleryImage = async (data: GalleryForm) => {
-    setLoading(true);
     try {
+      // Form validation
+      const result = await galleryForm.trigger();
+      if (!result) {
+        // Get all form errors
+        const errors = galleryForm.formState.errors;
+        Object.entries(errors).forEach(([field, error]) => {
+          if (error?.message) {
+            toast({
+              title: `Invalid ${field}`,
+              description: error.message,
+              variant: "destructive",
+            });
+          }
+        });
+        return;
+      }
+
+      setLoading(true);
       if (file) {
         const { url, public_id } = await uploadFileToServer(file, "gallery");
         const galleryData = { ...data, url, public_id };
@@ -731,10 +805,7 @@ function AdminDashboard() {
         if (response.status === 201) {
           setGalleryImages(response.data.gallery);
           toast({ title: "Image added to gallery!" });
-          setShowGalleryDialog(false);
-          galleryForm.reset();
-          setFile(null);
-          setPreviewUrl("");
+          resetGalleryDialog();
         }
       } else {
         const galleryData = { ...data };
@@ -752,8 +823,7 @@ function AdminDashboard() {
         if (response.status === 201) {
           setGalleryImages(response.data.gallery);
           toast({ title: "Image added to gallery!" });
-          setShowGalleryDialog(false);
-          galleryForm.reset();
+          resetGalleryDialog();
         }
       }
     } catch (err: any) {
@@ -811,14 +881,27 @@ function AdminDashboard() {
     }
   };
 
-
-
-
-
   // Create Pastor
   const createPastor = async (data: PastorForm) => {
-    setLoading(true);
     try {
+      // Form validation
+      const result = await pastorForm.trigger();
+      if (!result) {
+        // Get all form errors
+        const errors = pastorForm.formState.errors;
+        Object.entries(errors).forEach(([field, error]) => {
+          if (error?.message) {
+            toast({
+              title: `Invalid ${field}`,
+              description: error.message,
+              variant: "destructive",
+            });
+          }
+        });
+        return;
+      }
+
+      setLoading(true);
       if (file === null) {
         const res = await axios.post(
           `${Configs.url}/api/pastors/new-pastor`,
@@ -879,44 +962,36 @@ function AdminDashboard() {
   const updatePastor = async (id: string, data: Partial<PastorForm>) => {
     setLoading(true);
     try {
-
-
- if (file !== null) {
+      if (file !== null) {
         const { url, public_id } = await uploadFileToServer(file, "sermons");
         const sermonData = { ...data, url, public_id };
 
-        
         const res = await axios.put(
-        `${Configs.url}/api/pastors/update-profile${id}`,
-        sermonData
-      );
-      if (res.status === 200) {
-        setPastors(res.data.pastors);
-        setNotifications(res.data.notifications);
-        setPastors((prev) =>
-          prev.map((p) => (p._id === id ? { ...p, ...data } : p))
+          `${Configs.url}/api/pastors/update-profile/${id}`,
+          sermonData
         );
-        toast({ title: "Pastor updated successfully!" });
-        setShowPastorDialog(false);
-        setEditingPastor(null);
-        pastorForm.reset();
-      }
-      }else{
+        if (res.status === 200) {
+          setPastors(res.data.pastors);
+          setNotifications(res.data.notifications);
+
+          toast({ title: "Pastor updated successfully!" });
+          setShowPastorDialog(false);
+          setEditingPastor(null);
+          pastorForm.reset();
+        }
+      } else {
         const res = await axios.put(
-        `${Configs.url}/api/pastors/update-profile${id}`,
-        data
-      );
-      if (res.status === 200) {
-        setPastors(res.data.pastors);
-        setNotifications(res.data.notifications);
-        setPastors((prev) =>
-          prev.map((p) => (p._id === id ? { ...p, ...data } : p))
+          `${Configs.url}/api/pastors/update-profile/${id}`,
+          data
         );
-        toast({ title: "Pastor updated successfully!" });
-        setShowPastorDialog(false);
-        setEditingPastor(null);
-        pastorForm.reset();
-      }
+        if (res.status === 200) {
+          setNotifications(res.data.notifications);
+          setPastors(res.data.pastors);
+          toast({ title: "Pastor updated successfully!" });
+          setShowPastorDialog(false);
+          setEditingPastor(null);
+          pastorForm.reset();
+        }
       }
     } catch (error: any) {
       toast({
@@ -951,7 +1026,11 @@ function AdminDashboard() {
         description: `Failed to delete pastor: ${
           error.response?.data?.err || error.message
         }`,
+
       });
+      console.log('====================================');
+      console.log(error);
+      console.log('====================================');
     } finally {
       setdeleteLoading("");
     }
@@ -1009,11 +1088,11 @@ function AdminDashboard() {
         variant: "destructive",
         description: error.message || "Failed to delete notification.",
       });
-    }finally {
+    } finally {
       setdeleteLoading("");
     }
 
-    // setNotifications(prev => prev.filter(n => n.id !== id));
+     
   };
 
   // Unarchive notifications
@@ -1034,11 +1113,10 @@ function AdminDashboard() {
       });
     }
   };
-
+// Clear all notifications
   const clearAllNotifications = async () => {
-setdeleteLoading("clear-all");
+    setdeleteLoading("clear-all");
     try {
-
       const res = await axios.delete(
         `${Configs.url}/api/notifications/clear-notifications`
       );
@@ -1046,14 +1124,13 @@ setdeleteLoading("clear-all");
         toast({ title: "All notifications cleared." });
         setNotifications([]);
       }
-      
     } catch (error) {
       toast({
         title: "Error",
         variant: "destructive",
         description: "Failed to clear notifications.",
       });
-    }finally {
+    } finally {
       setdeleteLoading("");
     }
 
@@ -1117,7 +1194,7 @@ setdeleteLoading("clear-all");
       thumbnailUrl: event.thumbnailUrl || "",
       category: event.category,
     });
-    setPreviewUrl(event.thumbnailUrl || event.thumbnail.url ||"");
+    setPreviewUrl(event.thumbnailUrl || event.thumbnail.url || "");
     setShowEventDialog(true);
   };
 
@@ -1139,6 +1216,7 @@ setdeleteLoading("clear-all");
 
   const handleEditSermon = (sermon: Sermon) => {
     setEditingSermon(sermon);
+    setPreviewUrl(sermon.thumbnailUrl || sermon.thumbnail.url || "");
     sermonForm.reset({
       ...sermon,
       date: format(new Date(sermon.date), "yyyy-MM-dd"),
@@ -1159,7 +1237,7 @@ setdeleteLoading("clear-all");
   };
 
   const handleEditPastor = (pastor: Pastor) => {
-    setPreviewUrl(pastor.imageUrl || pastor.profileImg.url ||"");
+    setPreviewUrl(pastor.imageUrl || pastor.profileImg.url || "");
     setEditingPastor(pastor);
     pastorForm.reset(pastor);
     setShowPastorDialog(true);
@@ -1189,6 +1267,13 @@ setdeleteLoading("clear-all");
     pastorForm.reset();
   };
 
+  const resetGalleryDialog = () => {
+    setShowGalleryDialog(false);
+    setFile(null);
+    setPreviewUrl("");
+    galleryForm.reset();
+  };
+
   useEffect(() => {
     getNotifications();
     getEvents();
@@ -1196,12 +1281,12 @@ setdeleteLoading("clear-all");
     getPastors();
     getGalleryImages();
 
-    //   const interval = setInterval(() => {
+      const interval = setInterval(() => {
 
-    //    getSubscribers()
-    // }, 5000);
+       getSubscribers()
+    }, 5000);
 
-    // return () => clearInterval(interval);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -1402,20 +1487,22 @@ setdeleteLoading("clear-all");
                                 Upload
                               </Button>
                             </div>
-                            {(previewUrl || eventForm.watch("thumbnailUrl")) && (
+                            {(previewUrl ||
+                              eventForm.watch("thumbnailUrl")) && (
                               <div className="col-span-2 mt-4">
                                 <div className="relative aspect-video w-full overflow-hidden rounded-lg border">
                                   <img
-                                    src={previewUrl || eventForm.watch("thumbnailUrl")}
+                                    src={
+                                      previewUrl ||
+                                      eventForm.watch("thumbnailUrl")
+                                    }
                                     alt="Event preview"
                                     className="h-full w-full object-cover"
                                   />
                                 </div>
-                                 
                               </div>
                             )}
                           </div>
-                           
                         </div>
 
                         <DialogFooter>
@@ -1506,13 +1593,15 @@ setdeleteLoading("clear-all");
                                       variant="destructive"
                                       data-testid={`button-delete-event-${event._id}`}
                                     >
-                                      {deleteLoading === event._id ?  
+                                      {deleteLoading === event._id ? (
                                         <LoaderCircle
                                           size={20}
                                           color="white"
                                           className=" top-2 right-2 h-6 w-6 aboslute mx-auto animate-spin"
-                                        />:
-                                      <Trash2 className="h-4 w-4" />}
+                                        />
+                                      ) : (
+                                        <Trash2 className="h-4 w-4" />
+                                      )}
                                     </Button>
                                   </AlertDialogTrigger>
                                   <AlertDialogContent>
@@ -1655,6 +1744,25 @@ setdeleteLoading("clear-all");
                             />
                           </div>
                         </div>
+                        <div className="flex items-center justify-between p-4 rounded-lg border">
+                          <div className="space-y-0.5">
+                            <Label>Live Sermon</Label>
+                            <p className="text-xs text-muted-foreground">
+                              {sermonForm.watch("isLive") 
+                                ? "This sermon will be shown as currently streaming live"
+                                : "Toggle this to mark the sermon as currently streaming live"}
+                            </p>
+                            <p className={`text-xs mt-1 ${sermonForm.watch("isLive") ? "text-green-600" : "text-gray-400"}`}>
+                              Status: {sermonForm.watch("isLive") ? "Live Now" : "Not Live"}
+                            </p>
+                          </div>
+                          <Switch
+                            checked={sermonForm.watch("isLive")}
+                            onCheckedChange={(checked) =>
+                              sermonForm.setValue("isLive", checked)
+                            }
+                          />
+                        </div>
                         <div>
                           <Label htmlFor="thumbnailUrl">
                             Thumbnail (URL or Upload)
@@ -1696,7 +1804,6 @@ setdeleteLoading("clear-all");
                                   className="w-full object-contain"
                                 />
                               </div>
-                               
                             </div>
                           )}
                         </div>
@@ -1709,7 +1816,7 @@ setdeleteLoading("clear-all");
                             Cancel
                           </Button>
                           <Button type="submit">
-                           {Loading && !editingSermon
+                            {Loading && !editingSermon
                               ? "Creating..."
                               : editingSermon
                               ? Loading && editingSermon
@@ -1772,7 +1879,16 @@ setdeleteLoading("clear-all");
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
                                     <Button size="sm" variant="destructive">
-                                      <Trash2 className="h-4 w-4" />
+                                      {deleteLoading === sermon._id ? (
+                                          <LoaderCircle
+                                            size={20}
+                                            color="white"
+                                            className=" top-2 right-2 h-6 w-6 aboslute mx-auto animate-spin"
+                                          />
+                                        ) : (
+                                          <Trash2 className="h-4 w-4" />
+                                        )}
+                                      
                                     </Button>
                                   </AlertDialogTrigger>
                                   <AlertDialogContent>
@@ -1793,15 +1909,7 @@ setdeleteLoading("clear-all");
                                         onClick={() => deleteSermon(sermon._id)}
                                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                       >
-                                        {deleteLoading === sermon._id ? (
-                                          <LoaderCircle
-                                            size={20}
-                                            color="white"
-                                            className=" top-2 right-2 h-6 w-6 aboslute mx-auto animate-spin"
-                                          />
-                                        ) : (
-                                          "Delete"
-                                        )}
+                                        Delete
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
                                   </AlertDialogContent>
@@ -1873,7 +1981,8 @@ setdeleteLoading("clear-all");
                                     <div className="flex items-center gap-3">
                                       <img
                                         src={
-                                          user.profileImage?.url || user.imageUrl ||
+                                          user.profileImage?.url ||
+                                          user.imageUrl ||
                                           "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740&q=80"
                                         }
                                         alt={user.name || "User"}
@@ -2242,12 +2351,7 @@ setdeleteLoading("clear-all");
                           <Button
                             type="button"
                             variant="outline"
-                            onClick={() => {
-                              setShowGalleryDialog(false);
-                              setPreviewUrl("");
-                              setFile(null);
-                              galleryForm.reset();
-                            }}
+                            onClick={resetGalleryDialog}
                           >
                             Cancel
                           </Button>
@@ -2405,21 +2509,22 @@ setdeleteLoading("clear-all");
                                 Upload
                               </Button>
                             </div>
-                            
                           </div>
                           {(previewUrl || pastorForm.watch("imageUrl")) && (
-                                <div className="col-span-2 mt-4">
+                            <div className="col-span-2 mt-4">
                               <div className="relative aspect-video w-full overflow-hidden rounded-lg border">
                                 <img
-                                  src={previewUrl || pastorForm.watch("imageUrl")}
+                                  src={
+                                    previewUrl || pastorForm.watch("imageUrl")
+                                  }
                                   alt="Pastor profile preview"
                                   className="h-full w-full object-cover"
                                 />
                               </div>
-                              </div>
-                            )}
+                            </div>
+                          )}
                         </div>
-                        
+
                         <DialogFooter>
                           <Button
                             type="button"
@@ -2475,7 +2580,8 @@ setdeleteLoading("clear-all");
                           <TableRow key={pastor._id}>
                             <img
                               src={
-                                pastor.profileImg?.url || pastor.imageUrl ||
+                                pastor.profileImg?.url ||
+                                pastor?.imageUrl ||
                                 "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740&q=80"
                               }
                               alt={pastor.name}
@@ -2499,7 +2605,16 @@ setdeleteLoading("clear-all");
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
                                     <Button size="sm" variant="destructive">
-                                      <Trash2 className="h-4 w-4" />
+                                      {deleteLoading === pastor._id ? (
+                                          <LoaderCircle
+                                            size={20}
+                                            color="white"
+                                            className=" top-2 right-2 h-6 w-6 aboslute mx-auto animate-spin"
+                                          />
+                                        ) : (
+                                        <Trash2 className="h-4 w-4" />
+                                        )}
+                                     
                                     </Button>
                                   </AlertDialogTrigger>
                                   <AlertDialogContent>
@@ -2520,15 +2635,7 @@ setdeleteLoading("clear-all");
                                         onClick={() => deletePastor(pastor._id)}
                                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                       >
-                                        {deleteLoading === pastor._id ? (
-                                          <LoaderCircle
-                                            size={20}
-                                            color="white"
-                                            className=" top-2 right-2 h-6 w-6 aboslute mx-auto animate-spin"
-                                          />
-                                        ) : (
-                                          "Delete"
-                                        )}
+                                        Delete
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
                                   </AlertDialogContent>
@@ -2560,7 +2667,7 @@ setdeleteLoading("clear-all");
                   </CardTitle>
                   <div className="flex gap-2">
                     {notifications.filter((n) => n.archived).length > 0 && (
-                     <Button
+                      <Button
                         variant="outline"
                         size="sm"
                         onClick={UnArchiveNotifications}
@@ -2569,42 +2676,42 @@ setdeleteLoading("clear-all");
                           notifications.filter((n) => n.archived).length
                         })`}
                       </Button>
-                  )}
-                     
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm">
-                            
-                            {deleteLoading === "clear-all" ? (
-                              <LoaderCircle
-                                size={16}
-                                color="white"
-                                className="ml-2 animate-spin inline-block"
-                              />
-                            ):"Clear All"}
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This will permanently delete all notifications.
-                              This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={clearAllNotifications}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Clear All
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  
+                    )}
+
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          {deleteLoading === "clear-all" ? (
+                            <LoaderCircle
+                              size={16}
+                              color="white"
+                              className="ml-2 animate-spin inline-block"
+                            />
+                          ) : (
+                            "Clear All"
+                          )}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete all notifications. This
+                            action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={clearAllNotifications}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Clear All
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -2698,12 +2805,15 @@ setdeleteLoading("clear-all");
                                         size="sm"
                                         className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                                       >
-                                        {deleteLoading ?  <LoaderCircle
-                                size={16}
-                                color="white"
-                                className="ml-2 animate-spin inline-block"
-                              /> :"Delete"}
-                                        
+                                        {deleteLoading ? (
+                                          <LoaderCircle
+                                            size={16}
+                                            color="white"
+                                            className="ml-2 animate-spin inline-block"
+                                          />
+                                        ) : (
+                                          "Delete"
+                                        )}
                                       </Button>
                                     </AlertDialogTrigger>
                                     <AlertDialogContent>
