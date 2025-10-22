@@ -8,7 +8,6 @@ import { format } from "date-fns";
 import { Skeleton } from "../components/ui/skeleton";
 import { mockSermons } from "../lib/Data";
 import { useAppData } from "../hooks/use-AppData";
- 
 
 // Mock Data
 
@@ -18,25 +17,26 @@ export default function Sermons() {
   const [allSermons, setAllSermons] = useState(Sermons);
   const [sermonsLoading, setSermonsLoading] = useState(true);
   const [watchedSermons, setWatchedSermons] = useState<string[]>(() => {
-    const saved = localStorage.getItem('watchedSermons');
+    const saved = localStorage.getItem("watchedSermons");
     return saved ? JSON.parse(saved) : [];
   });
-  const [currentSermon, setCurrentSermon] = useState<typeof Sermons[0] | null>(null);
+  const [currentSermon, setCurrentSermon] = useState<
+    (typeof Sermons)[0] | null
+  >(null);
 
   // Function to handle sermon selection and tracking watched status
-  const handleSelectSermon = (sermon: typeof Sermons[0]) => {
+  const handleSelectSermon = (sermon: (typeof Sermons)[0]) => {
     setCurrentSermon(sermon);
     if (!watchedSermons.includes(sermon._id)) {
       const newWatched = [...watchedSermons, sermon._id];
       setWatchedSermons(newWatched);
-      localStorage.setItem('watchedSermons', JSON.stringify(newWatched));
+      localStorage.setItem("watchedSermons", JSON.stringify(newWatched));
     }
   };
 
   useEffect(() => {
     // window.scrollTo(0, 0);
 
-    
     if (sermonsLoading && !loading) {
       const timer = setTimeout(() => {
         setAllSermons(Sermons);
@@ -46,10 +46,12 @@ export default function Sermons() {
     }
   });
 
-  const filteredSermons = allSermons.filter(sermon =>
-    sermon.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    sermon.speaker.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (sermon.series && sermon.series.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredSermons = allSermons.filter(
+    (sermon) =>
+      sermon.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      sermon.speaker.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (sermon.series &&
+        sermon.series.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const displaySermons = searchQuery ? filteredSermons : allSermons;
@@ -69,8 +71,12 @@ export default function Sermons() {
             <h1 className="text-5xl font-bold mb-6" data-testid="sermons-title">
               Watch & Listen
             </h1>
-            <p className="text-xl max-w-3xl mx-auto mb-8" data-testid="sermons-subtitle">
-              Experience our worship services and dive deeper into God's Word through our sermon archive.
+            <p
+              className="text-xl max-w-3xl mx-auto mb-8"
+              data-testid="sermons-subtitle"
+            >
+              Experience our worship services and dive deeper into God's Word
+              through our sermon archive.
             </p>
           </div>
         </div>
@@ -80,7 +86,7 @@ export default function Sermons() {
       <section className="py-8 bg-card">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1400px]">
           <div className="grid grid-cols-12 gap-6">
-              {/* Main Video Player */}
+            {/* Main Video Player */}
             <div className="col-span-12 lg:col-span-8">
               <Card className="overflow-hidden shadow-lg">
                 <CardContent className="p-0">
@@ -89,15 +95,19 @@ export default function Sermons() {
                       {(currentSermon || allSermons[0])?.videoUrl ? (
                         <iframe
                           key={currentSermon?._id || allSermons[0]?._id} // Force iframe refresh when sermon changes
-                          src={`${(currentSermon || allSermons[0])?.videoUrl}?autoplay=1`}
+                          src={`${
+                            (currentSermon || allSermons[0])?.videoUrl
+                          }?autoplay=1`}
                           className="w-full h-full"
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                           allowFullScreen
                         />
                       ) : (
                         <div className="flex flex-col items-center justify-center h-full">
-                          <Play className="h-20 w-20 text-primary mb-4" />
-                          <p className="text-muted-foreground">Select a sermon to watch</p>
+                          <Play className="h-20 w-20 text-white mb-4" />
+                          <p className="text-muted-foreground">
+                            Select a sermon to watch
+                          </p>
                         </div>
                       )}
                     </div>
@@ -110,13 +120,17 @@ export default function Sermons() {
                         </Badge>
                       )}
                       <Badge variant="outline" className="text-xs">
-                        {(currentSermon || allSermons[0])?.date ? 
-                          format(new Date((currentSermon || allSermons[0])?.date), "MMMM d, yyyy") 
+                        {(currentSermon || allSermons[0])?.date
+                          ? format(
+                              new Date((currentSermon || allSermons[0])?.date),
+                              "MMMM d, yyyy"
+                            )
                           : ""}
                       </Badge>
                     </div>
                     <h3 className="text-xl font-semibold mb-2">
-                      {(currentSermon || allSermons[0])?.title || "Select a sermon to watch"}
+                      {(currentSermon || allSermons[0])?.title ||
+                        "Select a sermon to watch"}
                     </h3>
                     <div className="flex items-center text-muted-foreground text-sm mb-4">
                       <User className="mr-2 h-4 w-4" />
@@ -128,63 +142,95 @@ export default function Sermons() {
                     {(currentSermon || allSermons[0])?.scripture && (
                       <div className="mt-4">
                         <Badge variant="outline" className="text-xs">
-                          Scripture: {(currentSermon || allSermons[0])?.scripture}
+                          Scripture:{" "}
+                          {(currentSermon || allSermons[0])?.scripture}
                         </Badge>
                       </div>
                     )}
                   </div>
                 </CardContent>
               </Card>
-            </div>            {/* Side Sections */}
+            </div>{" "}
+            {/* Side Sections */}
             <div className="col-span-12 lg:col-span-4 grid grid-rows-2 gap-6 h-full">
               {/* Watched Sermons */}
               <Card className="overflow-hidden">
                 <CardContent className="p-4">
                   <h3 className="font-semibold mb-4">Recently Watched</h3>
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                    {allSermons.slice(0, 3).map((sermon) => (
-                      <div 
-                        key={sermon._id} 
-                        className={`flex gap-3 items-start p-2 rounded-lg cursor-pointer transition-colors
-                          ${currentSermon?._id === sermon._id ? 'bg-primary/10' : 'hover:bg-muted'}
-                        `}
-                        onClick={() => handleSelectSermon(sermon)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            handleSelectSermon(sermon);
+                  {allSermons.length > 0 ? (
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                      {allSermons.slice(0, 3).map((sermon) => (
+                        <div
+                          key={sermon._id}
+                          className={`flex gap-3 items-start p-2 rounded-lg cursor-pointer transition-colors
+                          ${
+                            currentSermon?._id === sermon._id
+                              ? "bg-primary/10"
+                              : "hover:bg-muted"
                           }
-                        }}
-                      >
-                        <div className="w-24 h-16 relative flex-shrink-0">
-                          <img
-                            src={sermon.thumbnail?.url || sermon.thumbnailUrl || "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"}
-                            alt={sermon.title}
-                            className="w-full h-full object-cover rounded"
-                          />
-                          <div className={`absolute inset-0 bg-black/20 flex items-center justify-center 
-                            ${currentSermon?._id === sermon._id ? 'opacity-100' : 'opacity-0 hover:opacity-100'}
-                          `}>
-                            <Play className="h-6 w-6 text-white" />
+                        `}
+                          onClick={() => handleSelectSermon(sermon)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              handleSelectSermon(sermon);
+                            }
+                          }}
+                        >
+                          <div className="w-24 h-16 relative flex-shrink-0">
+                            <img
+                              src={
+                                sermon.thumbnail?.url ||
+                                sermon.thumbnailUrl ||
+                                "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"
+                              }
+                              alt={sermon.title}
+                              className="w-full h-full object-cover rounded"
+                            />
+                            <div
+                              className={`absolute inset-0 bg-black/20 flex items-center justify-center 
+                            ${
+                              currentSermon?._id === sermon._id
+                                ? "opacity-100"
+                                : "opacity-0 hover:opacity-100"
+                            }
+                          `}
+                            >
+                              <Play className="h-6 w-6 text-white" />
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4
+                              className={`font-medium text-sm line-clamp-2 
+                            ${
+                              currentSermon?._id === sermon._id
+                                ? "text-primary"
+                                : ""
+                            }
+                          `}
+                            >
+                              {sermon.title}
+                            </h4>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {sermon.speaker}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge variant="outline" className="text-xs">
+                                {format(new Date(sermon.date), "MMM d, yyyy")}
+                              </Badge>
+                            </div>
                           </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className={`font-medium text-sm line-clamp-2 
-                            ${currentSermon?._id === sermon._id ? 'text-primary' : ''}
-                          `}>
-                            {sermon.title}
-                          </h4>
-                          <p className="text-xs text-muted-foreground mt-1">{sermon.speaker}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="outline" className="text-xs">
-                              {format(new Date(sermon.date), "MMM d, yyyy")}
-                            </Badge>
-                          </div>
-                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-1 w-full h-52 justify-center items-center">
+                      <div className="text-gray-400 text-center">
+                        You have not watched any sermons yet.
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -192,7 +238,7 @@ export default function Sermons() {
               <Card className="overflow-hidden">
                 <CardContent className="p-4">
                   <h3 className="font-semibold mb-4">Up Next</h3>
-                  <div className="space-y-4 max-h-[300px] overflow-y-auto">
+                 {allSermons.length>0? <div className="space-y-4 max-h-[300px] overflow-y-auto">
                     {allSermons.slice(3, 6).map((sermon) => (
                       <div key={sermon._id} className="flex gap-3 items-start">
                         <div className="w-24 h-16 relative flex-shrink-0">
@@ -206,12 +252,20 @@ export default function Sermons() {
                           </div>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm line-clamp-2">{sermon.title}</h4>
-                          <p className="text-xs text-muted-foreground">{sermon.speaker}</p>
+                          <h4 className="font-medium text-sm line-clamp-2">
+                            {sermon.title}
+                          </h4>
+                          <p className="text-xs text-muted-foreground">
+                            {sermon.speaker}
+                          </p>
                         </div>
                       </div>
                     ))}
-                  </div>
+                  </div>:(<div className="flex flex-1 w-full h-52 justify-center items-center">
+                      <div className="text-gray-400 text-center">
+                       No sermons available. come back later 😇
+                      </div>
+                    </div>)}
                 </CardContent>
               </Card>
             </div>
@@ -223,10 +277,16 @@ export default function Sermons() {
       <section className="py-16 bg-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-foreground mb-4" data-testid="sermon-archive-title">
+            <h2
+              className="text-4xl font-bold text-foreground mb-4"
+              data-testid="sermon-archive-title"
+            >
               Sermon Archive
             </h2>
-            <p className="text-xl text-muted-foreground" data-testid="sermon-archive-description">
+            <p
+              className="text-xl text-muted-foreground"
+              data-testid="sermon-archive-description"
+            >
               Browse and search through our collection of messages
             </p>
           </div>
@@ -242,7 +302,11 @@ export default function Sermons() {
                 className="flex-grow"
                 data-testid="input-sermon-search"
               />
-              <Button type="submit" variant="outline" data-testid="button-search-sermons">
+              <Button
+                type="submit"
+                variant="outline"
+                data-testid="button-search-sermons"
+              >
                 <Search className="h-4 w-4" />
               </Button>
             </form>
@@ -250,7 +314,7 @@ export default function Sermons() {
 
           {/* Sermon Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {(sermonsLoading || (searchQuery && searchLoading)) ? (
+            {sermonsLoading || (searchQuery && searchLoading) ? (
               Array.from({ length: 6 }).map((_, i) => (
                 <Card key={i} className="overflow-hidden">
                   <Skeleton className="w-full aspect-video" />
@@ -266,72 +330,98 @@ export default function Sermons() {
               ))
             ) : displaySermons && displaySermons.length > 0 ? (
               displaySermons.map((sermon) => (
-                <Card key={sermon._id} className="overflow-hidden hover:shadow-xl transition-shadow duration-300" data-testid={`sermon-card-${sermon._id}`}>
+                <Card
+                  key={sermon._id}
+                  className="overflow-hidden hover:shadow-xl transition-shadow duration-300"
+                  data-testid={`sermon-card-${sermon._id}`}
+                >
                   <div className="relative">
                     <img
-                      src={sermon.thumbnail.url||sermon.thumbnailUrl || "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"}
+                      src={
+                        sermon.thumbnail.url ||
+                        sermon.thumbnailUrl ||
+                        "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"
+                      }
                       alt={sermon.title}
                       className="w-full aspect-video object-cover"
                       data-testid={`sermon-thumbnail-${sermon._id}`}
                     />
-                    <div 
+                    <div
                       className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300"
                       onClick={() => {
                         handleSelectSermon(sermon);
                         // Scroll to the top where the video player is
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
                     >
-                      <Button size="lg" className="rounded-full" data-testid={`button-play-sermon-${sermon._id}`}>
+                      <Button
+                        size="lg"
+                        className="rounded-full"
+                        data-testid={`button-play-sermon-${sermon._id}`}
+                      >
                         <Play className="h-6 w-6" />
                       </Button>
                     </div>
                     {sermon.series && (
-                      <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground" data-testid={`sermon-series-${sermon._id}`}>
+                      <Badge
+                        className="absolute top-2 left-2 bg-primary text-primary-foreground"
+                        data-testid={`sermon-series-${sermon._id}`}
+                      >
                         {sermon.series}
                       </Badge>
                     )}
                   </div>
-                  
+
                   <CardContent className="p-6">
-                    <h3 className="text-xl font-semibold text-card-foreground mb-2 line-clamp-2" data-testid={`sermon-title-${sermon._id}`}>
+                    <h3
+                      className="text-xl font-semibold text-card-foreground mb-2 line-clamp-2"
+                      data-testid={`sermon-title-${sermon._id}`}
+                    >
                       {sermon.title}
                     </h3>
-                    
+
                     <div className="flex items-center text-muted-foreground text-sm mb-2">
                       <User className="mr-2 h-4 w-4" />
-                      <span data-testid={`sermon-speaker-${sermon._id}`}>{sermon.speaker}</span>
+                      <span data-testid={`sermon-speaker-${sermon._id}`}>
+                        {sermon.speaker}
+                      </span>
                     </div>
-                    
+
                     <div className="flex items-center text-muted-foreground text-sm mb-4">
                       <Calendar className="mr-2 h-4 w-4" />
                       <span data-testid={`sermon-date-${sermon._id}`}>
                         {format(new Date(sermon.date), "EEEE, MMMM d, yyyy")}
                       </span>
                     </div>
-                    
-                    <p className="text-muted-foreground text-sm mb-4 line-clamp-3" data-testid={`sermon-description-${sermon._id}`}>
+
+                    <p
+                      className="text-muted-foreground text-sm mb-4 line-clamp-3"
+                      data-testid={`sermon-description-${sermon._id}`}
+                    >
                       {sermon.description}
                     </p>
-                    
+
                     {sermon.scripture && (
                       <div className="mb-4">
-                        <Badge variant="outline" data-testid={`sermon-scripture-${sermon._id}`}>
+                        <Badge
+                          variant="outline"
+                          data-testid={`sermon-scripture-${sermon._id}`}
+                        >
                           {sermon.scripture}
                         </Badge>
                       </div>
                     )}
-                    
+
                     <div className="flex gap-2">
                       {sermon.videoUrl && (
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           className="flex-1"
                           data-testid={`button-watch-video-${sermon._id}`}
                           onClick={() => {
                             handleSelectSermon(sermon);
                             // Scroll to the top where the video player is
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                            window.scrollTo({ top: 0, behavior: "smooth" });
                           }}
                         >
                           <Play className="mr-2 h-4 w-4" />
@@ -339,9 +429,9 @@ export default function Sermons() {
                         </Button>
                       )}
                       {sermon.audioUrl && (
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
+                        <Button
+                          size="sm"
+                          variant="outline"
                           className="flex-1"
                           data-testid={`button-listen-audio-${sermon._id}`}
                         >
@@ -354,8 +444,13 @@ export default function Sermons() {
               ))
             ) : (
               <div className="col-span-full text-center py-12">
-                <p className="text-muted-foreground text-lg" data-testid="no-sermons-found">
-                  {searchQuery ? "No sermons found matching your search." : "No sermons available at this time."}
+                <p
+                  className="text-muted-foreground text-lg"
+                  data-testid="no-sermons-found"
+                >
+                  {searchQuery
+                    ? "No sermons found matching your search."
+                    : "No sermons available at this time."}
                 </p>
               </div>
             )}

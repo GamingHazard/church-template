@@ -1376,6 +1376,7 @@ function AdminDashboard() {
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl">
+                      <div className="max-h-[80vh] overflow-y-auto pr-3">
                       <DialogHeader>
                         <DialogTitle>
                           {editingEvent ? "Edit Event" : "Create New Event"}
@@ -1525,6 +1526,7 @@ function AdminDashboard() {
                           </Button>
                         </DialogFooter>
                       </form>
+                      </div>
                     </DialogContent>
                   </Dialog>
                 </CardHeader>
@@ -1679,6 +1681,7 @@ function AdminDashboard() {
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl">
+                      <div className="max-h-[80vh] overflow-y-auto pr-3">
                       <DialogHeader>
                         <DialogTitle>
                           {editingSermon ? "Edit Sermon" : "Create New Sermon"}
@@ -1826,6 +1829,7 @@ function AdminDashboard() {
                           </Button>
                         </DialogFooter>
                       </form>
+                      </div>
                     </DialogContent>
                   </Dialog>
                 </CardHeader>
@@ -1955,106 +1959,88 @@ function AdminDashboard() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {usersLoading
-                            ? Array.from({ length: 3 }).map((_, i) => (
-                                <TableRow key={i}>
-                                  <TableCell>
-                                    <Skeleton className="h-10 w-10 rounded-full" />
-                                  </TableCell>
-                                  <TableCell>
-                                    <Skeleton className="h-4 w-40" />
-                                  </TableCell>
-                                  <TableCell>
-                                    <Skeleton className="h-4 w-24" />
-                                  </TableCell>
-                                  <TableCell>
-                                    <Skeleton className="h-4 w-12" />
-                                  </TableCell>
-                                  <TableCell>
-                                    <Skeleton className="h-8 w-24" />
-                                  </TableCell>
-                                </TableRow>
-                              ))
-                            : users.map((user, index) => (
-                                <TableRow key={user._id}>
-                                  <TableCell>
-                                    <div className="flex items-center gap-3">
-                                      <img
-                                        src={
-                                          user.profileImage?.url ||
-                                          user.imageUrl ||
-                                          "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740&q=80"
-                                        }
-                                        alt={user.name || "User"}
-                                        className="h-10 w-10 rounded-full object-cover"
-                                      />
-                                      <div>
-                                        <p className="font-medium ">
-                                          {user.name || `Sheep: ${index}`}
-                                        </p>
-                                        <p className="text-sm text-muted-foreground text-gray-400">
-                                          {user.email}
-                                        </p>
-                                      </div>
+                          {usersLoading ? (
+                            Array.from({ length: 3 }).map((_, i) => (
+                              <TableRow key={i}>
+                                <TableCell>
+                                  <Skeleton className="h-10 w-10 rounded-full" />
+                                </TableCell>
+                                <TableCell>
+                                  <Skeleton className="h-4 w-40" />
+                                </TableCell>
+                                <TableCell>
+                                  <Skeleton className="h-4 w-24" />
+                                </TableCell>
+                                <TableCell>
+                                  <Skeleton className="h-4 w-12" />
+                                </TableCell>
+                                <TableCell>
+                                  <Skeleton className="h-8 w-24" />
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          ) : users && users.length > 0 ? (
+                            users.map((user, index) => (
+                              <TableRow key={user._id}>
+                                <TableCell>
+                                  <div className="flex items-center gap-3">
+                                    <img
+                                      src={
+                                        user.profileImage?.url ||
+                                        user.imageUrl ||
+                                        "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740&q=80"
+                                      }
+                                      alt={user.name || "User"}
+                                      className="h-10 w-10 rounded-full object-cover"
+                                    />
+                                    <div>
+                                      <p className="font-medium ">{user.name || `Sheep: ${index}`}</p>
+                                      <p className="text-sm text-muted-foreground text-gray-400">{user.email}</p>
                                     </div>
+                                  </div>
+                                </TableCell>
+                                {/* <TableCell className="text-gray-400">{user.phone}</TableCell> */}
+                                {user.subscribedAt && (
+                                  <TableCell className="text-gray-400  p-1">
+                                    {format(new Date(user.subscribedAt || new Date()), "MMM d, yyyy")}
                                   </TableCell>
-                                  {/* <TableCell className="text-gray-400">{user.phone}</TableCell> */}
-                                  {user.subscribedAt && (
-                                    <TableCell className="text-gray-400  p-1">
-                                      {format(
-                                        new Date(
-                                          user.subscribedAt || new Date()
-                                        ),
-                                        "MMM d, yyyy"
-                                      )}
-                                    </TableCell>
-                                  )}
-                                  {(user.remindersCount || user.reminder) && (
-                                    <TableCell className="text-center text-gray-400  ">
-                                      {user.remindersCount ||
-                                        (user.reminder ? 1 : 0)}
-                                    </TableCell>
-                                  )}
+                                )}
+                                {(user.remindersCount || user.reminder) && (
+                                  <TableCell className="text-center text-gray-400  ">{user.remindersCount || (user.reminder ? 1 : 0)}</TableCell>
+                                )}
 
-                                  <TableCell>
-                                    <div className="flex gap-1">
-                                      <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() =>
-                                          toast({
-                                            title: `Emailing ${user.name}`,
-                                          })
-                                        }
-                                      >
-                                        <Mail className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() =>
-                                          toast({
-                                            title: `Sending SMS to ${user.name}`,
-                                          })
-                                        }
-                                      >
-                                        <MessageSquare className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        className="bg-red-200 hover:bg-red-300"
-                                        size="icon"
-                                        onClick={() =>
-                                          toast({
-                                            title: `Banning ${user.name}`,
-                                          })
-                                        }
-                                      >
-                                        <Ban className="h-4 w-4 text-red-600" />
-                                      </Button>
-                                    </div>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
+                                <TableCell>
+                                  <div className="flex gap-1">
+                                    <Button variant="outline" size="icon" onClick={() => toast({ title: `Emailing ${user.name}` })}>
+                                      <Mail className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="outline" size="icon" onClick={() => toast({ title: `Sending SMS to ${user.name}` })}>
+                                      <MessageSquare className="h-4 w-4" />
+                                    </Button>
+                                    <Button className="bg-red-200 hover:bg-red-300" size="icon" onClick={() => toast({ title: `Banning ${user.name}` })}>
+                                      <Ban className="h-4 w-4 text-red-600" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          ) : (
+                            <TableRow>
+                              <TableCell colSpan={5} className="py-12">
+                                <div className="text-center space-y-4">
+                                  <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=1400&auto=format&fit=crop&ixlib=rb-4.0.3&s=5a1f3f5f1f2f6d3a" alt="No users" className="mx-auto h-36 w-auto" />
+                                  <h3 className="text-lg font-semibold">Throwback: No users yet</h3>
+                                  <p className="text-sm text-muted-foreground max-w-xl mx-auto">It looks like no one has signed up yet. Invite your congregation, share the site link, or import contacts to get started.</p>
+                                  <div className="flex items-center justify-center gap-2 mt-4">
+                                    <Button variant="outline" onClick={() => { try { navigator.clipboard?.writeText(window.location.href); toast({ title: 'Invite link copied' }); } catch (e) { toast({ title: 'Could not copy invite link', variant: 'destructive' }); } }}>
+                                      Copy Invite Link
+                                    </Button>
+                                    <Button onClick={() => toast({ title: 'Import CSV not configured' })}>Import CSV</Button>
+                                  </div>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
                         </TableBody>
                       </Table>
                     </CardContent>
@@ -2257,6 +2243,7 @@ function AdminDashboard() {
                         galleryForm.reset();
                       }}
                     >
+                      <div className="max-h-[80vh] overflow-y-auto pr-3">
                       <DialogHeader>
                         <DialogTitle>Add Gallery Image</DialogTitle>
                       </DialogHeader>
@@ -2360,6 +2347,7 @@ function AdminDashboard() {
                           </Button>
                         </DialogFooter>
                       </form>
+                      </div>
                     </DialogContent>
                   </Dialog>
                 </CardHeader>
@@ -2450,6 +2438,7 @@ function AdminDashboard() {
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl">
+                      <div className="max-h-[80vh] overflow-y-auto pr-3">
                       <DialogHeader>
                         <DialogTitle>
                           {editingPastor ? "Edit Pastor" : "Add New Pastor"}
@@ -2544,6 +2533,7 @@ function AdminDashboard() {
                           </Button>
                         </DialogFooter>
                       </form>
+                      </div>
                     </DialogContent>
                   </Dialog>
                 </CardHeader>
