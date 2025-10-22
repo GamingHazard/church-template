@@ -94,11 +94,28 @@ export default {
             "animation-timing-function": "cubic-bezier(0, 0, 0.2, 1)",
           },
         },
+        "smooth-slide": {
+          "0%": {
+            transform: "translateX(100%)",
+            opacity: "0",
+          },
+          "5%": {
+            opacity: "1",
+          },
+          "95%": {
+            opacity: "1",
+          },
+          "100%": {
+            transform: "translateX(-100%)",
+            opacity: "0",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         bounce: "bounce 1s infinite",
+        "smooth-slide": "smooth-slide 5s ease-in-out",
       },
     },
   },

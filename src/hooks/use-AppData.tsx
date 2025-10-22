@@ -4,7 +4,7 @@ import { Configs } from "../lib/utils";
 import { set } from "date-fns";
 
 interface Event {
-   _id: string;
+    _id: string;
   title: string;
   description: string;
   date: string;
@@ -12,11 +12,12 @@ interface Event {
   location: string;
   speaker?: string;
   thumbnailUrl?: string;
-  category: 'general' | 'service' | 'youth' | 'community';
+  category: "general" | "service" | "youth" | "community";
+  thumbnail: { url?: string; public_id?: string }
 }
 
 interface Sermon {
-  _id: string;
+ _id: string;
   title: string;
   speaker: string;
   date: string;
@@ -26,7 +27,7 @@ interface Sermon {
   thumbnailUrl?: string;
   scripture?: string;
   series?: string;
-}
+  thumbnail: { url?: string; public_id?: string }}
 
 interface AppData {
   events: Event[];

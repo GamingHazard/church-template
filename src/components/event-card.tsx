@@ -11,7 +11,7 @@ import { useToast } from "../hooks/use-toast";
 
 // Define Event type locally
 export type Event = {
-  _id: string;
+     _id: string;
   title: string;
   description: string;
   date: string;
@@ -19,7 +19,8 @@ export type Event = {
   location: string;
   speaker?: string;
   thumbnailUrl?: string;
-  category: string;
+  category: "general" | "service" | "youth" | "community";
+  thumbnail: { url?: string; public_id?: string }
 };
 
 interface EventCardProps {
@@ -62,11 +63,13 @@ export default function EventCard({ event }: EventCardProps) {
     }, 1000);
   };
 
+  const ImgUrl = event.thumbnail.url || event.thumbnailUrl || "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/1665px-No-Image-Placeholder.svg.png";
+
   return (
     <Card className="overflow-hidden hover:shadow-xl transition-shadow duration-300" data-testid={`event-card-${event._id}`}>
-      {event.thumbnailUrl && (
+      {ImgUrl && (
         <img
-          src={event.thumbnailUrl || "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/1665px-No-Image-Placeholder.svg.png"}
+          src={ ImgUrl }
           alt={event.title}
           className="w-full h-48 object-cover"
           data-testid={`event-image-${event._id}`}

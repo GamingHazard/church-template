@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "../components/ui/card";
 import {
   Clock,
   MapPin,
@@ -8,7 +8,7 @@ import {
   Music,
   ArrowRight,
 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "../components/ui/skeleton";
 import { useEffect, useState } from "react";
 
 // Define types locally

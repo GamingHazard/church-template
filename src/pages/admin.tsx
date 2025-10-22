@@ -1,19 +1,79 @@
-import { useState, useEffect,useRef } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { useState, useEffect, useRef } from "react";
+import { Redirect } from "wouter";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
 import { Badge } from "../components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../components/ui/alert-dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../components/ui/alert-dialog";
 import { Skeleton } from "../components/ui/skeleton";
 import { Switch } from "../components/ui/switch";
 import {
-  Plus, Edit, Trash2, Calendar, Users, DollarSign, Image, Mail, Eye, Bell, Settings as SettingsIcon, Ban, MessageSquare,PlayCircleIcon,Loader2
+  Plus,
+  Edit,
+  Trash2,
+  Calendar,
+  Users,
+  DollarSign,
+  Image,
+  Mail,
+  Eye,
+  Bell,
+  Settings as SettingsIcon,
+  Ban,
+  MessageSquare,
+  PlayCircleIcon,
+  Loader2,
+  DeleteIcon,
+  LoaderCircle,
+  CameraIcon,
+  ImageIcon,
 } from "lucide-react";
 import { format, set } from "date-fns";
 import { useForm } from "react-hook-form";
@@ -33,8 +93,10 @@ export type Event = {
   time: string;
   location: string;
   speaker?: string;
-  imageUrl?: string;
-  category: 'general' | 'service' | 'youth' | 'community';
+  thumbnailUrl?: string;
+  category: "general" | "service" | "youth" | "community";
+  thumbnail: { url?: string; public_id?: string }
+  
 };
 
 export type Sermon = {
@@ -48,6 +110,8 @@ export type Sermon = {
   thumbnailUrl?: string;
   scripture?: string;
   series?: string;
+  thumbnail: { url?: string; public_id?: string }
+
 };
 
 export type Newsletter = {
@@ -61,16 +125,17 @@ export type Donation = {
   id: string;
   amount: string;
   donorName?: string;
-  purpose: 'general' | 'missions' | 'building' | 'special';
-  status: 'completed' | 'pending' | 'failed';
+  purpose: "general" | "missions" | "building" | "special";
+  status: "completed" | "pending" | "failed";
   createdAt: string;
 };
 
 export type GalleryImage = {
-  id: string;
+  _id: string;
   title: string;
   imageUrl: string;
-  category: 'general' | 'events' | 'worship' | 'community';
+  category: "general" | "events" | "worship" | "community";
+  image: { url?: string; public_id?: string };
 };
 
 export type Pastor = {
@@ -78,17 +143,18 @@ export type Pastor = {
   name: string;
   title: string;
   bio: string;
-  profileImg: {url?:string,public_id?:string};
+  profileImg: { url?: string; public_id?: string };
   email: string;
   isLead: boolean;
   order: number;
+  imageUrl?: string;
 };
 
 export type Notification = {
   _id: string;
   title: string;
   description: string;
-  type: 'donation' | 'event' | 'system' | 'user'|'sermon';
+  type: "donation" | "event" | "system" | "user" | "sermon";
   createdAt: string;
   read: boolean;
   archived?: boolean;
@@ -99,7 +165,7 @@ export type User = {
   name?: string;
   email?: string;
   // profile image url (optional)
-  profileImage?:{url?:string,public_id?:string};
+  profileImage?: { url?: string; public_id?: string };
   // normalized count of reminders (optional)
   remindersCount?: number;
   // legacy boolean flag some responses may include
@@ -107,41 +173,49 @@ export type User = {
   // banned flag (optional)
   banned?: boolean;
   subscribedAt?: string | null;
+  imageUrl?: string;
 };
 
-
-
 const mockNewsletters: Newsletter[] = [
-  { id: '1', email: 'test1@example.com', subscribedAt: new Date().toISOString(), active: true },
-  { id: '2', email: 'test2@example.com', subscribedAt: new Date().toISOString(), active: false },
+  {
+    id: "1",
+    email: "test1@example.com",
+    subscribedAt: new Date().toISOString(),
+    active: true,
+  },
+  {
+    id: "2",
+    email: "test2@example.com",
+    subscribedAt: new Date().toISOString(),
+    active: false,
+  },
 ];
 
 const mockDonations: Donation[] = [
-  { id: '1', amount: '100.00', donorName: 'Jane Doe', purpose: 'missions', status: 'completed', createdAt: new Date().toISOString() },
-  { id: '2', amount: '50.00', purpose: 'general', status: 'completed', createdAt: new Date().toISOString() },
+  {
+    id: "1",
+    amount: "100.00",
+    donorName: "Jane Doe",
+    purpose: "missions",
+    status: "completed",
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "2",
+    amount: "50.00",
+    purpose: "general",
+    status: "completed",
+    createdAt: new Date().toISOString(),
+  },
 ];
 
-const mockGalleryImages: GalleryImage[] = [
-  { id: '1', title: 'Worship Night', imageUrl: 'https://t3.ftcdn.net/jpg/06/55/03/10/360_F_65503108_yz1Yp3jXgWkOQ8huq1k1aYt7u0rH2X6.jpg', category: 'worship' },
-  { id: '2', title: 'Community Outreach', imageUrl: 'https://cocoutreach.org/wp-content/uploads/2025/09/website-1.jpg', category: 'community' },
-];
-
-const mockPastors: Pastor[] = [
-    { id: '1', name: 'Pastor John Doe', title: 'Lead Pastor', bio: 'Pastor John has been leading our congregation for over 15 years, with a heart for the community and a passion for teaching the Word.', imageUrl: 'https://i.pravatar.cc/150?u=pastorjohn', email: 'pastor.john@church.com', isLead: true, order: 1 },
-    { id: '2', name: 'Pastor Jane Smith', title: 'Youth Pastor', bio: 'Pastor Jane has a gift for connecting with young people and helping them grow in their faith.', imageUrl: 'https://i.pravatar.cc/150?u=pastorjane', email: 'pastor.jane@church.com', isLead: false, order: 2 },
-];
-
- 
-
-
-
-
-type EventForm = Omit<Event, 'id'>;
-type SermonForm = Omit<Sermon, 'id'>;
-type GalleryForm = Omit<GalleryImage, 'id'>;
-type PastorForm = Omit<Pastor, 'id'>;
+type EventForm = Omit<Event, "id">;
+type SermonForm = Omit<Sermon, "id">;
+type GalleryForm = Omit<GalleryImage, "id">;
+type PastorForm = Omit<Pastor, "id">;
 
 function AdminDashboard() {
+  const { isAuthenticated, isAdmin, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState("events");
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [editingSermon, setEditingSermon] = useState<Sermon | null>(null);
@@ -151,6 +225,20 @@ function AdminDashboard() {
   const [showGalleryDialog, setShowGalleryDialog] = useState(false);
   const [showPastorDialog, setShowPastorDialog] = useState(false);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin">
+          <Loader2 className="h-8 w-8" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !isAdmin) {
+    return <LoginForm />;
+  }
+
   const { toast } = useToast();
 
   // State management for mock data
@@ -158,9 +246,9 @@ function AdminDashboard() {
   const [sermons, setSermons] = useState<Sermon[]>([]);
   const [newsletters, setNewsletters] = useState(mockNewsletters);
   const [donations, setDonations] = useState(mockDonations);
-  const [galleryImages, setGalleryImages] = useState(mockGalleryImages);
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
   const [pastors, setPastors] = useState<Pastor[]>([]);
-  const [notifications, setNotifications] = useState<Notification []>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [users, setUsers] = useState<User[]>([]);
 
   const [eventsLoading, setEventsLoading] = useState(true);
@@ -177,7 +265,7 @@ function AdminDashboard() {
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [uploading, setUploading] = useState<boolean>(false);
   const [Loading, setLoading] = useState<boolean>(false);
-  
+  const [deleteLoading, setdeleteLoading] = useState<string>("");
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -191,10 +279,7 @@ function AdminDashboard() {
       setUsersLoading(false);
     }, 500);
     return () => clearTimeout(timer);
-
-    
   }, []);
-
 
   // Event form
   const eventForm = useForm<EventForm>({
@@ -205,7 +290,7 @@ function AdminDashboard() {
       time: "",
       location: "",
       speaker: "",
-      imageUrl: "",
+      thumbnailUrl: "",
       category: "general",
     },
   });
@@ -248,15 +333,9 @@ function AdminDashboard() {
   });
 
  
-
-   // 1) File picker open
-  const handleSelectClick = () => fileInputRef.current?.click();
-
   // 2) File chosen
   // handleImageUpload accepts optional react-hook-form setValue and field name to populate forms when uploading
-  const handleImageUpload = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const sel = e.target.files?.[0];
     if (!sel || !sel.type.startsWith("image/")) {
       return toast({ title: "Select a valid image", variant: "destructive" });
@@ -267,15 +346,15 @@ function AdminDashboard() {
   };
 
   // 3) Upload helper
-  const uploadFileToServer = async (file: File) => {
+  const uploadFileToServer = async (file: File, route: String) => {
     setUploading(true);
     try {
       const fd = new FormData();
       fd.append("image", file);
       const { data } = await axios.post(
-        `${Configs.url}/api/events/upload/image`,
+        `${Configs.url}/api/${route}/upload/image`,
         fd,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
       );
 
       return data;
@@ -285,7 +364,9 @@ function AdminDashboard() {
         description: "Image upload failed, please try again!",
         variant: "destructive",
       });
-    }finally{setUploading(false);}
+    } finally {
+      setUploading(false);
+    }
   };
 
   //get Events from server
@@ -296,250 +377,453 @@ function AdminDashboard() {
         setEvents(response.data.events);
       }
     } catch (error: any) {
-      toast({ 
-        title: "Error", 
-        variant: "destructive", 
-        description: error.response?.data?.message || "Failed to fetch events." 
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description: error.response?.data?.message || "Failed to fetch events.",
       });
-      console.error('Error fetching events:', error);
+      console.error("Error fetching events:", error);
     }
-  }
+  };
 
-  // Mutations replaced with state updates
+// Create Event
   const createEvent = async (data: EventForm) => {
-    
-  try {
-  
+    try {
+      if (file === null) {
+        setLoading(true);
+        const eventData = { ...data };
 
-    if(file === null){
-      setLoading(true);
-    const eventData = { ...data };
-  
-    const response =  await axios.post(`${Configs.url}/api/events/new-event`, eventData, {
-  headers: {
-    "Content-Type": "application/x-www-form-urlencoded"
-  },
-});
-    if (response.status === 201) {
-      setEvents(response.data.events);
-      
-      toast({ title: "Event created successfully!" });
-      // setShowEventDialog(false); 
-      eventForm.reset();
+        const response = await axios.post(
+          `${Configs.url}/api/events/new-event`,
+          eventData,
+          {
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+          }
+        );
+        if (response.status === 201) {
+          setEvents(response.data.events);
 
-      
+          toast({ title: "Event created successfully!" });
+          // setShowEventDialog(false);
+          eventForm.reset();
+        }
+      } else {
+        setLoading(true);
+        const { url, public_id } = await uploadFileToServer(file, "events");
+        const eventData = { ...data, url, public_id };
+
+        const response = await axios.post(
+          `${Configs.url}/api/events/new-event`,
+          eventData,
+          {
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+          }
+        );
+        if (response.status === 201) {
+          setEvents(response.data.events);
+          toast({ title: "Event created successfully!" });
+          // setShowEventDialog(false);
+          eventForm.reset();
+        }
+      }
+    } catch (err: any) {
+      if (err.response && err.response.data) {
+        toast({
+          title: "Error!",
+          description: err.response.data.err || err.response.data.error,
+          variant: "destructive",
+        });
+
+        console.error(
+          "Error:",
+          err.response.data.err || err.response.data.error
+        );
+      } else {
+        toast({
+          title: "Error!",
+          description: err.message,
+          variant: "destructive",
+        });
+
+        console.error("Network error:", err);
+      }
+    } finally {
+      setLoading(false);
     }
-
-    }else{
-      setLoading(true);
-      const { url, public_id } = await uploadFileToServer(file);
-    const eventData = { ...data,  url,public_id };
-  
-    const response =  await axios.post(`${Configs.url}/api/events/new-event`, eventData, {
-  headers: {
-    "Content-Type": "application/x-www-form-urlencoded"
-  },
-});
-    if (response.status === 201) {
-     setEvents(response.data.events); 
-      toast({ title: "Event created successfully!" });
-      // setShowEventDialog(false); 
-      eventForm.reset();
-
-    }
-
-    }
-
-    
-   
-  } catch (err:any) {
-    if (err.response && err.response.data) {
-    toast({ title: "Error!", description: err.response.data.err || err.response.data.error, variant: "destructive" });
-      
-    console.error("Error:", err.response.data.err || err.response.data.error);
-  } else {
-    toast({ title: "Error!", description: err.message, variant: "destructive" });
-
-    console.error("Network error:", err);
-  }
-  }finally{setLoading(false);}
-
-
-   
   };
 
   // Update Event
   const updateEvent = async (id: string, data: Partial<EventForm>) => {
- setLoading(true);
+    setLoading(true);
     try {
-      const res = await axios.put(`${Configs.url}/api/events/update-event/${id}`, data);  
+      if (file !== null) {
+        const { url, public_id } = await uploadFileToServer(file, "events");
+        const eventData = { ...data, url, public_id };
+
+        
+        const res = await axios.put(
+        `${Configs.url}/api/events/update-event/${id}`,
+        eventData
+      );
       if (res.status === 200) {
-        setEvents(prev => prev.map(e => e._id === id ? { ...e, ...data } : e));
+        setEvents(res.data.events);
+         
         toast({ title: "Event updated successfully!" });
         setShowEventDialog(false);
         setEditingEvent(null);
         eventForm.reset();
       }
-    } catch (error:any) {
-      toast({ title: "Error", variant: "destructive" , description: `Failed to update event: ${error.response?.data?.err || error.message}`});
-    }finally{setLoading(false);}
-    
+      }else{
+        const res = await axios.put(
+        `${Configs.url}/api/events/update-event/${id}`,
+        data
+      );
+      if (res.status === 200) {
+        setEvents((prev) =>
+          prev.map((e) => (e._id === id ? { ...e, ...data } : e))
+        );
+        toast({ title: "Event updated successfully!" });
+        setShowEventDialog(false);
+        setEditingEvent(null);
+        eventForm.reset();
+      }
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description: `Failed to update event: ${
+          error.response?.data?.err || error.message
+        }`,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
-// Delete Event
+  // Delete Event
   const deleteEvent = async (id: string) => {
-     
+    setdeleteLoading(id);
     try {
-      const res = await axios.delete(`${Configs.url}/api/events/delete-event/${id}`);
+      const res = await axios.delete(
+        `${Configs.url}/api/events/delete-event/${id}`
+      );
       if (res.status === 200) {
         setEvents(res.data.events);
-        setEvents(prev => prev.filter(e => e._id !== id));
+        setEvents((prev) => prev.filter((e) => e._id !== id));
         toast({ title: "Event deleted successfully!" });
       }
     } catch (error) {
-      toast({ title: "Error", variant: "destructive" , description: `Failed to delete event: ${error}`});
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description: `Failed to delete event: ${error}`,
+      });
+    } finally {
+      setdeleteLoading("");
     }
-    
   };
+
+
+
 
 
 
   // Create Sermon
   const createSermon = async (data: SermonForm) => {
     setUploading(true);
-   try {
-     if(file!==null){
-      const { url, public_id } = await uploadFileToServer(file)
-    const eventData = { ...data,  url,public_id };
-    
-    console.log('Sermon Data:', eventData);
-    const response =  await axios.post(`${Configs.url}/api/sermons/new-sermon`, eventData, {
-  headers: {
-    "Content-Type": "application/x-www-form-urlencoded"
-  },
-});
-  if (response.status === 201) {
+    try {
+      if (file !== null) {
+        const { url, public_id } = await uploadFileToServer(file, "sermons");
+        const eventData = { ...data, url, public_id };
 
+        console.log("Sermon Data:", eventData);
+        const response = await axios.post(
+          `${Configs.url}/api/sermons/new-sermon`,
+          eventData,
+          {
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+          }
+        );
+        if (response.status === 201) {
+          const newSermon: Sermon = { ...data, _id: response.data.id };
+          setSermons((prev) => [...prev, newSermon]);
+          toast({ title: "Sermon created successfully!" });
+          setShowSermonDialog(false);
+          sermonForm.reset();
+        }
+      } else {
+        const eventData = { ...data };
 
-     const newSermon: Sermon = { ...data,  _id: response.data.id  };
-  setSermons(prev => [...prev, newSermon]);
-    toast({ title: "Sermon created successfully!" });
-    setShowSermonDialog(false);
-    sermonForm.reset();
-     
-    }}else{
-      const eventData = { ...data };
-    
-    console.log('Sermon Data:', eventData);
-    const response =  await axios.post(`${Configs.url}/api/sermons/new-sermon`, eventData, {
-  headers: {
-    "Content-Type": "application/x-www-form-urlencoded"
-  },
-});
-    if (response.status === 201) {
-    setSermons(response.data.sermons);
+        console.log("Sermon Data:", eventData);
+        const response = await axios.post(
+          `${Configs.url}/api/sermons/new-sermon`,
+          eventData,
+          {
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+          }
+        );
+        if (response.status === 201) {
+          setSermons(response.data.sermons);
 
-        
-    toast({ title: "Sermon created successfully!" });
-    // setShowSermonDialog(false);
-    sermonForm.reset();
-     
+          toast({ title: "Sermon created successfully!" });
+          // setShowSermonDialog(false);
+          sermonForm.reset();
+        }
+      }
+    } catch (err: any) {
+      if (err.response && err.response.data) {
+        toast({
+          title: "Error!",
+          description: err.response.data.err || err.response.data.error,
+          variant: "destructive",
+        });
+
+        console.error(
+          "Error:",
+          err.response.data.err || err.response.data.error
+        );
+      } else {
+        toast({
+          title: "Error!",
+          description: err.message,
+          variant: "destructive",
+        });
+
+        console.error("Network error:", err);
+      }
+    } finally {
+      setUploading(false);
     }
-    }
-     
-    
-
-   
-  } catch (err:any) {
-    if (err.response && err.response.data) {
-    toast({ title: "Error!", description: err.response.data.err || err.response.data.error, variant: "destructive" });
-      
-    console.error("Error:", err.response.data.err || err.response.data.error);
-  } else {
-    toast({ title: "Error!", description: err.message, variant: "destructive" });
-
-    console.error("Network error:", err);
-  }
-  }finally{setUploading(false);}
   };
 
   // Get Sermons
   const getSermons = async () => {
-  try {
-    const response = await axios.get(`${Configs.url}/api/sermons/all`);
-    if (response.status === 200) {
-      setSermons(response.data.sermons);
+    try {
+      const response = await axios.get(`${Configs.url}/api/sermons/all`);
+      if (response.status === 200) {
+        setSermons(response.data.sermons);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description: "Failed to fetch sermons.",
+      });
     }
-  } catch (error) {
-    toast({ title: "Error", variant: "destructive", description: "Failed to fetch sermons." });
-  }
-}
-// Update Sermon
+  };
+  // Update Sermon
   const updateSermon = async (id: string, data: Partial<SermonForm>) => {
     setLoading(true);
-  try {
-    const res = await axios.put(`${Configs.url}/api/sermons/update-sermon/${id}`, data);
-    if (res.status === 200) {
-      setSermons(prev => prev.map(s => s._id === id ? { ...s, ...data } : s));
-      toast({ title: "Sermon updated successfully!" });
-      setShowSermonDialog(false);
-      setEditingSermon(null);
-      sermonForm.reset();
+    try {
+      let sermonData = { ...data };
+
+      if (file !== null) {
+        const uploadResponse = await uploadFileToServer(file, "sermons");
+        if (uploadResponse) {
+          const { url, public_id } = uploadResponse;
+          sermonData = {
+            ...data,
+            thumbnail: { url, public_id }  // Match the Sermon type structure
+          };
+        }
+      }
+
+      console.log("Updating sermon with data:", sermonData);
       
-      setNotifications(res.data.notifications);
+      const res = await axios.put(
+        `${Configs.url}/api/sermons/update-sermon/${id}`,
+        sermonData,
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          }
+        }
+      );
 
+      if (res.status === 200) {
+        if (res.data.sermons) {
+          setSermons(res.data.sermons);
+        } else {
+          // Fallback to updating local state if server doesn't return full list
+          setSermons(prev => 
+            prev.map(sermon => 
+              sermon._id === id 
+                ? { ...sermon, ...sermonData }
+                : sermon
+            )
+          );
+        }
+        
+        toast({ title: "Sermon updated successfully!" });
+        setShowSermonDialog(false);
+        setEditingSermon(null);
+        sermonForm.reset();
+        setFile(null);
+        setPreviewUrl("");
+      }
+    } catch (error: any) {
+      console.error("Error updating sermon:", error);
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description: error.response?.data?.message || "Failed to update sermon"
+      });
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    toast({ title: "Error", variant: "destructive" , description: `Failed to update sermon: ${error}`});
-  }finally{setLoading(false);}
-  
-
-
-     
   };
 
   // Delete Sermon
   const deleteSermon = async (id: string) => {
-
+    setdeleteLoading(id);
     try {
-      const res = await axios.delete(`${Configs.url}/api/sermons/delete-sermon/${id}`);
+      const res = await axios.delete(
+        `${Configs.url}/api/sermons/delete-sermon/${id}`
+      );
       if (res.status === 200) {
         // server returns remaining sermons or success; remove locally by id
-        setSermons(prev => prev.filter(s => s._id !== id));
+        setSermons((prev) => prev.filter((s) => s._id !== id));
         toast({ title: "Sermon deleted successfully!" });
       }
     } catch (error) {
-      toast({ title: "Error", variant: "destructive" , description: `Failed to delete sermon: ${error}`});
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description: `Failed to delete sermon: ${error}`,
+      });
+    } finally {
+      setdeleteLoading("");
     }
-
-     
-  };
-
-  const createGalleryImage = (data: GalleryForm) => {
-    const newImage: GalleryImage = { ...data, id: Date.now().toString() };
-    setGalleryImages(prev => [...prev, newImage]);
-    toast({ title: "Image added to gallery!" });
-    setShowGalleryDialog(false);
-    galleryForm.reset();
   };
 
 
-  const getPastors = async () => {
+
+
+
+
+
+  // Create Gallery Image
+  const createGalleryImage = async (data: GalleryForm) => {
+    setLoading(true);
     try {
-      const response = await axios.get(`${Configs.url}/api/pastors/all`);
-      if (response.status === 200) {
-        setPastors(response.data.pastors);
+      if (file) {
+        const { url, public_id } = await uploadFileToServer(file, "gallery");
+        const galleryData = { ...data, url, public_id };
+
+        const response = await axios.post(
+          `${Configs.url}/api/gallery/new`,
+          galleryData,
+          {
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+          }
+        );
+
+        if (response.status === 201) {
+          setGalleryImages(response.data.gallery);
+          toast({ title: "Image added to gallery!" });
+          setShowGalleryDialog(false);
+          galleryForm.reset();
+          setFile(null);
+          setPreviewUrl("");
+        }
+      } else {
+        const galleryData = { ...data };
+
+        const response = await axios.post(
+          `${Configs.url}/api/gallery/new`,
+          galleryData,
+          {
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+          }
+        );
+
+        if (response.status === 201) {
+          setGalleryImages(response.data.gallery);
+          toast({ title: "Image added to gallery!" });
+          setShowGalleryDialog(false);
+          galleryForm.reset();
+        }
       }
-    } catch (error) {
-      // log({title:"Error", variant:"destructive",description:"Failed to fetch pastors."});
- 
+    } catch (err: any) {
+      if (err.response && err.response.data) {
+        toast({
+          title: "Error!",
+          description: err.response.data.err || err.response.data.error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error!",
+          description: "Failed to add image to gallery",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setLoading(false);
     }
-  }
-// Create Pastor
+  };
+  // Get Gallery Images
+  const getGalleryImages = async () => {
+    try {
+      const response = await axios.get(`${Configs.url}/api/gallery/all`);
+      if (response.status === 200) {
+        setGalleryImages(response.data.gallery);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description: error.message || "Failed to fetch gallery images.",
+      });
+    }
+  };
+
+  // Delete Gallery Image
+  const deleteImage = async (id: string) => {
+    setdeleteLoading(id);
+    try {
+      const res = await axios.delete(`${Configs.url}/api/gallery/delete/${id}`);
+      if (res.status === 200) {
+        setGalleryImages(res.data.gallery);
+        toast({ title: "Gallery image deleted successfully!" });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description:
+          error.response.data.err || "Failed to delete gallery image.",
+      });
+    } finally {
+      setdeleteLoading("");
+    }
+  };
+
+
+
+
+
+  // Create Pastor
   const createPastor = async (data: PastorForm) => {
     setLoading(true);
     try {
-      if(file === null) {
-        const res = await axios.post(`${Configs.url}/api/pastors/new-pastor`, data);
+      if (file === null) {
+        const res = await axios.post(
+          `${Configs.url}/api/pastors/new-pastor`,
+          data
+        );
         if (res.status === 201) {
           setPastors(res.data.pastors);
           setNotifications(res.data.notifications);
@@ -548,12 +832,13 @@ function AdminDashboard() {
           pastorForm.reset();
         }
       } else {
-
-        
-        const { url, public_id } = await uploadFileToServer(file);
+        const { url, public_id } = await uploadFileToServer(file, "pastors");
         const pastorData = { ...data, profileImage: { url, public_id } };
-    
-        const res = await axios.post(`${Configs.url}/api/pastors/new-pastor`, pastorData);
+
+        const res = await axios.post(
+          `${Configs.url}/api/pastors/new-pastor`,
+          pastorData
+        );
         if (res.status === 201) {
           setPastors(res.data.pastors);
           toast({ title: "Pastor added successfully!" });
@@ -563,146 +848,261 @@ function AdminDashboard() {
       }
     } catch (err: any) {
       if (err.response && err.response.data) {
-        toast({ 
-          title: "Error!", 
-          description: err.response.data.err || err.response.data.error, 
-          variant: "destructive" 
+        toast({
+          title: "Error!",
+          description: err.response.data.err || err.response.data.error,
+          variant: "destructive",
         });
       } else {
-        toast({ 
-          title: "Error!", 
-          description: "Failed to add pastor", 
-          variant: "destructive" 
+        toast({
+          title: "Error!",
+          description: "Failed to add pastor",
+          variant: "destructive",
         });
       }
-    }finally{setLoading(false);}
+    } finally {
+      setLoading(false);
+    }
   };
-
+  //get Pastors
+  const getPastors = async () => {
+    try {
+      const response = await axios.get(`${Configs.url}/api/pastors/all`);
+      if (response.status === 200) {
+        setPastors(response.data.pastors);
+      }
+    } catch (error) {
+      // log({title:"Error", variant:"destructive",description:"Failed to fetch pastors."});
+    }
+  };
   // Update Pastor
-  const updatePastor = async(id: string, data: Partial<PastorForm>) => {
+  const updatePastor = async (id: string, data: Partial<PastorForm>) => {
     setLoading(true);
-try {
-  const res = await axios.put(`${Configs.url}/api/pastors/update-profile/${id}`, data);
-  if (res.status === 200) {
-    setPastors(res.data.pastors);
-    setNotifications(res.data.notifications);
-    setPastors(prev => prev.map(p => p._id === id ? { ...p, ...data } : p));
-    toast({ title: "Pastor updated successfully!" });
-    setShowPastorDialog(false);
-    setEditingPastor(null);
-    pastorForm.reset();
-  }
-} catch (error:any) {
-  toast({ title: "Error", variant: "destructive" , description: `Failed to update pastor: ${error.response?.data?.err || error.message}`});
-}finally{setLoading(false);}
+    try {
 
-    
+
+ if (file !== null) {
+        const { url, public_id } = await uploadFileToServer(file, "sermons");
+        const sermonData = { ...data, url, public_id };
+
+        
+        const res = await axios.put(
+        `${Configs.url}/api/pastors/update-profile${id}`,
+        sermonData
+      );
+      if (res.status === 200) {
+        setPastors(res.data.pastors);
+        setNotifications(res.data.notifications);
+        setPastors((prev) =>
+          prev.map((p) => (p._id === id ? { ...p, ...data } : p))
+        );
+        toast({ title: "Pastor updated successfully!" });
+        setShowPastorDialog(false);
+        setEditingPastor(null);
+        pastorForm.reset();
+      }
+      }else{
+        const res = await axios.put(
+        `${Configs.url}/api/pastors/update-profile${id}`,
+        data
+      );
+      if (res.status === 200) {
+        setPastors(res.data.pastors);
+        setNotifications(res.data.notifications);
+        setPastors((prev) =>
+          prev.map((p) => (p._id === id ? { ...p, ...data } : p))
+        );
+        toast({ title: "Pastor updated successfully!" });
+        setShowPastorDialog(false);
+        setEditingPastor(null);
+        pastorForm.reset();
+      }
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description: `Failed to update pastor: ${
+          error.response?.data?.err || error.message
+        }`,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Delete Pastor
   const deletePastor = async (id: string) => {
-try {
-  const res = await axios.delete(`${Configs.url}/api/pastors/delete-pastor/${id}`);
-  if (res.status === 200) {
-    setPastors(res.data.pastors);
-    setNotifications(res.data.notifications);
-    setPastors(prev => prev.filter(p => p._id !== id));
-    toast({ title: "Pastor deleted successfully!" });
-  }
-} catch (error:any) {
-  toast({ title: "Error", variant: "destructive" , description: `Failed to delete pastor: ${error.response?.data?.err || error.message}`});
-}
-
-    
+    setdeleteLoading(id);
+    try {
+      const res = await axios.delete(
+        `${Configs.url}/api/pastors/delete-pastor/${id}`
+      );
+      if (res.status === 200) {
+        setPastors(res.data.pastors);
+        setNotifications(res.data.notifications);
+        setPastors((prev) => prev.filter((p) => p._id !== id));
+        toast({ title: "Pastor deleted successfully!" });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description: `Failed to delete pastor: ${
+          error.response?.data?.err || error.message
+        }`,
+      });
+    } finally {
+      setdeleteLoading("");
+    }
   };
 
   const getNotifications = async () => {
     try {
-      const response = await axios.get(`${Configs.url}/api/notifications/get-notifications`);
+      const response = await axios.get(
+        `${Configs.url}/api/notifications/get-notifications`
+      );
       if (response.status === 200) {
         setNotifications(response.data.notifications);
       }
     } catch (error) {
-      toast({ title: "Error", variant: "destructive", description: "Failed to fetch notifications." });
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description: "Failed to fetch notifications.",
+      });
     }
-  }
-
+  };
+  //archieved Notification
   const archiveNotification = async (id: string) => {
     try {
-      const res = await axios.put(`${Configs.url}/api/notifications/archive-notification/${id}`);
+      const res = await axios.put(
+        `${Configs.url}/api/notifications/archive-notification/${id}`
+      );
       if (res.status === 200) {
- 
         setNotifications(res.data.notifications);
-    toast({ title: "Notification archived." });
+        toast({ title: "Notification archived." });
       }
     } catch (error) {
-    toast({ title: "Error", variant: "destructive", description: "Failed to archive notification." });
-    
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description: "Failed to archive notification.",
+      });
+    }
+  };
+
+  // Delete Notification
+  const deleteNotification = async (id: string) => {
+    setdeleteLoading(id);
+    try {
+      const res = await axios.delete(
+        `${Configs.url}/api/notifications/delete-notification/${id}`
+      );
+      if (res.status === 200) {
+        toast({ title: "Notification deleted." });
+        setNotifications((prev) => prev.filter((n) => n._id !== id));
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description: error.message || "Failed to delete notification.",
+      });
+    }finally {
+      setdeleteLoading("");
     }
 
-    
-  };
-
-  const deleteNotification = async (id: string) => {
-
-   try {
-   const res = await axios.delete(`${Configs.url}/api/notifications/delete-notification/${id}`);
-   if (res.status===200) {
-    toast({ title: "Notification deleted." });
-    setNotifications(prev => prev.filter(n => n._id !== id));
-   }
-   } catch (error:any) {
-    toast({ title: "Error", variant: "destructive", description: error.message || "Failed to delete notification." });
-   }
-
     // setNotifications(prev => prev.filter(n => n.id !== id));
-    
   };
 
-  const UnArchiveNotifications = async() => {
+  // Unarchive notifications
+  const UnArchiveNotifications = async () => {
     try {
-      const res = await axios.put(`${Configs.url}/api/notifications/unarchive-notifications`);
+      const res = await axios.put(
+        `${Configs.url}/api/notifications/unarchive-notifications`
+      );
       if (res.status === 200) {
         setNotifications(res.data.notifications);
         toast({ title: "All notifications unarchived." });
       }
     } catch (error) {
-      toast({ title: "Error", variant: "destructive", description: "Failed to unarchive notifications." });
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description: "Failed to unarchive notifications.",
+      });
     }
-
-     
-    
   };
 
-  const clearAllNotifications = () => {
+  const clearAllNotifications = async () => {
+setdeleteLoading("clear-all");
+    try {
+
+      const res = await axios.delete(
+        `${Configs.url}/api/notifications/clear-notifications`
+      );
+      if (res.status === 200) {
+        toast({ title: "All notifications cleared." });
+        setNotifications([]);
+      }
+      
+    } catch (error) {
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description: "Failed to clear notifications.",
+      });
+    }finally {
+      setdeleteLoading("");
+    }
+
     setNotifications([]);
     toast({ title: "All notifications cleared." });
   };
 
-// Get Users
+  // Get Users
   const getSubscribers = async () => {
     try {
-      const response = await axios.get(`${Configs.url}/api/news-letter/subscribers`);
+      const response = await axios.get(
+        `${Configs.url}/api/news-letter/subscribers`
+      );
       if (response.status === 200) {
         // Normalize subscriber objects to a consistent shape for the UI.
-        const subs = Array.isArray(response.data.subscribers) ? response.data.subscribers : [];
+        const subs = Array.isArray(response.data.subscribers)
+          ? response.data.subscribers
+          : [];
         const normalized: User[] = subs.map((s: any, i: number) => ({
-          _id: s._id || s.id || `${s.email || 'user'}-${i}`,
-          name: s.name || s.fullName || s.displayName || s.email?.split('@')?.[0] || `User ${i}`,
-          email: s.email || '',
-          profileImage: s.profileImage || s.pr || s.avatarUrl || '',
-          remindersCount: typeof s.remindersCount === 'number' ? s.remindersCount : (s.reminderCount || (s.reminder ? 1 : 0)),
-          reminder: !!(s.reminder || (s.remindersCount && s.remindersCount > 0)),
+          _id: s._id || s.id || `${s.email || "user"}-${i}`,
+          name:
+            s.name ||
+            s.fullName ||
+            s.displayName ||
+            s.email?.split("@")?.[0] ||
+            `User ${i}`,
+          email: s.email || "",
+          profileImage: s.profileImage || s.pr || s.avatarUrl || "",
+          remindersCount:
+            typeof s.remindersCount === "number"
+              ? s.remindersCount
+              : s.reminderCount || (s.reminder ? 1 : 0),
+          reminder: !!(
+            s.reminder ||
+            (s.remindersCount && s.remindersCount > 0)
+          ),
           subscribedAt: s.subscribedAt || s.createdAt || null,
           banned: !!s.banned,
         }));
         setUsers(normalized);
       }
     } catch (error) {
-      toast({ title: "Error", variant: "destructive", description: "Failed to fetch users." });
+      toast({
+        title: "Error",
+        variant: "destructive",
+        description: "Failed to fetch users.",
+      });
     }
-  }
-
+  };
 
   // Event handlers
   const handleEditEvent = (event: Event) => {
@@ -714,15 +1114,16 @@ try {
       time: event.time,
       location: event.location,
       speaker: event.speaker || "",
-      imageUrl: event.imageUrl || "",
+      thumbnailUrl: event.thumbnailUrl || "",
       category: event.category,
     });
+    setPreviewUrl(event.thumbnailUrl || event.thumbnail.url ||"");
     setShowEventDialog(true);
   };
 
   const handleSubmitEvent = async (data: EventForm) => {
     if (editingEvent) {
-     await updateEvent(editingEvent._id, data);
+      await updateEvent(editingEvent._id, data);
     } else {
       createEvent(data);
     }
@@ -758,6 +1159,7 @@ try {
   };
 
   const handleEditPastor = (pastor: Pastor) => {
+    setPreviewUrl(pastor.imageUrl || pastor.profileImg.url ||"");
     setEditingPastor(pastor);
     pastorForm.reset(pastor);
     setShowPastorDialog(true);
@@ -789,23 +1191,21 @@ try {
 
   useEffect(() => {
     getNotifications();
-    getEvents()
-     getSermons()
-     getPastors()
-     
-      const interval = setInterval(() => {
-      
-       getSubscribers()
-    }, 5000);  
+    getEvents();
+    getSermons();
+    getPastors();
+    getGalleryImages();
 
-     
-    return () => clearInterval(interval);
+    //   const interval = setInterval(() => {
+
+    //    getSubscribers()
+    // }, 5000);
+
+    // return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="min-h-screen "
-   
-    >
+    <div className="min-h-screen ">
       {/* Header */}
       <section className="py-12 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
@@ -823,15 +1223,46 @@ try {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-9 mb-8">
-              <TabsTrigger value="events" data-testid="tab-events">Events</TabsTrigger>
-              <TabsTrigger value="sermons" data-testid="tab-sermons">Sermons</TabsTrigger>
-              <TabsTrigger value="users" data-testid="tab-users">Users</TabsTrigger>
-              <TabsTrigger value="newsletters" className="hidden" data-testid="tab-newsletters">Newsletter</TabsTrigger>
-              <TabsTrigger value="donations" data-testid="tab-donations">Donations</TabsTrigger>
-              <TabsTrigger value="gallery" data-testid="tab-gallery">Gallery</TabsTrigger>
-              <TabsTrigger value="pastors" data-testid="tab-pastors">Pastors</TabsTrigger>
-              <TabsTrigger value="notifications" data-testid="tab-notifications">Notifications  {notifications.filter(n=>!n.read && !n.archived).length>0 &&(<span className="ml-2 text-primary ">{notifications.filter(n => !n.read).length}</span>)}</TabsTrigger>
-              <TabsTrigger value="settings" data-testid="tab-settings">Settings</TabsTrigger>
+              <TabsTrigger value="events" data-testid="tab-events">
+                Events
+              </TabsTrigger>
+              <TabsTrigger value="sermons" data-testid="tab-sermons">
+                Sermons
+              </TabsTrigger>
+              <TabsTrigger value="users" data-testid="tab-users">
+                Users
+              </TabsTrigger>
+              <TabsTrigger
+                value="newsletters"
+                className="hidden"
+                data-testid="tab-newsletters"
+              >
+                Newsletter
+              </TabsTrigger>
+              <TabsTrigger value="donations" data-testid="tab-donations">
+                Donations
+              </TabsTrigger>
+              <TabsTrigger value="gallery" data-testid="tab-gallery">
+                Gallery
+              </TabsTrigger>
+              <TabsTrigger value="pastors" data-testid="tab-pastors">
+                Pastors
+              </TabsTrigger>
+              <TabsTrigger
+                value="notifications"
+                data-testid="tab-notifications"
+              >
+                Notifications{" "}
+                {notifications.filter((n) => !n.read && !n.archived).length >
+                  0 && (
+                  <span className="ml-2 text-primary ">
+                    {notifications.filter((n) => !n.read).length}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="settings" data-testid="tab-settings">
+                Settings
+              </TabsTrigger>
             </TabsList>
 
             {/* Events Tab */}
@@ -842,13 +1273,19 @@ try {
                     <Calendar className="mr-2 h-5 w-5" />
                     Events Management
                   </CardTitle>
-                  <Dialog open={showEventDialog} onOpenChange={(open) => !open && resetEventDialog()}>
+                  <Dialog
+                    open={showEventDialog}
+                    onOpenChange={(open) => !open && resetEventDialog()}
+                  >
                     <DialogTrigger asChild>
-                      <Button onClick={() => {
-                        setEditingEvent(null);
-                        eventForm.reset();
-                        setShowEventDialog(true);
-                      }} data-testid="button-add-event">
+                      <Button
+                        onClick={() => {
+                          setEditingEvent(null);
+                          eventForm.reset();
+                          setShowEventDialog(true);
+                        }}
+                        data-testid="button-add-event"
+                      >
                         <Plus className="mr-2 h-4 w-4" />
                         Add Event
                       </Button>
@@ -859,17 +1296,25 @@ try {
                           {editingEvent ? "Edit Event" : "Create New Event"}
                         </DialogTitle>
                       </DialogHeader>
-                      <form onSubmit={eventForm.handleSubmit(handleSubmitEvent)} className="space-y-4">
+                      <form
+                        onSubmit={eventForm.handleSubmit(handleSubmitEvent)}
+                        className="space-y-4"
+                      >
                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
                             <Label htmlFor="title">Event Title</Label>
-                            <Input {...eventForm.register("title")} data-testid="input-event-title" />
+                            <Input
+                              {...eventForm.register("title")}
+                              data-testid="input-event-title"
+                            />
                           </div>
                           <div>
                             <Label htmlFor="category">Category</Label>
                             <Select
                               value={eventForm.watch("category")}
-                              onValueChange={(value) => eventForm.setValue("category", value as any)}
+                              onValueChange={(value) =>
+                                eventForm.setValue("category", value as any)
+                              }
                             >
                               <SelectTrigger data-testid="select-event-category">
                                 <SelectValue />
@@ -878,7 +1323,9 @@ try {
                                 <SelectItem value="general">General</SelectItem>
                                 <SelectItem value="service">Service</SelectItem>
                                 <SelectItem value="youth">Youth</SelectItem>
-                                <SelectItem value="community">Community</SelectItem>
+                                <SelectItem value="community">
+                                  Community
+                                </SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -886,34 +1333,53 @@ try {
 
                         <div>
                           <Label htmlFor="description">Description</Label>
-                          <Textarea {...eventForm.register("description")} data-testid="textarea-event-description" />
+                          <Textarea
+                            {...eventForm.register("description")}
+                            data-testid="textarea-event-description"
+                          />
                         </div>
 
                         <div className="grid md:grid-cols-3 gap-4">
                           <div>
                             <Label htmlFor="date">Date</Label>
-                            <Input type="date" {...eventForm.register("date")} data-testid="input-event-date" />
+                            <Input
+                              type="date"
+                              {...eventForm.register("date")}
+                              data-testid="input-event-date"
+                            />
                           </div>
                           <div>
                             <Label htmlFor="time">Time</Label>
-                            <Input {...eventForm.register("time")} placeholder="7:00 PM" data-testid="input-event-time" />
+                            <Input
+                              {...eventForm.register("time")}
+                              placeholder="7:00 PM"
+                              data-testid="input-event-time"
+                            />
                           </div>
                           <div>
                             <Label htmlFor="location">Location</Label>
-                            <Input {...eventForm.register("location")} data-testid="input-event-location" />
+                            <Input
+                              {...eventForm.register("location")}
+                              data-testid="input-event-location"
+                            />
                           </div>
                         </div>
 
                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
                             <Label htmlFor="speaker">Speaker (Optional)</Label>
-                            <Input {...eventForm.register("speaker")} data-testid="input-event-speaker" />
+                            <Input
+                              {...eventForm.register("speaker")}
+                              data-testid="input-event-speaker"
+                            />
                           </div>
                           <div>
-                            <Label htmlFor="imageUrl">Image (URL or Upload)</Label>
+                            <Label htmlFor="imageUrl">
+                              Image (URL or Upload)
+                            </Label>
                             <div className="flex items-center gap-2">
                               <Input
-                                {...eventForm.register("imageUrl")}
+                                {...eventForm.register("thumbnailUrl")}
                                 placeholder="https://example.com/image.jpg"
                                 data-testid="input-event-image"
                               />
@@ -927,46 +1393,48 @@ try {
                               <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => document.getElementById('event-image-upload')?.click()}
+                                onClick={() =>
+                                  document
+                                    .getElementById("event-image-upload")
+                                    ?.click()
+                                }
                               >
                                 Upload
                               </Button>
                             </div>
-                            {(previewUrl || eventForm.watch("imageUrl")) && (
-                              <div className="mt-2 space-y-2">
-                                <div className="relative w-full rounded-lg overflow-hidden border">
+                            {(previewUrl || eventForm.watch("thumbnailUrl")) && (
+                              <div className="col-span-2 mt-4">
+                                <div className="relative aspect-video w-full overflow-hidden rounded-lg border">
                                   <img
-                                    src={previewUrl || eventForm.watch("imageUrl")}
+                                    src={previewUrl || eventForm.watch("thumbnailUrl")}
                                     alt="Event preview"
-                                    className="w-full object-contain"
+                                    className="h-full w-full object-cover"
                                   />
                                 </div>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  className="w-full"
-                                  onClick={() => {
-                                    setPreviewUrl("");
-                                    setFile(null);
-                                    eventForm.setValue("imageUrl", "");
-                                  }}
-                                >
-                                  Change Image
-                                </Button>
+                                 
                               </div>
                             )}
                           </div>
+                           
                         </div>
 
                         <DialogFooter>
-                          <Button type="button" variant="outline" onClick={resetEventDialog} data-testid="button-cancel-event">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={resetEventDialog}
+                            data-testid="button-cancel-event"
+                          >
                             Cancel
                           </Button>
-                          <Button
-                            type="submit"
-                            data-testid="button-save-event"
-                          >
-                            {uploading || Loading ? "Creating..." :( editingEvent ? Loading ? "Updating Event...":"Update Event" : "Create Event")}
+                          <Button type="submit" data-testid="button-save-event">
+                            {Loading && !editingEvent
+                              ? "Creating..."
+                              : editingEvent
+                              ? Loading && editingEvent
+                                ? "Updating Event..."
+                                : "Update Event"
+                              : "Create Event"}
                           </Button>
                         </DialogFooter>
                       </form>
@@ -988,27 +1456,44 @@ try {
                       {eventsLoading ? (
                         Array.from({ length: 3 }).map((_, i) => (
                           <TableRow key={i}>
-                            <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-32" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-24" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-16" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-28" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-20" />
+                            </TableCell>
                           </TableRow>
                         ))
                       ) : events && events.length > 0 ? (
                         events.map((event) => (
-                          <TableRow key={event._id} data-testid={`event-row-${event._id}`}>
-                            <TableCell className="font-medium">{event.title}</TableCell>
-                            <TableCell>{format(new Date(event.date), "MMM d, yyyy")}</TableCell>
+                          <TableRow
+                            key={event._id}
+                            data-testid={`event-row-${event._id}`}
+                          >
+                            <TableCell className="font-medium">
+                              {event.title}
+                            </TableCell>
+                            <TableCell>
+                              {format(new Date(event.date), "MMM d, yyyy")}
+                            </TableCell>
                             <TableCell>
                               <Badge variant="outline">{event.category}</Badge>
                             </TableCell>
                             <TableCell>{event.location}</TableCell>
                             <TableCell>
                               <div className="flex gap-2">
-                                <Button 
-                                  size="sm" 
-                                  variant="outline" 
+                                <Button
+                                  size="sm"
+                                  variant="outline"
                                   onClick={() => handleEditEvent(event)}
                                   data-testid={`button-edit-event-${event._id}`}
                                 >
@@ -1021,23 +1506,43 @@ try {
                                       variant="destructive"
                                       data-testid={`button-delete-event-${event._id}`}
                                     >
-                                      <Trash2 className="h-4 w-4" />
+                                      {deleteLoading === event._id ?  
+                                        <LoaderCircle
+                                          size={20}
+                                          color="white"
+                                          className=" top-2 right-2 h-6 w-6 aboslute mx-auto animate-spin"
+                                        />:
+                                      <Trash2 className="h-4 w-4" />}
                                     </Button>
                                   </AlertDialogTrigger>
                                   <AlertDialogContent>
                                     <AlertDialogHeader>
-                                      <AlertDialogTitle>Delete Event</AlertDialogTitle>
+                                      <AlertDialogTitle>
+                                        Delete Event
+                                      </AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        Are you sure you want to delete "{event.title}"? This action cannot be undone.
+                                        Are you sure you want to delete "
+                                        {event.title}"? This action cannot be
+                                        undone.
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogCancel>
+                                        Cancel
+                                      </AlertDialogCancel>
                                       <AlertDialogAction
                                         onClick={() => deleteEvent(event._id)}
                                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                       >
-                                        Delete
+                                        {deleteLoading === event._id ? (
+                                          <LoaderCircle
+                                            size={20}
+                                            color="white"
+                                            className=" top-2 right-2 h-6 w-6 aboslute mx-auto animate-spin"
+                                          />
+                                        ) : (
+                                          "Delete"
+                                        )}
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
                                   </AlertDialogContent>
@@ -1067,13 +1572,19 @@ try {
                     <Eye className="mr-2 h-5 w-5" />
                     Sermons Management
                   </CardTitle>
-                  <Dialog open={showSermonDialog} onOpenChange={(open) => !open && resetSermonDialog()}>
+                  <Dialog
+                    open={showSermonDialog}
+                    onOpenChange={(open) => !open && resetSermonDialog()}
+                  >
                     <DialogTrigger asChild>
-                      <Button onClick={() => {
-                        setEditingSermon(null);
-                        sermonForm.reset();
-                        setShowSermonDialog(true);
-                      }} data-testid="button-add-sermon">
+                      <Button
+                        onClick={() => {
+                          setEditingSermon(null);
+                          sermonForm.reset();
+                          setShowSermonDialog(true);
+                        }}
+                        data-testid="button-add-sermon"
+                      >
                         <Plus className="mr-2 h-4 w-4" />
                         Add Sermon
                       </Button>
@@ -1084,43 +1595,70 @@ try {
                           {editingSermon ? "Edit Sermon" : "Create New Sermon"}
                         </DialogTitle>
                       </DialogHeader>
-                      <form onSubmit={sermonForm.handleSubmit(handleSubmitSermon)} className="space-y-4">
+                      <form
+                        onSubmit={sermonForm.handleSubmit(handleSubmitSermon)}
+                        className="space-y-4"
+                      >
                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
                             <Label htmlFor="title">Sermon Title</Label>
-                            <Input {...sermonForm.register("title")} data-testid="input-sermon-title" />
+                            <Input
+                              {...sermonForm.register("title")}
+                              data-testid="input-sermon-title"
+                            />
                           </div>
                           <div>
                             <Label htmlFor="speaker">Speaker</Label>
-                            <Input {...sermonForm.register("speaker")} data-testid="input-sermon-speaker" />
+                            <Input
+                              {...sermonForm.register("speaker")}
+                              data-testid="input-sermon-speaker"
+                            />
                           </div>
                         </div>
                         <div>
                           <Label htmlFor="description">Description</Label>
-                          <Textarea {...sermonForm.register("description")} data-testid="textarea-sermon-description" />
+                          <Textarea
+                            {...sermonForm.register("description")}
+                            data-testid="textarea-sermon-description"
+                          />
                         </div>
                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
                             <Label htmlFor="date">Date</Label>
-                            <Input type="date" {...sermonForm.register("date")} data-testid="input-sermon-date" />
+                            <Input
+                              type="date"
+                              {...sermonForm.register("date")}
+                              data-testid="input-sermon-date"
+                            />
                           </div>
-                           <div>
+                          <div>
                             <Label htmlFor="scripture">Scripture</Label>
-                            <Input {...sermonForm.register("scripture")} data-testid="input-sermon-scripture" />
+                            <Input
+                              {...sermonForm.register("scripture")}
+                              data-testid="input-sermon-scripture"
+                            />
                           </div>
                         </div>
                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
                             <Label htmlFor="videoUrl">Video URL</Label>
-                            <Input {...sermonForm.register("videoUrl")} data-testid="input-sermon-video" />
+                            <Input
+                              {...sermonForm.register("videoUrl")}
+                              data-testid="input-sermon-video"
+                            />
                           </div>
                           <div>
                             <Label htmlFor="audioUrl">Audio URL</Label>
-                            <Input {...sermonForm.register("audioUrl")} data-testid="input-sermon-audio" />
+                            <Input
+                              {...sermonForm.register("audioUrl")}
+                              data-testid="input-sermon-audio"
+                            />
                           </div>
                         </div>
                         <div>
-                          <Label htmlFor="thumbnailUrl">Thumbnail (URL or Upload)</Label>
+                          <Label htmlFor="thumbnailUrl">
+                            Thumbnail (URL or Upload)
+                          </Label>
                           <div className="flex items-center gap-2">
                             <Input
                               {...sermonForm.register("thumbnailUrl")}
@@ -1137,7 +1675,11 @@ try {
                             <Button
                               type="button"
                               variant="outline"
-                              onClick={() => document.getElementById('sermon-thumb-upload')?.click()}
+                              onClick={() =>
+                                document
+                                  .getElementById("sermon-thumb-upload")
+                                  ?.click()
+                              }
                             >
                               Upload
                             </Button>
@@ -1146,32 +1688,34 @@ try {
                             <div className="mt-2 space-y-2">
                               <div className="relative w-full rounded-lg overflow-hidden border">
                                 <img
-                                  src={previewUrl || sermonForm.watch("thumbnailUrl")}
+                                  src={
+                                    previewUrl ||
+                                    sermonForm.watch("thumbnailUrl")
+                                  }
                                   alt="Sermon thumbnail preview"
                                   className="w-full object-contain"
                                 />
                               </div>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="w-full"
-                                onClick={() => {
-                                  setPreviewUrl("");
-                                  setFile(null);
-                                  sermonForm.setValue("thumbnailUrl", "");
-                                }}
-                              >
-                                Change Thumbnail
-                              </Button>
+                               
                             </div>
                           )}
                         </div>
                         <DialogFooter>
-                          <Button type="button" variant="outline" onClick={resetSermonDialog}>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={resetSermonDialog}
+                          >
                             Cancel
                           </Button>
                           <Button type="submit">
-                            {uploading || Loading ? "Creating..." :( editingSermon ? Loading?"Updating Sermon...":"Update Sermon" : "Create Sermon")}
+                           {Loading && !editingSermon
+                              ? "Creating..."
+                              : editingSermon
+                              ? Loading && editingSermon
+                                ? "Updating Sermon..."
+                                : "Update Sermon"
+                              : "Create Sermon"}
                           </Button>
                         </DialogFooter>
                       </form>
@@ -1192,21 +1736,37 @@ try {
                       {sermonsLoading ? (
                         Array.from({ length: 3 }).map((_, i) => (
                           <TableRow key={i}>
-                            <TableCell><Skeleton className="h-4 w-48" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-48" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-32" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-24" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-20" />
+                            </TableCell>
                           </TableRow>
                         ))
                       ) : sermons && sermons.length > 0 ? (
                         sermons.map((sermon) => (
                           <TableRow key={sermon._id}>
-                            <TableCell className="font-medium">{sermon.title}</TableCell>
+                            <TableCell className="font-medium">
+                              {sermon.title}
+                            </TableCell>
                             <TableCell>{sermon.speaker}</TableCell>
-                            <TableCell>{format(new Date(sermon.date), "MMM d, yyyy")}</TableCell>
+                            <TableCell>
+                              {format(new Date(sermon.date), "MMM d, yyyy")}
+                            </TableCell>
                             <TableCell>
                               <div className="flex gap-2">
-                                <Button size="sm" variant="outline" onClick={() => handleEditSermon(sermon)}>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleEditSermon(sermon)}
+                                >
                                   <Edit className="h-4 w-4" />
                                 </Button>
                                 <AlertDialog>
@@ -1217,15 +1777,31 @@ try {
                                   </AlertDialogTrigger>
                                   <AlertDialogContent>
                                     <AlertDialogHeader>
-                                      <AlertDialogTitle>Delete Sermon</AlertDialogTitle>
+                                      <AlertDialogTitle>
+                                        Delete Sermon
+                                      </AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        Are you sure you want to delete "{sermon.title}"?
+                                        Are you sure you want to delete "
+                                        {sermon.title}"?
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => deleteSermon(sermon._id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                        Delete
+                                      <AlertDialogCancel>
+                                        Cancel
+                                      </AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => deleteSermon(sermon._id)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
+                                        {deleteLoading === sermon._id ? (
+                                          <LoaderCircle
+                                            size={20}
+                                            color="white"
+                                            className=" top-2 right-2 h-6 w-6 aboslute mx-auto animate-spin"
+                                          />
+                                        ) : (
+                                          "Delete"
+                                        )}
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
                                   </AlertDialogContent>
@@ -1262,64 +1838,114 @@ try {
                       <Table>
                         <TableHeader>
                           <TableRow>
-
-                            
                             <TableHead>User</TableHead>
-                            {/* <TableHead>Contact</TableHead> */}
                             <TableHead>Subscribed</TableHead>
-                            
-                            <TableHead>Actions</TableHead>
-
-                            {users.filter(u=>u.reminder).length>0 &&(
-                             <TableHead>Reminders</TableHead>
+                            {users.filter((u) => u.reminder).length > 0 && (
+                              <TableHead>Reminders</TableHead>
                             )}
+                            <TableHead>Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {usersLoading ? (
-                            Array.from({ length: 3 }).map((_, i) => (
-                              <TableRow key={i}>
-                                <TableCell><Skeleton className="h-10 w-10 rounded-full" /></TableCell>
-                                <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                                <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                                <TableCell><Skeleton className="h-8 w-24" /></TableCell>
-                              </TableRow>
-                            ))
-                          ) : users.map((user,index) => (
-                            <TableRow key={user._id}>
-                              <TableCell>
-                                <div className="flex items-center gap-3">
-                                    <img src={user.profileImage?.url || "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740&q=80"} alt={user.name || 'User'} className="h-10 w-10 rounded-full object-cover" />
-                                  <div>
-                                    <p className="font-medium ">{user.name||`Sheep: ${index}`}</p>
-                                    <p className="text-sm text-muted-foreground text-gray-400">{user.email}</p>
-                                  </div>
-                                </div>
-                              </TableCell>
-                              {/* <TableCell className="text-gray-400">{user.phone}</TableCell> */}
-                              {user.subscribedAt && (
-                              <TableCell className="text-gray-400  p-1">{format(new Date(user.subscribedAt || new Date()), "MMM d, yyyy")}</TableCell>
-                              )}
-                              {(user.remindersCount || user.reminder) && (
-                                <TableCell className="text-center text-gray-400  ">{user.remindersCount || (user.reminder ? 1 : 0)}</TableCell>
-                              )}
-                              
-                              <TableCell>
-                                <div className="flex gap-1">
-                                  <Button variant="outline" size="icon" onClick={() => toast({ title: `Emailing ${user.name}` })}>
-                                    <Mail className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="outline" size="icon" onClick={() => toast({ title: `Sending SMS to ${user.name}` })}>
-                                    <MessageSquare className="h-4 w-4" />
-                                  </Button>
-                                  <Button  className="bg-red-200 hover:bg-red-300" size="icon" onClick={() => toast({ title: `Banning ${user.name}` })}>
-                                    <Ban className="h-4 w-4 text-red-600" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
+                          {usersLoading
+                            ? Array.from({ length: 3 }).map((_, i) => (
+                                <TableRow key={i}>
+                                  <TableCell>
+                                    <Skeleton className="h-10 w-10 rounded-full" />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Skeleton className="h-4 w-40" />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Skeleton className="h-4 w-24" />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Skeleton className="h-4 w-12" />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Skeleton className="h-8 w-24" />
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            : users.map((user, index) => (
+                                <TableRow key={user._id}>
+                                  <TableCell>
+                                    <div className="flex items-center gap-3">
+                                      <img
+                                        src={
+                                          user.profileImage?.url || user.imageUrl ||
+                                          "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740&q=80"
+                                        }
+                                        alt={user.name || "User"}
+                                        className="h-10 w-10 rounded-full object-cover"
+                                      />
+                                      <div>
+                                        <p className="font-medium ">
+                                          {user.name || `Sheep: ${index}`}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground text-gray-400">
+                                          {user.email}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </TableCell>
+                                  {/* <TableCell className="text-gray-400">{user.phone}</TableCell> */}
+                                  {user.subscribedAt && (
+                                    <TableCell className="text-gray-400  p-1">
+                                      {format(
+                                        new Date(
+                                          user.subscribedAt || new Date()
+                                        ),
+                                        "MMM d, yyyy"
+                                      )}
+                                    </TableCell>
+                                  )}
+                                  {(user.remindersCount || user.reminder) && (
+                                    <TableCell className="text-center text-gray-400  ">
+                                      {user.remindersCount ||
+                                        (user.reminder ? 1 : 0)}
+                                    </TableCell>
+                                  )}
+
+                                  <TableCell>
+                                    <div className="flex gap-1">
+                                      <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() =>
+                                          toast({
+                                            title: `Emailing ${user.name}`,
+                                          })
+                                        }
+                                      >
+                                        <Mail className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() =>
+                                          toast({
+                                            title: `Sending SMS to ${user.name}`,
+                                          })
+                                        }
+                                      >
+                                        <MessageSquare className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        className="bg-red-200 hover:bg-red-300"
+                                        size="icon"
+                                        onClick={() =>
+                                          toast({
+                                            title: `Banning ${user.name}`,
+                                          })
+                                        }
+                                      >
+                                        <Ban className="h-4 w-4 text-red-600" />
+                                      </Button>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
                         </TableBody>
                       </Table>
                     </CardContent>
@@ -1334,32 +1960,51 @@ try {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <form className="space-y-4" onSubmit={(e) => {
-                        e.preventDefault();
-                        const form = e.target as HTMLFormElement;
-                        const subject = (form.elements.namedItem('broadcast-subject') as HTMLInputElement).value;
-                        const message = (form.elements.namedItem('broadcast-message') as HTMLTextAreaElement).value;
-                        if (subject && message) {
-                          toast({
-                            title: "Broadcast Sent!",
-                            description: `Message with subject "${subject}" sent to ${users.length} users.`,
-                          });
-                          form.reset();
-                        } else {
-                          toast({
-                            title: "Error",
-                            description: "Subject and message cannot be empty.",
-                            variant: "destructive"
-                          });
-                        }
-                      }}>
+                      <form
+                        className="space-y-4"
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          const form = e.target as HTMLFormElement;
+                          const subject = (
+                            form.elements.namedItem(
+                              "broadcast-subject"
+                            ) as HTMLInputElement
+                          ).value;
+                          const message = (
+                            form.elements.namedItem(
+                              "broadcast-message"
+                            ) as HTMLTextAreaElement
+                          ).value;
+                          if (subject && message) {
+                            toast({
+                              title: "Broadcast Sent!",
+                              description: `Message with subject "${subject}" sent to ${users.length} users.`,
+                            });
+                            form.reset();
+                          } else {
+                            toast({
+                              title: "Error",
+                              description:
+                                "Subject and message cannot be empty.",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                      >
                         <div className="space-y-2">
                           <Label htmlFor="broadcast-subject">Subject</Label>
-                          <Input id="broadcast-subject" placeholder="Enter subject..." />
+                          <Input
+                            id="broadcast-subject"
+                            placeholder="Enter subject..."
+                          />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="broadcast-message">Message</Label>
-                          <Textarea id="broadcast-message" placeholder="Type your message to all users..." rows={5} />
+                          <Textarea
+                            id="broadcast-message"
+                            placeholder="Type your message to all users..."
+                            rows={5}
+                          />
                         </div>
                         <Button type="submit" className="w-full">
                           Send Broadcast
@@ -1369,63 +2014,6 @@ try {
                   </Card>
                 </div>
               </div>
-            </TabsContent>
-
-            {/* Newsletter Tab */}
-            <TabsContent value="newsletters" className="hidden">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Mail className="mr-2 h-5 w-5" />
-                    Newsletter Subscribers
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-4">
-                    <p className="text-muted-foreground">
-                      Total Subscribers: <span className="font-semibold">{newsletters?.length || 0}</span>
-                    </p>
-                  </div>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Subscribed Date</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {newslettersLoading ? (
-                        Array.from({ length: 5 }).map((_, i) => (
-                          <TableRow key={i}>
-                            <TableCell><Skeleton className="h-4 w-48" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                          </TableRow>
-                        ))
-                      ) : newsletters && newsletters.length > 0 ? (
-                        newsletters.map((subscriber) => (
-                          <TableRow key={subscriber.id} data-testid={`subscriber-row-${subscriber.id}`}>
-                            <TableCell>{subscriber.email}</TableCell>
-                            <TableCell>{format(new Date(subscriber.subscribedAt || new Date()), "MMM d, yyyy")}</TableCell>
-                            <TableCell>
-                              <Badge variant={subscriber.active ? "default" : "secondary"}>
-                                {subscriber.active ? "Active" : "Inactive"}
-                              </Badge>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={3} className="text-center py-8">
-                            No newsletter subscribers yet.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
             </TabsContent>
 
             {/* Donations Tab */}
@@ -1440,8 +2028,16 @@ try {
                 <CardContent>
                   <div className="mb-4">
                     <p className="text-muted-foreground">
-                      Total Donations: <span className="font-semibold">
-                        ${donations?.reduce((sum, donation) => sum + parseFloat(donation.amount), 0).toFixed(2) || "0.00"}
+                      Total Donations:{" "}
+                      <span className="font-semibold">
+                        $
+                        {donations
+                          ?.reduce(
+                            (sum, donation) =>
+                              sum + parseFloat(donation.amount),
+                            0
+                          )
+                          .toFixed(2) || "0.00"}
                       </span>
                     </p>
                   </div>
@@ -1459,32 +2055,59 @@ try {
                       {donationsLoading ? (
                         Array.from({ length: 5 }).map((_, i) => (
                           <TableRow key={i}>
-                            <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-16" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-32" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-20" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-16" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-24" />
+                            </TableCell>
                           </TableRow>
                         ))
                       ) : donations && donations.length > 0 ? (
                         donations.map((donation) => (
-                          <TableRow key={donation.id} data-testid={`donation-row-${donation.id}`}>
-                            <TableCell className="font-medium">${donation.amount}</TableCell>
-                            <TableCell>{donation.donorName || "Anonymous"}</TableCell>
-                            <TableCell>
-                              <Badge variant="outline">{donation.purpose}</Badge>
+                          <TableRow
+                            key={donation.id}
+                            data-testid={`donation-row-${donation.id}`}
+                          >
+                            <TableCell className="font-medium">
+                              ${donation.amount}
                             </TableCell>
                             <TableCell>
-                              <Badge 
+                              {donation.donorName || "Anonymous"}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">
+                                {donation.purpose}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
                                 variant={
-                                  donation.status === "completed" ? "default" : 
-                                  donation.status === "failed" ? "destructive" : "secondary"
+                                  donation.status === "completed"
+                                    ? "default"
+                                    : donation.status === "failed"
+                                    ? "destructive"
+                                    : "secondary"
                                 }
                               >
                                 {donation.status}
                               </Badge>
                             </TableCell>
-                            <TableCell>{format(new Date(donation.createdAt || new Date()), "MMM d, yyyy")}</TableCell>
+                            <TableCell>
+                              {format(
+                                new Date(donation.createdAt || new Date()),
+                                "MMM d, yyyy"
+                              )}
+                            </TableCell>
                           </TableRow>
                         ))
                       ) : (
@@ -1508,28 +2131,41 @@ try {
                     <Image className="mr-2 h-5 w-5" />
                     Gallery Management
                   </CardTitle>
-                  <Dialog open={showGalleryDialog} onOpenChange={setShowGalleryDialog}>
+                  <Dialog
+                    open={showGalleryDialog}
+                    onOpenChange={setShowGalleryDialog}
+                  >
                     <DialogTrigger asChild>
                       <Button data-testid="button-add-gallery-image">
                         <Plus className="mr-2 h-4 w-4" />
                         Add Image
                       </Button>
                     </DialogTrigger>
-                    <DialogContent onOpenAutoFocus={() => {
-                      setPreviewUrl("");
-                      setFile(null);
-                      galleryForm.reset();
-                    }}>
+                    <DialogContent
+                      onOpenAutoFocus={() => {
+                        setPreviewUrl("");
+                        setFile(null);
+                        galleryForm.reset();
+                      }}
+                    >
                       <DialogHeader>
                         <DialogTitle>Add Gallery Image</DialogTitle>
                       </DialogHeader>
-                      <form onSubmit={galleryForm.handleSubmit(handleSubmitGallery)} className="space-y-4">
+                      <form
+                        onSubmit={galleryForm.handleSubmit(handleSubmitGallery)}
+                        className="space-y-4"
+                      >
                         <div>
                           <Label htmlFor="title">Image Title</Label>
-                          <Input {...galleryForm.register("title")} data-testid="input-gallery-title" />
+                          <Input
+                            {...galleryForm.register("title")}
+                            data-testid="input-gallery-title"
+                          />
                         </div>
                         <div>
-                          <Label htmlFor="imageUrl">Image (URL or Upload)</Label>
+                          <Label htmlFor="imageUrl">
+                            Image (URL or Upload)
+                          </Label>
                           <div className="flex items-center gap-2">
                             <Input
                               {...galleryForm.register("imageUrl")}
@@ -1546,7 +2182,11 @@ try {
                             <Button
                               type="button"
                               variant="outline"
-                              onClick={() => document.getElementById('gallery-image-upload')?.click()}
+                              onClick={() =>
+                                document
+                                  .getElementById("gallery-image-upload")
+                                  ?.click()
+                              }
                             >
                               Upload
                             </Button>
@@ -1555,7 +2195,9 @@ try {
                             <div className="mt-2 space-y-2">
                               <div className="relative w-full rounded-lg overflow-hidden border">
                                 <img
-                                  src={previewUrl || galleryForm.watch("imageUrl")}
+                                  src={
+                                    previewUrl || galleryForm.watch("imageUrl")
+                                  }
                                   alt="Gallery image preview"
                                   className="w-full object-contain"
                                 />
@@ -1579,7 +2221,9 @@ try {
                           <Label htmlFor="category">Category</Label>
                           <Select
                             value={galleryForm.watch("category")}
-                            onValueChange={(value) => galleryForm.setValue("category", value as any)}
+                            onValueChange={(value) =>
+                              galleryForm.setValue("category", value as any)
+                            }
                           >
                             <SelectTrigger data-testid="select-gallery-category">
                               <SelectValue />
@@ -1588,14 +2232,16 @@ try {
                               <SelectItem value="general">General</SelectItem>
                               <SelectItem value="events">Events</SelectItem>
                               <SelectItem value="worship">Worship</SelectItem>
-                              <SelectItem value="community">Community</SelectItem>
+                              <SelectItem value="community">
+                                Community
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <DialogFooter>
-                          <Button 
-                            type="button" 
-                            variant="outline" 
+                          <Button
+                            type="button"
+                            variant="outline"
                             onClick={() => {
                               setShowGalleryDialog(false);
                               setPreviewUrl("");
@@ -1606,7 +2252,7 @@ try {
                             Cancel
                           </Button>
                           <Button type="submit">
-                            Add Image
+                            {Loading ? "Adding Image..." : "Add Image"}
                           </Button>
                         </DialogFooter>
                       </form>
@@ -1617,27 +2263,56 @@ try {
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {galleryLoading ? (
                       Array.from({ length: 8 }).map((_, i) => (
-                        <Skeleton key={i} className="aspect-square rounded-lg" />
+                        <Skeleton
+                          key={i}
+                          className="aspect-square rounded-lg"
+                        />
                       ))
                     ) : galleryImages && galleryImages.length > 0 ? (
                       galleryImages.map((image) => (
-                        <div key={image.id} className="relative group" data-testid={`gallery-item-${image.id}`}>
+                        <div
+                          key={image._id}
+                          className="relative group"
+                          data-testid={`gallery-item-${image._id}`}
+                        >
                           <img
-                            src={image.imageUrl}
+                            src={
+                              image?.image?.url ||
+                              image?.imageUrl ||
+                              "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/No-Image-Placeholder-landscape.svg/1280px-No-Image-Placeholder-landscape.svg.png"
+                            }
                             alt={image.title}
                             className="w-full aspect-square object-cover rounded-lg"
                           />
                           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
                             <div className="text-white text-center">
                               <p className="font-medium">{image.title}</p>
-                              <Badge className="mt-1">{image.category}</Badge>
+                              <Badge className="mt-1 text-white">
+                                {image.category}
+                              </Badge>
+                              {deleteLoading === image._id ? (
+                                <LoaderCircle
+                                  size={20}
+                                  color="white"
+                                  className=" top-2 right-2 h-6 w-6 aboslute mx-auto animate-spin"
+                                />
+                              ) : (
+                                <Trash2
+                                  size={20}
+                                  color="white"
+                                  className="absolute top-2 right-2 cursor-pointer"
+                                  onClick={() => deleteImage(image._id)}
+                                />
+                              )}
                             </div>
                           </div>
                         </div>
                       ))
                     ) : (
                       <div className="col-span-full text-center py-8">
-                        <p className="text-muted-foreground">No gallery images yet. Add your first image!</p>
+                        <p className="text-muted-foreground">
+                          No gallery images yet. Add your first image!
+                        </p>
                       </div>
                     )}
                   </div>
@@ -1653,13 +2328,19 @@ try {
                     <Users className="mr-2 h-5 w-5" />
                     Pastors Management
                   </CardTitle>
-                  <Dialog open={showPastorDialog} onOpenChange={(open) => !open && resetPastorDialog()}>
+                  <Dialog
+                    open={showPastorDialog}
+                    onOpenChange={(open) => !open && resetPastorDialog()}
+                  >
                     <DialogTrigger asChild>
-                      <Button onClick={() => {
-                        setEditingPastor(null);
-                        pastorForm.reset();
-                        setShowPastorDialog(true);
-                      }} data-testid="button-add-pastor">
+                      <Button
+                        onClick={() => {
+                          setEditingPastor(null);
+                          pastorForm.reset();
+                          setShowPastorDialog(true);
+                        }}
+                        data-testid="button-add-pastor"
+                      >
                         <Plus className="mr-2 h-4 w-4" />
                         Add Pastor
                       </Button>
@@ -1670,7 +2351,10 @@ try {
                           {editingPastor ? "Edit Pastor" : "Add New Pastor"}
                         </DialogTitle>
                       </DialogHeader>
-                      <form onSubmit={pastorForm.handleSubmit(handleSubmitPastor)} className="space-y-4">
+                      <form
+                        onSubmit={pastorForm.handleSubmit(handleSubmitPastor)}
+                        className="space-y-4"
+                      >
                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
                             <Label htmlFor="name">Name</Label>
@@ -1688,10 +2372,15 @@ try {
                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
                             <Label htmlFor="email">Email</Label>
-                            <Input type="email" {...pastorForm.register("email")} />
+                            <Input
+                              type="email"
+                              {...pastorForm.register("email")}
+                            />
                           </div>
                           <div>
-                            <Label htmlFor="imageUrl">Image (URL or Upload)</Label>
+                            <Label htmlFor="imageUrl">
+                              Image (URL or Upload)
+                            </Label>
                             <div className="flex items-center gap-2">
                               <Input
                                 {...pastorForm.register("imageUrl")}
@@ -1707,42 +2396,46 @@ try {
                               <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => document.getElementById('pastor-image-upload')?.click()}
+                                onClick={() =>
+                                  document
+                                    .getElementById("pastor-image-upload")
+                                    ?.click()
+                                }
                               >
                                 Upload
                               </Button>
                             </div>
-                            {(previewUrl || pastorForm.watch("imageUrl")) && (
-                              <div className="mt-2 w-full space-y-2">
-                                <div className="relative  rounded-lg overflow-hidden border">
-                                  <img
-                                    src={previewUrl || pastorForm.watch("imageUrl")}
-                                    alt="Pastor profile preview"
-                                    className="w-full flex-1 object-contain"
-                                  />
-                                </div>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  className="w-full"
-                                  onClick={() => {
-                                    setPreviewUrl("");
-                                    setFile(null);
-                                    pastorForm.setValue("imageUrl", "");
-                                  }}
-                                >
-                                  Change Profile Image
-                                </Button>
+                            
+                          </div>
+                          {(previewUrl || pastorForm.watch("imageUrl")) && (
+                                <div className="col-span-2 mt-4">
+                              <div className="relative aspect-video w-full overflow-hidden rounded-lg border">
+                                <img
+                                  src={previewUrl || pastorForm.watch("imageUrl")}
+                                  alt="Pastor profile preview"
+                                  className="h-full w-full object-cover"
+                                />
+                              </div>
                               </div>
                             )}
-                          </div>
                         </div>
+                        
                         <DialogFooter>
-                          <Button type="button" variant="outline" onClick={resetPastorDialog}>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={resetPastorDialog}
+                          >
                             Cancel
                           </Button>
                           <Button type="submit">
-                            {editingPastor ?( Loading?"Updating Pastor...":"Update Pastor" ):( Loading ?"Adding Pastor...":"Add Pastor")}
+                            {editingPastor
+                              ? Loading
+                                ? "Updating Pastor..."
+                                : "Update Pastor"
+                              : Loading
+                              ? "Adding Pastor..."
+                              : "Add Pastor"}
                           </Button>
                         </DialogFooter>
                       </form>
@@ -1763,23 +2456,44 @@ try {
                       {pastorsLoading ? (
                         Array.from({ length: 2 }).map((_, i) => (
                           <TableRow key={i}>
-                            <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-32" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-24" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-40" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-20" />
+                            </TableCell>
                           </TableRow>
                         ))
                       ) : pastors && pastors.length > 0 ? (
                         pastors.map((pastor) => (
                           <TableRow key={pastor._id}>
-                         <img src={pastor.profileImg.url|| "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740&q=80"} alt={pastor.name} className="size-20 mt-5 shadow-md rounded-full object-cover" />
+                            <img
+                              src={
+                                pastor.profileImg?.url || pastor.imageUrl ||
+                                "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740&q=80"
+                              }
+                              alt={pastor.name}
+                              className="size-20 mt-5 shadow-md rounded-full object-cover"
+                            />
 
-                            <TableCell className="font-medium">{pastor.name}</TableCell>
+                            <TableCell className="font-medium">
+                              {pastor.name}
+                            </TableCell>
                             <TableCell>{pastor.title}</TableCell>
                             <TableCell>{pastor.email}</TableCell>
                             <TableCell>
                               <div className="flex gap-2">
-                                <Button size="sm" variant="outline" onClick={() => handleEditPastor(pastor)}>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleEditPastor(pastor)}
+                                >
                                   <Edit className="h-4 w-4" />
                                 </Button>
                                 <AlertDialog>
@@ -1790,15 +2504,31 @@ try {
                                   </AlertDialogTrigger>
                                   <AlertDialogContent>
                                     <AlertDialogHeader>
-                                      <AlertDialogTitle>Delete Pastor</AlertDialogTitle>
+                                      <AlertDialogTitle>
+                                        Delete Pastor
+                                      </AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        Are you sure you want to delete {pastor.name}?
+                                        Are you sure you want to delete{" "}
+                                        {pastor.name}?
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => deletePastor(pastor._id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                        Delete
+                                      <AlertDialogCancel>
+                                        Cancel
+                                      </AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => deletePastor(pastor._id)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
+                                        {deleteLoading === pastor._id ? (
+                                          <LoaderCircle
+                                            size={20}
+                                            color="white"
+                                            className=" top-2 right-2 h-6 w-6 aboslute mx-auto animate-spin"
+                                          />
+                                        ) : (
+                                          "Delete"
+                                        )}
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
                                   </AlertDialogContent>
@@ -1827,34 +2557,54 @@ try {
                   <CardTitle className="flex items-center">
                     <Bell className="mr-2 h-5 w-5" />
                     Notifications
-                   
                   </CardTitle>
-                  {notifications.filter(n=>n.archived).length > 0 && (<div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={UnArchiveNotifications}>
-                      {`Unarchive All (${notifications.filter(n => n.archived ).length})`}
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
-                          Clear All
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This will permanently delete all notifications. This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={clearAllNotifications} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                            Clear All
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>)}
+                  <div className="flex gap-2">
+                    {notifications.filter((n) => n.archived).length > 0 && (
+                     <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={UnArchiveNotifications}
+                      >
+                        {`Unarchive All (${
+                          notifications.filter((n) => n.archived).length
+                        })`}
+                      </Button>
+                  )}
+                     
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="sm">
+                            
+                            {deleteLoading === "clear-all" ? (
+                              <LoaderCircle
+                                size={16}
+                                color="white"
+                                className="ml-2 animate-spin inline-block"
+                              />
+                            ):"Clear All"}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will permanently delete all notifications.
+                              This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={clearAllNotifications}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Clear All
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -1868,66 +2618,131 @@ try {
                           </div>
                         </div>
                       ))
-                    ) : notifications.filter(n=>!n.read && !n.archived).length > 0 ? (
-                      notifications.filter(n=>!n.read && !n.archived).map(notification => (
-                        <div key={notification._id} className={`flex items-start gap-4 p-4 rounded-lg border ${notification.read ? 'bg-muted/50' : 'bg-background'}`}>
-                          <div className="flex-shrink-0 mt-1">
-                            {notification.type === 'donation' && <DollarSign className="h-5 w-5 text-green-500" />}
-                            {notification.type === 'event' && <Calendar className="h-5 w-5 text-blue-500" />}
-                            {notification.type === 'system' && <SettingsIcon className="h-5 w-5 text-gray-500" />}
-                            {notification.type === 'user' && <Users className="h-5 w-5 text-purple-500" />}
-                            {notification.type === 'sermon' && <PlayCircleIcon className="h-5 w-5 text-amber-500" />}
-                          </div>
-                          
-                          <div className="flex-1">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <p className="font-semibold text-black">{notification.title}</p>
-                                <p className="text-sm text-muted-foreground">{notification.description}</p>
-                              </div>
-                              {!notification.read  && (
-                                <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-600">New</Badge>
+                    ) : notifications.filter((n) => !n.read && !n.archived)
+                        .length > 0 ? (
+                      notifications
+                        .filter((n) => !n.read && !n.archived)
+                        .map((notification) => (
+                          <div
+                            key={notification._id}
+                            className={`flex items-start gap-4 p-4 rounded-lg border ${
+                              notification.read
+                                ? "bg-muted/50"
+                                : "bg-background"
+                            }`}
+                          >
+                            <div className="flex-shrink-0 mt-1">
+                              {notification.type === "donation" && (
+                                <DollarSign className="h-5 w-5 text-green-500" />
+                              )}
+                              {notification.type === "event" && (
+                                <Calendar className="h-5 w-5 text-blue-500" />
+                              )}
+                              {notification.type === "system" && (
+                                <SettingsIcon className="h-5 w-5 text-gray-500" />
+                              )}
+                              {notification.type === "user" && (
+                                <Users className="h-5 w-5 text-purple-500" />
+                              )}
+                              {notification.type === "sermon" && (
+                                <PlayCircleIcon className="h-5 w-5 text-amber-500" />
+                              )}
+                              {notification.type === "gallery" && (
+                                <ImageIcon className="h-5 w-5 text-pink-500" />
                               )}
                             </div>
-                            <div className="flex items-center justify-between mt-2">
-                              <p className="text-xs text-muted-foreground text-gray-400">
-                                {format(new Date(notification.createdAt), "MMM d, yyyy 'at' h:mm a")}
-                              </p>
-                              <div className="flex gap-2">
-                                <Button variant="outline" size="sm" onClick={() => archiveNotification(notification._id)} disabled={notification.read}>
-                                  {notification.archived ? 'Archived' : 'Archive'}
-                                  
-                                </Button>
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive">
-                                      Delete
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Delete Notification?</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        This will permanently delete the notification titled "{notification.title}".
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => deleteNotification(notification._id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                        Delete
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
+
+                            <div className="flex-1">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <p className="font-semibold text-black">
+                                    {notification.title}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {notification.description}
+                                  </p>
+                                </div>
+                                {!notification.read && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs bg-purple-100 text-purple-600"
+                                  >
+                                    New
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex items-center justify-between mt-2">
+                                <p className="text-xs text-muted-foreground text-gray-400">
+                                  {format(
+                                    new Date(notification.createdAt),
+                                    "MMM d, yyyy 'at' h:mm a"
+                                  )}
+                                </p>
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      archiveNotification(notification._id)
+                                    }
+                                    disabled={notification.read}
+                                  >
+                                    {notification.archived
+                                      ? "Archived"
+                                      : "Archive"}
+                                  </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                      >
+                                        {deleteLoading ?  <LoaderCircle
+                                size={16}
+                                color="white"
+                                className="ml-2 animate-spin inline-block"
+                              /> :"Delete"}
+                                        
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>
+                                          Delete Notification?
+                                        </AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          This will permanently delete the
+                                          notification titled "
+                                          {notification.title}".
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>
+                                          Cancel
+                                        </AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={() =>
+                                            deleteNotification(notification._id)
+                                          }
+                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                        >
+                                          Delete
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))
+                        ))
                     ) : (
                       <div className="text-center py-12 text-muted-foreground">
                         <Bell className="mx-auto h-10 w-10 mb-4" />
-                        <h3 className="text-lg font-semibold">No Notifications</h3>
+                        <h3 className="text-lg font-semibold">
+                          No Notifications
+                        </h3>
                         <p className="text-sm">You're all caught up!</p>
                       </div>
                     )}
@@ -1949,9 +2764,24 @@ try {
                   <Tabs defaultValue="website" orientation="vertical">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                       <TabsList className="flex flex-col h-full bg-transparent p-0">
-                        <TabsTrigger value="website" className="justify-start w-full">Website Settings</TabsTrigger>
-                        <TabsTrigger value="profile" className="justify-start w-full">Admin Profile</TabsTrigger>
-                        <TabsTrigger value="general" className="justify-start w-full">General</TabsTrigger>
+                        <TabsTrigger
+                          value="website"
+                          className="justify-start w-full"
+                        >
+                          Website Settings
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="profile"
+                          className="justify-start w-full"
+                        >
+                          Admin Profile
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="general"
+                          className="justify-start w-full"
+                        >
+                          General
+                        </TabsTrigger>
                       </TabsList>
                       <div className="md:col-span-3">
                         <TabsContent value="website">
@@ -1962,11 +2792,19 @@ try {
                             <CardContent className="space-y-4">
                               <div className="space-y-2">
                                 <Label htmlFor="site-name">Site Name</Label>
-                                <Input id="site-name" defaultValue="My Church" />
+                                <Input
+                                  id="site-name"
+                                  defaultValue="My Church"
+                                />
                               </div>
                               <div className="space-y-2">
-                                <Label htmlFor="site-description">Site Description</Label>
-                                <Textarea id="site-description" defaultValue="Welcome to our church website." />
+                                <Label htmlFor="site-description">
+                                  Site Description
+                                </Label>
+                                <Textarea
+                                  id="site-description"
+                                  defaultValue="Welcome to our church website."
+                                />
                               </div>
                               <Button>Save Changes</Button>
                             </CardContent>
@@ -1980,11 +2818,18 @@ try {
                             <CardContent className="space-y-4">
                               <div className="space-y-2">
                                 <Label htmlFor="admin-name">Name</Label>
-                                <Input id="admin-name" defaultValue="Admin User" />
+                                <Input
+                                  id="admin-name"
+                                  defaultValue="Admin User"
+                                />
                               </div>
                               <div className="space-y-2">
                                 <Label htmlFor="admin-email">Email</Label>
-                                <Input id="admin-email" type="email" defaultValue="admin@church.com" />
+                                <Input
+                                  id="admin-email"
+                                  type="email"
+                                  defaultValue="admin@church.com"
+                                />
                               </div>
                               <Button>Update Profile</Button>
                             </CardContent>
@@ -2000,7 +2845,8 @@ try {
                                 <div className="space-y-0.5">
                                   <Label>Enable Maintenance Mode</Label>
                                   <p className="text-xs text-muted-foreground">
-                                    Temporarily disable public access to the site.
+                                    Temporarily disable public access to the
+                                    site.
                                   </p>
                                 </div>
                                 <Switch />
@@ -2038,7 +2884,6 @@ export default function Admin() {
       </div>
     );
   }
-  
 
   // Show login form if not authenticated or not admin
   if (!isAuthenticated || !isAdmin) {

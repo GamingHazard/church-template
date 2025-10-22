@@ -6,5 +6,5 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const Configs = {
-  url:"https://church-server-p458.onrender.com"
+  url:"http://localhost:6060"
 }
