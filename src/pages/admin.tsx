@@ -265,7 +265,7 @@ function AdminDashboard() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [uploading, setUploading] = useState<boolean>(false);
-  const [Loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [deleteLoading, setdeleteLoading] = useState<string>("");
 
   useEffect(() => {
@@ -300,10 +300,10 @@ function AdminDashboard() {
       date: z.string().min(1, "Date is required").regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
       time: z.string().min(1, "Time is required").regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
       location: z.string().min(1, "Location is required"),
-      speaker: z.string().optional(),
-      thumbnailUrl: z.string().optional(),
-      category: z.enum(["general", "service", "youth", "community"]),
-    })),
+      speaker: z.string().optional().or(z.literal("")),
+      thumbnailUrl: z.string().optional().or(z.literal("")),
+      category: z.enum(["general", "service", "youth", "community"]).optional().default("general"),
+    }).partial({ speaker: true, thumbnailUrl: true })),
   });
 
   // Sermon form
@@ -328,10 +328,10 @@ function AdminDashboard() {
       videoUrl: z.string().url("Invalid video URL").optional().or(z.literal("")),
       audioUrl: z.string().url("Invalid audio URL").optional().or(z.literal("")),
       thumbnailUrl: z.string().url("Invalid thumbnail URL").optional().or(z.literal("")),
-      scripture: z.string().optional(),
-      series: z.string().optional(),
-      isLive: z.boolean(),
-    })),
+      scripture: z.string().optional().or(z.literal("")),
+      series: z.string().optional().or(z.literal("")),
+      isLive: z.boolean().optional().default(false),
+    }).partial({ videoUrl: true, audioUrl: true, thumbnailUrl: true, scripture: true, series: true })),
   });
 
   // Gallery form
@@ -367,9 +367,9 @@ function AdminDashboard() {
       bio: z.string().min(1, "Bio is required").max(1000, "Bio is too long"),
       imageUrl: z.string().url("Invalid image URL").optional().or(z.literal("")),
       email: z.string().min(1, "Email is required").email("Invalid email format"),
-      isLead: z.boolean(),
-      order: z.number().int().min(0, "Order must be 0 or greater"),
-    })),
+      isLead: z.boolean().optional().default(false),
+      order: z.number().int().min(0, "Order must be 0 or greater").optional().default(0),
+    }).partial({ imageUrl: true, isLead: true, order: true })),
   });
 
   // 2) File chosen
@@ -516,44 +516,70 @@ function AdminDashboard() {
 
   // Update Event
   const updateEvent = async (id: string, data: Partial<EventForm>) => {
-    setLoading(true);
     try {
+      // Form validation
+      const isValid = await eventForm.trigger();
+      if (!isValid) {
+        const errors = eventForm.formState.errors;
+        Object.entries(errors).forEach(([field, error]) => {
+          if (error?.message) {
+            toast({
+              title: `Invalid ${field}`,
+              description: error.message,
+              variant: "destructive",
+            });
+          }
+        });
+        return;
+      }
+
+      setLoading(true);
+
+      // Upload file if present
+      let eventData = { ...data };
       if (file !== null) {
-        const { url, public_id } = await uploadFileToServer(file, "events");
-        const eventData = { ...data, url, public_id };
+        const uploadResult = await uploadFileToServer(file, "events");
+        if (!uploadResult) {
+          setLoading(false);
+          return;
+        }
+        const { url, public_id } = uploadResult;
+        eventData = { 
+          ...eventData, 
+          thumbnail: { url, public_id },
+          thumbnailUrl: "" 
+        };
+      }
 
-        const res = await axios.put(
-          `${Configs.url}/api/events/update-event/${id}`,
-          eventData
-        );
-        if (res.status === 200) {
+      // Update the event
+      const res = await axios.put(
+        `${Configs.url}/api/events/update-event/${id}`,
+        eventData,
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        }
+      );
+      
+      if (res.status === 200) {
+        // Update local state
+        if (res.data.events) {
           setEvents(res.data.events);
-
-          toast({ title: "Event updated successfully!" });
-          resetEventDialog();
-          setEditingEvent(null);
-        }
-      } else {
-        const res = await axios.put(
-          `${Configs.url}/api/events/update-event/${id}`,
-          data
-        );
-        if (res.status === 200) {
+        } else {
           setEvents((prev) =>
-            prev.map((e) => (e._id === id ? { ...e, ...data } : e))
+            prev.map((e) => (e._id === id ? { ...e, ...eventData } : e))
           );
-          toast({ title: "Event updated successfully!" });
-          resetEventDialog();
-          setEditingEvent(null);
         }
+        toast({ title: "Event updated successfully!" });
+        resetEventDialog();
+        setEditingEvent(null);
       }
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: "Error updating event",
         variant: "destructive",
-        description: `Failed to update event: ${
-          error.response?.data?.err || error.message
-        }`,
+        description: error.response?.data?.message || error.message || "Failed to update event",
       });
     } finally {
       setLoading(false);
@@ -581,6 +607,11 @@ function AdminDashboard() {
       setdeleteLoading("");
     }
   };
+
+
+
+
+
 
   // Create Sermon
   const createSermon = async (data: SermonForm) => {
@@ -687,26 +718,42 @@ function AdminDashboard() {
   };
   // Update Sermon
   const updateSermon = async (id: string, data: Partial<SermonForm>) => {
-    setLoading(true);
     try {
-      // Start with a copy of the form data
-      let sermonData = { ...data };
-
-      if (file !== null) {
-        // Upload the file to the server (Cloudinary)
-        const uploadResponse = await uploadFileToServer(file, "sermons");
-        if (uploadResponse) {
-          const { url, public_id } = uploadResponse;
-
-          // Replace thumbnailUrl with Cloudinary object
-          sermonData = {
-            ...sermonData, // keep other fields
-            thumbnail: { url, public_id }, // Cloudinary
-            thumbnailUrl: "", // override any existing thumbnailUrl
-          };
-        }
+      // Form validation
+      const isValid = await sermonForm.trigger();
+      if (!isValid) {
+        const errors = sermonForm.formState.errors;
+        Object.entries(errors).forEach(([field, error]) => {
+          if (error?.message) {
+            toast({
+              title: `Invalid ${field}`,
+              description: error.message,
+              variant: "destructive",
+            });
+          }
+        });
+        return;
       }
 
+      setLoading(true);
+
+      // Upload file if present
+      let sermonData = { ...data };
+      if (file !== null) {
+        const uploadResult = await uploadFileToServer(file, "sermons");
+        if (!uploadResult) {
+          setLoading(false);
+          return;
+        }
+        const { url, public_id } = uploadResult;
+        sermonData = {
+          ...sermonData,
+          thumbnail: { url, public_id },
+          thumbnailUrl: "", // override any existing thumbnailUrl
+        };
+      }
+
+      // Update the sermon
       const res = await axios.put(
         `${Configs.url}/api/sermons/update-sermon/${id}`,
         sermonData,
@@ -717,7 +764,8 @@ function AdminDashboard() {
         }
       );
 
-        if (res.status === 200) {
+      if (res.status === 200) {
+        // Update local state
         if (res.data.sermons) {
           setSermons(res.data.sermons);
         } else {
@@ -729,15 +777,15 @@ function AdminDashboard() {
         }
 
         toast({ title: "Sermon updated successfully!" });
-          resetSermonDialog();
-          setEditingSermon(null);
+        resetSermonDialog();
+        setEditingSermon(null);
       }
     } catch (error: any) {
       console.error("Error updating sermon:", error);
       toast({
-        title: "Error",
+        title: "Error updating sermon",
         variant: "destructive",
-        description: error.response?.data?.message || "Failed to update sermon",
+        description: error.response?.data?.message || error.message || "Failed to update sermon",
       });
     } finally {
       setLoading(false);
@@ -766,6 +814,9 @@ function AdminDashboard() {
       setdeleteLoading("");
     }
   };
+
+
+
 
   // Create Gallery Image
   const createGalleryImage = async (data: GalleryForm) => {
@@ -881,6 +932,10 @@ function AdminDashboard() {
     }
   };
 
+
+
+
+
   // Create Pastor
   const createPastor = async (data: PastorForm) => {
     try {
@@ -960,46 +1015,70 @@ function AdminDashboard() {
   };
   // Update Pastor
   const updatePastor = async (id: string, data: Partial<PastorForm>) => {
-    setLoading(true);
     try {
+      // Form validation
+      const isValid = await pastorForm.trigger();
+      if (!isValid) {
+        const errors = pastorForm.formState.errors;
+        Object.entries(errors).forEach(([field, error]) => {
+          if (error?.message) {
+            toast({
+              title: `Invalid ${field}`,
+              description: error.message,
+              variant: "destructive",
+            });
+          }
+        });
+        return;
+      }
+
+      setLoading(true);
+
+      // Upload file if present
+      let pastorData = { ...data };
       if (file !== null) {
-        const { url, public_id } = await uploadFileToServer(file, "sermons");
-        const sermonData = { ...data, url, public_id };
-
-        const res = await axios.put(
-          `${Configs.url}/api/pastors/update-profile/${id}`,
-          sermonData
-        );
-        if (res.status === 200) {
-          setPastors(res.data.pastors);
-          setNotifications(res.data.notifications);
-
-          toast({ title: "Pastor updated successfully!" });
-          setShowPastorDialog(false);
-          setEditingPastor(null);
-          pastorForm.reset();
+        const uploadResult = await uploadFileToServer(file, "pastors");
+        if (!uploadResult) {
+          setLoading(false);
+          return;
         }
-      } else {
-        const res = await axios.put(
-          `${Configs.url}/api/pastors/update-profile/${id}`,
-          data
-        );
-        if (res.status === 200) {
-          setNotifications(res.data.notifications);
-          setPastors(res.data.pastors);
-          toast({ title: "Pastor updated successfully!" });
-          setShowPastorDialog(false);
-          setEditingPastor(null);
-          pastorForm.reset();
+        const { url, public_id } = uploadResult;
+        pastorData = { ...pastorData, profileImg: { url, public_id } };
+      }
+
+     
+      const res = await axios.put(
+        `${Configs.url}/api/pastors/update-profile/${id}`,
+        pastorData,
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
         }
+      );
+
+      if (res.status === 200) {
+        // Update local state
+        if (res.data.pastors) {
+          setPastors(res.data.pastors);
+        } else {
+          setPastors((prev) =>
+            prev.map((p) => (p._id === id ? { ...p, ...pastorData } : p))
+          );
+        }
+        if (res.data.notifications) {
+          setNotifications(res.data.notifications);
+        }
+
+        toast({ title: "Pastor updated successfully!" });
+        resetPastorDialog();
+        setEditingPastor(null);
       }
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: "Error updating pastor",
         variant: "destructive",
-        description: `Failed to update pastor: ${
-          error.response?.data?.err || error.message
-        }`,
+        description: error.response?.data?.message || error.message || "Failed to update pastor profile",
       });
     } finally {
       setLoading(false);
@@ -1199,18 +1278,34 @@ function AdminDashboard() {
   };
 
   const handleSubmitEvent = async (data: EventForm) => {
-    if (editingEvent) {
-      await updateEvent(editingEvent._id, data);
-    } else {
-      createEvent(data);
+    try {
+      if (editingEvent) {
+        await updateEvent(editingEvent._id, data);
+      } else {
+        await createEvent(data);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save event",
+        variant: "destructive"
+      });
     }
   };
 
-  const handleSubmitSermon = (data: SermonForm) => {
-    if (editingSermon) {
-      updateSermon(editingSermon._id, data);
-    } else {
-      createSermon(data);
+  const handleSubmitSermon = async (data: SermonForm) => {
+    try {
+      if (editingSermon) {
+        await updateSermon(editingSermon._id, data);
+      } else {
+        await createSermon(data);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save sermon",
+        variant: "destructive"
+      });
     }
   };
 
@@ -1224,15 +1319,31 @@ function AdminDashboard() {
     setShowSermonDialog(true);
   };
 
-  const handleSubmitGallery = (data: GalleryForm) => {
-    createGalleryImage(data);
+  const handleSubmitGallery = async (data: GalleryForm) => {
+    try {
+      await createGalleryImage(data);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save gallery image",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleSubmitPastor = (data: PastorForm) => {
-    if (editingPastor) {
-      updatePastor(editingPastor._id, data);
-    } else {
-      createPastor(data);
+  const handleSubmitPastor = async (data: PastorForm) => {
+    try {
+      if (editingPastor) {
+        await updatePastor(editingPastor._id, data);
+      } else {
+        await createPastor(data);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save pastor",
+        variant: "destructive"
+      });
     }
   };
 
@@ -1390,6 +1501,7 @@ function AdminDashboard() {
                           <div>
                             <Label htmlFor="title">Event Title</Label>
                             <Input
+                              id="title"
                               {...eventForm.register("title")}
                               data-testid="input-event-title"
                             />
@@ -1506,23 +1618,31 @@ function AdminDashboard() {
                           </div>
                         </div>
 
-                        <DialogFooter>
+                        <DialogFooter className="flex justify-end gap-2 mt-4">
                           <Button
                             type="button"
                             variant="outline"
                             onClick={resetEventDialog}
+                            disabled={loading}
                             data-testid="button-cancel-event"
                           >
                             Cancel
                           </Button>
-                          <Button type="submit" data-testid="button-save-event">
-                            {Loading && !editingEvent
-                              ? "Creating..."
-                              : editingEvent
-                              ? Loading && editingEvent
-                                ? "Updating Event..."
-                                : "Update Event"
-                              : "Create Event"}
+                          <Button 
+                            type="submit"
+                            disabled={loading}
+                            data-testid="button-save-event"
+                            className="min-w-[90px]"
+                            onClick={eventForm.handleSubmit(handleSubmitEvent)}
+                          >
+                            {loading ? (
+                              <div className="flex items-center gap-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <span>{editingEvent ? "Updating..." : "Creating..."}</span>
+                              </div>
+                            ) : (
+                              editingEvent ? "Update Event" : "Create Event"
+                            )}
                           </Button>
                         </DialogFooter>
                       </form>
@@ -1688,13 +1808,17 @@ function AdminDashboard() {
                         </DialogTitle>
                       </DialogHeader>
                       <form
-                        onSubmit={sermonForm.handleSubmit(handleSubmitSermon)}
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          sermonForm.handleSubmit(handleSubmitSermon)(e);
+                        }}
                         className="space-y-4"
                       >
                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
                             <Label htmlFor="title">Sermon Title</Label>
                             <Input
+                              id="title"
                               {...sermonForm.register("title")}
                               data-testid="input-sermon-title"
                             />
@@ -1815,17 +1939,22 @@ function AdminDashboard() {
                             type="button"
                             variant="outline"
                             onClick={resetSermonDialog}
+                            disabled={loading}
                           >
                             Cancel
                           </Button>
-                          <Button type="submit">
-                            {Loading && !editingSermon
-                              ? "Creating..."
-                              : editingSermon
-                              ? Loading && editingSermon
-                                ? "Updating Sermon..."
-                                : "Update Sermon"
-                              : "Create Sermon"}
+                          <Button 
+                            type="submit"
+                            disabled={loading}
+                          >
+                            {loading ? (
+                              <div className="flex items-center gap-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                {editingSermon ? "Updating Sermon..." : "Creating Sermon..."}
+                              </div>
+                            ) : (
+                              editingSermon ? "Update Sermon" : "Create Sermon"
+                            )}
                           </Button>
                         </DialogFooter>
                       </form>
@@ -2248,7 +2377,10 @@ function AdminDashboard() {
                         <DialogTitle>Add Gallery Image</DialogTitle>
                       </DialogHeader>
                       <form
-                        onSubmit={galleryForm.handleSubmit(handleSubmitGallery)}
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          galleryForm.handleSubmit(handleSubmitGallery)(e);
+                        }}
                         className="space-y-4"
                       >
                         <div>
@@ -2343,7 +2475,7 @@ function AdminDashboard() {
                             Cancel
                           </Button>
                           <Button type="submit">
-                            {Loading ? "Adding Image..." : "Add Image"}
+                            {loading ? "Adding Image..." : "Add Image"}
                           </Button>
                         </DialogFooter>
                       </form>
@@ -2445,7 +2577,10 @@ function AdminDashboard() {
                         </DialogTitle>
                       </DialogHeader>
                       <form
-                        onSubmit={pastorForm.handleSubmit(handleSubmitPastor)}
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          pastorForm.handleSubmit(handleSubmitPastor)(e);
+                        }}
                         className="space-y-4"
                       >
                         <div className="grid md:grid-cols-2 gap-4">
@@ -2519,17 +2654,22 @@ function AdminDashboard() {
                             type="button"
                             variant="outline"
                             onClick={resetPastorDialog}
+                            disabled={loading}
                           >
                             Cancel
                           </Button>
-                          <Button type="submit">
-                            {editingPastor
-                              ? Loading
-                                ? "Updating Pastor..."
-                                : "Update Pastor"
-                              : Loading
-                              ? "Adding Pastor..."
-                              : "Add Pastor"}
+                          <Button 
+                            type="submit"
+                            disabled={loading}
+                          >
+                            {loading ? (
+                              <div className="flex items-center gap-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                {editingPastor ? "Updating..." : "Creating..."}
+                              </div>
+                            ) : (
+                              editingPastor ? "Update Pastor" : "Add Pastor"
+                            )}
                           </Button>
                         </DialogFooter>
                       </form>

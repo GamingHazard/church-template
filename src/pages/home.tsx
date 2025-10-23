@@ -5,32 +5,37 @@ import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Clock, Play } from "lucide-react";
 import { Link } from "wouter";
-import { format } from "date-fns";
+import { format, set } from "date-fns";
 import { Skeleton } from "../components/ui/skeleton";
 import { useEffect, useState } from "react";
-import { mockEvents } from "../lib/Data";
-import { mockSermons } from "../lib/Data";
+ 
 import { useAppData } from "../hooks/use-AppData";
+import { VideoPlayer } from "../components/video-player";
 
 
 
-
-
+interface Sermon {
+  _id: string;
+  title: string;
+  speaker: string;
+  date: string;
+  description: string;
+  videoUrl: string;
+  thumbnailUrl?: string;
+  thumbnail?: {
+    url: string;
+  };
+  isLive?: boolean;
+}
  
 
-const mockPastor = {
-  id: 1,
-  name: "Pastor David Johnson",
-  title: "Lead Pastor",
-  bio: "Pastor David has been leading FaithLife Church for over 15 years...",
-  imageUrl: "https://t4.ftcdn.net/jpg/09/59/90/05/360_F_959900529_TsWNG6lFpVUbHTd0KytLwKZ3SxBQNdkR.jpg",
-};
-
+ 
 export default function Home() {
-  const { events, Sermons, loading, error, refresh } = useAppData();
+  const { events, Sermons, loading, error, refresh,Pastors } = useAppData();
 
-  const [upcomingEvents, setUpcomingEvents] = useState<any[]>(events );
-  const [recentSermons, setRecentSermons] = useState<any[]>(Sermons );
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>(events);
+  const [recentSermons, setRecentSermons] = useState<any[]>(Sermons);
+  const [currentSermon, setCurrentSermon] = useState<any>(Sermons?.[0] || null);
   const [leadPastor, setLeadPastor] = useState<any>(null);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [sermonsLoading, setSermonsLoading] = useState(true);
@@ -41,16 +46,24 @@ export default function Home() {
 
     // Simulate fetching data
     const timer = setTimeout(() => {
-      setUpcomingEvents(mockEvents);
-      setRecentSermons(mockSermons);
-      setLeadPastor(mockPastor);
+if (Sermons) {
+  const liveSermons = Sermons.filter(sermon => sermon.isLive);
+  if (!currentSermon && liveSermons.length>0) {
+     setCurrentSermon(liveSermons?.[0] || null);
+  }else{setCurrentSermon(Sermons?.[0] || null);}
+}
+
+      
+      setUpcomingEvents(events);
+      setRecentSermons(Sermons);
+      setLeadPastor(Pastors);
       setEventsLoading(false);
       setSermonsLoading(false);
       setPastorLoading(false);
     }, 1500); // 1.5 second delay
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [Sermons, events, Pastors]);
 
 
   return (
@@ -117,7 +130,7 @@ export default function Home() {
       </section>
 
       {/* Upcoming Events */}
-      <section className="py-16 bg-background">
+      {upcomingEvents.length > 0 && (<section className="py-16 bg-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-foreground mb-4" data-testid="upcoming-events-title">
@@ -167,7 +180,7 @@ export default function Home() {
             </div>
           )}
         </div>
-      </section>
+      </section>)}
 
       {/* Pastor Message */}
       <section className="py-16 bg-card">
@@ -231,7 +244,8 @@ export default function Home() {
       </section>
 
       {/* Live Sermon Section */}
-      <section className="py-16 bg-background">
+     {Sermons && Sermons.length > 0 && (
+       <section className="py-16 bg-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-foreground mb-4" data-testid="watch-listen-title">
@@ -241,35 +255,30 @@ export default function Home() {
               Experience our worship services live or catch up on past messages
             </p>
           </div>
-
-          <div className="grid lg:grid-cols-2 gap-12">
-            {/* Live Stream */}
-            <div className="bg-card rounded-xl p-6 shadow-lg">
-              <h3 className="text-2xl font-semibold text-card-foreground mb-4 flex items-center" data-testid="live-stream-title">
-                <span className="bg-red-500 text-white px-2 py-1 rounded text-sm font-medium mr-3">
-                  LIVE
-                </span>
-                Sunday Service
-              </h3>
-              <div className="aspect-video bg-muted rounded-lg mb-4 flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  <Play className="mx-auto h-16 w-16 mb-4 text-primary" />
-                  <p className="text-lg font-medium" data-testid="live-stream-status">
-                    Live Stream Starting Soon
-                  </p>
-                  <p className="text-sm" data-testid="live-stream-time">
-                    Sundays at 10:30 AM
-                  </p>
-                </div>
-              </div>
-              <Link href="/sermons">
-                <Button 
-                  className="w-full bg-primary text-primary-foreground hover:opacity-90"
-                  data-testid="button-join-live-stream"
-                >
-                  Join Live Stream
-                </Button>
-              </Link>
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Featured Video Player */}
+            <div className="lg:col-span-2">
+              <Card className="overflow-hidden">
+                <CardContent className="p-0">
+                  <VideoPlayer
+                    videoUrl={currentSermon?.videoUrl || ""}
+                    thumbnailUrl={currentSermon?.thumbnailUrl || currentSermon?.thumbnail?.url}
+                    title={currentSermon?.title}
+                    autoplay={false}
+                  />
+                  {currentSermon && (
+                    <div className="p-4">
+                      <h3 className="text-xl font-semibold mb-2">{currentSermon.title}</h3>
+                      <p className="text-muted-foreground text-sm">
+                        {currentSermon.speaker} • {format(new Date(currentSermon.date), "MMMM d, yyyy")}
+                      </p>
+                      <p className="text-muted-foreground text-sm mt-2 line-clamp-2">
+                        {currentSermon.description}
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
 
             {/* Recent Sermons */}
@@ -293,27 +302,41 @@ export default function Home() {
                 ))
               ) : Sermons && Sermons.length > 0 ? (
                 Sermons.slice(0, 3).map((sermon) => (
-                  <div key={sermon._id} className="bg-card rounded-lg p-4 shadow hover:shadow-md transition-shadow duration-300" data-testid={`sermon-item-${sermon._id}`}>
-                    <div className="flex items-start space-x-4">
-                      <div className="flex-shrink-0">
-                        <Link href="/sermons" className="w-16 h-16 bg-primary rounded-lg object-cover flex items-center justify-center">
-                          <img className="h-full w-full rounded-sm relative" src= {sermon.thumbnailUrl}/>
-                          <Play className="text-primary-foreground absolute h-6 w-6 cursor-pointer" />
-                        </Link>
+                  <Card 
+                    key={sermon._id} 
+                    className={`overflow-hidden hover:shadow-lg transition-all cursor-pointer group ${
+                      currentSermon?._id === sermon._id ? 'ring-2 ring-primary' : ''
+                    }`}
+                    data-testid={`sermon-item-${sermon._id}`}
+                    onClick={() => setCurrentSermon(sermon)}
+                  >
+                    <div className="flex p-4 gap-4">
+                      <div className="flex-shrink-0 relative w-20 h-20">
+                        <img 
+                          src={sermon.thumbnail?.url || sermon.thumbnailUrl || "/placeholder-sermon.jpg"} 
+                          alt={sermon.title}
+                          className="w-full h-full object-cover rounded-md"
+                        />
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Play className="w-8 h-8 text-white" />
+                        </div>
                       </div>
-                      <div className="flex-grow">
-                        <h4 className="font-semibold text-card-foreground mb-1" data-testid={`sermon-title-${sermon._id}`}>
+                      <div className="flex-grow min-w-0">
+                        <h4 className="font-semibold text-sm line-clamp-1 group-hover:text-primary transition-colors" data-testid={`sermon-title-${sermon._id}`}>
                           {sermon.title}
                         </h4>
-                        <p className="text-muted-foreground text-sm mb-2" data-testid={`sermon-meta-${sermon._id}`}>
-                          {sermon.speaker} • {format(new Date(sermon.date), "MMM d, yyyy")}
+                        <p className="text-muted-foreground text-sm mt-1" data-testid={`sermon-meta-${sermon._id}`}>
+                          {sermon.speaker}
                         </p>
-                        <p className="text-muted-foreground text-sm" data-testid={`sermon-description-${sermon._id}`}>
+                        <p className="text-xs text-muted-foreground mt-1" data-testid={`sermon-date-${sermon._id}`}>
+                          {format(new Date(sermon.date), "MMM d, yyyy")}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-2 line-clamp-2" data-testid={`sermon-description-${sermon._id}`}>
                           {sermon.description}
                         </p>
                       </div>
                     </div>
-                  </div>
+                  </Card>
                 ))
               ) : (
                 <div className="text-center py-8">
@@ -335,6 +358,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+     )}
 
       <NewsletterSignup />
     </div>

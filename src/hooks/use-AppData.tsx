@@ -32,11 +32,11 @@ interface Sermon {
 interface AppData {
   events: Event[];
   Sermons: Sermon[];
+  gallery: GalleryImage[];
+  Pastors: Pastor[];
   loading: boolean;
   error: string | null;
   refresh: () => void;
-
-
 }
   export type GalleryImage = {
   _id: string;
@@ -61,7 +61,7 @@ export type Pastor = {
 export const useAppData = (): AppData => {
   const [events, setEvents] = useState<Event[]>([]);
   const [Sermons, setSermons] = useState<Sermon[]>([]);
-  const [Gallery, setGallery] = useState<GalleryImage[]>([]);
+  const [gallery, setGallery] = useState<GalleryImage[]>([]);
   const [Pastors, setPastors] = useState<Pastor[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -82,7 +82,8 @@ export const useAppData = (): AppData => {
       setEvents(eventsRes.data.events || []);
       setSermons(sermonsRes.data.sermons || []);
       setGallery(galleryRes.data.gallery || []);
-      setGallery(pastorsRes.data.pastors || []);
+      setPastors(pastorsRes.data.pastors || []);
+      
     } catch (err: any) {
       console.error("API Error:", err);
       setError(err.response?.data?.message || "Failed to load data");
@@ -91,14 +92,11 @@ export const useAppData = (): AppData => {
 
   // Automatically fetch on mount
   useEffect(() => {
-setLoading(true);
-   const interval = setInterval(() => {
-     fetchData();
-     
+    setLoading(true);
+    fetchData().then(() => {
       setLoading(false);
-    }, 3000);  
-    return () => clearInterval(interval);
+    });
   }, [fetchData]);
 
-  return { events, Sermons,Gallery,Pastors, loading, error, refresh: fetchData };
+  return { events, Sermons,gallery,Pastors, loading, error, refresh: fetchData };
 };
