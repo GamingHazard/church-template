@@ -150,7 +150,7 @@ export default function Events() {
               <div className="grid md:grid-cols-2">
                 <div>
                   <img
-                    src={upcomingEvents[0].thumbnail.url||upcomingEvents[0].thumbnailUrl || "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/1665px-No-Image-Placeholder.svg.png"}
+                    src={upcomingEvents[0]?.thumbnail?.url||upcomingEvents[0].thumbnailUrl || "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/1665px-No-Image-Placeholder.svg.png"}
                     alt={upcomingEvents[0].title}
                     className="w-full h-64 md:h-full object-cover"
                     data-testid="featured-event-image"

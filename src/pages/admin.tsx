@@ -464,7 +464,7 @@ function AdminDashboard() {
           setEvents(response.data.events);
 
           toast({ title: "Event created successfully!" });
-          // setShowEventDialog(false);
+          setShowEventDialog(false);
           eventForm.reset();
           setPreviewUrl("");
         }
@@ -485,7 +485,7 @@ function AdminDashboard() {
         if (response.status === 201) {
           setEvents(response.data.events);
           toast({ title: "Event created successfully!" });
-          // setShowEventDialog(false);
+          setShowEventDialog(false);
           eventForm.reset();
           setPreviewUrl("");
         }
@@ -1273,10 +1273,10 @@ function AdminDashboard() {
       time: event.time,
       location: event.location,
       speaker: event.speaker || "",
-      thumbnailUrl: event.thumbnailUrl || "",
+      thumbnailUrl: event?.thumbnailUrl || "",
       category: event.category,
     });
-    setPreviewUrl(event.thumbnailUrl || event.thumbnail.url || "");
+    setPreviewUrl(event?.thumbnailUrl || event?.thumbnail?.url || "");
     setShowEventDialog(true);
   };
 

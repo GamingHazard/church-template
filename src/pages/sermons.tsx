@@ -26,10 +26,8 @@ import {
   Calendar,
   User,
   EyeIcon,
-  
   Send,
   ThumbsUpIcon,
- 
   Share2,
   Circle,
   Archive,
@@ -163,16 +161,18 @@ export default function Sermons() {
                                 )
                               : ""}
                           </Badge>
-                         {(currentSermon || allSermons[0])?.isLive? (
-                                                            <Badge variant="default" className="bg-green-500 text-white">
-                                                              <Circle className="text-white mr-2 animate-pulse"/>Live Now
-                                                            </Badge>
-                                                          ) : (
-                                                            <Badge variant="default" className="bg-green-500 text-white">
-                                                              <Circle className="text-white mr-2 animate-pulse"/>Live Now
-                                                            </Badge>
-                                                           
-                                                          )}
+                          {(currentSermon || allSermons[0])?.isLive ? (
+                            <Badge
+                              variant="default"
+                              className="bg-green-500 text-white"
+                            >
+                              <Circle className="text-white mr-2 animate-pulse" />
+                              Live Now
+                            </Badge>
+                          ) : (
+                                                            <Badge variant="outline"><Archive className=" mr-2"/> Recorded</Badge>
+                             
+                          )}
                         </span>
                         <Badge variant="outline" className="text-xs   ">
                           <EyeIcon className="inline-block mr-1 h-4 w-4" />
@@ -201,34 +201,36 @@ export default function Sermons() {
                     </p>
 
                     {(currentSermon || allSermons[0])?.scripture && (
-                       <span className=" flex-row mt-10 flex items-center gap-4     p-3 text-xs text-muted-foreground">
-                      <span className="flex-row cursor-pointer  flex items-center gap-1">
-                        65 Likes <ThumbsUpIcon size={16} />
+                      <span className=" flex-row mt-10 flex items-center gap-4     p-3 text-xs text-muted-foreground">
+                        <span className="flex-row cursor-pointer  flex items-center gap-1">
+                          65 Likes <ThumbsUpIcon size={16} />
+                        </span>
+                        <span className="flex-row cursor-pointer flex-1  flex items-center gap-1">
+                          Share
+                          <Share2
+                            size={16}
+                            onClick={() => {
+                              try {
+                                // or whatever your item ID variable is
+                                const url = `${
+                                  window.location.origin
+                                }/sermons/${
+                                  (currentSermon || allSermons[0])?._id
+                                }`;
+                                navigator.clipboard?.writeText(url);
+                                toast({ title: "Sermon link copied" });
+                              } catch (e) {
+                                toast({
+                                  title: "Could not copy sermon link",
+                                  variant: "destructive",
+                                });
+                              }
+                            }}
+                          />
+                        </span>
+                        <span className="text-xs text-muted">2 hours ago</span>
                       </span>
-                      <span className="flex-row cursor-pointer flex-1  flex items-center gap-1">
-                        Share
-                        <Share2
-                          size={16}
-                          onClick={() => {
-                            try {
-                               // or whatever your item ID variable is
-                              const url = `${window.location.origin}/sermons/${(currentSermon || allSermons[0])?._id}`;
-                              navigator.clipboard?.writeText(url);
-                              toast({ title: "Sermon link copied" });
-                            } catch (e) {
-                              toast({
-                                title: "Could not copy sermon link",
-                                variant: "destructive",
-                              });
-                            }
-                          }}
-                        />
-                      </span>
-                      <span className="text-xs text-muted">2 hours ago</span>
-                    </span>
                     )}
-
-                   
 
                     {/* Audio Player - Always show if available */}
                     {(currentSermon || allSermons[0])?.audioUrl && (
