@@ -617,6 +617,7 @@ function AdminDashboard() {
 
   // Create Sermon
   const createSermon = async (data: SermonForm) => {
+    setLoading(true);
     try {
       // Form validation
       const result = await sermonForm.trigger();
@@ -635,7 +636,7 @@ function AdminDashboard() {
         return;
       }
 
-      setUploading(true);
+       
       if (file !== null) {
         const { url, public_id } = await uploadFileToServer(file, "sermons");
         const eventData = { ...data, url, public_id };
@@ -699,7 +700,7 @@ function AdminDashboard() {
         console.error("Network error:", err);
       }
     } finally {
-      setUploading(false);
+      setLoading(false);
     }
   };
 
@@ -2208,14 +2209,14 @@ function AdminDashboard() {
                             <TableRow>
                               <TableCell colSpan={5} className="py-12">
                                 <div className="text-center space-y-4">
-                                  <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=1400&auto=format&fit=crop&ixlib=rb-4.0.3&s=5a1f3f5f1f2f6d3a" alt="No users" className="mx-auto h-36 w-auto" />
-                                  <h3 className="text-lg font-semibold">Throwback: No users yet</h3>
-                                  <p className="text-sm text-muted-foreground max-w-xl mx-auto">It looks like no one has signed up yet. Invite your congregation, share the site link, or import contacts to get started.</p>
+                                  <img src="https://img.freepik.com/premium-vector/flat-design-no-user-found_108061-1605.jpg" alt="No users" className="mx-auto h-36 w-auto" />
+                                  <h3 className="text-lg font-semibold"> No users yet</h3>
+                                  <p className="text-sm text-muted-foreground max-w-xl mx-auto">It looks like no one has signed up for the news-letter yet. Invite your congregation, share the site link, or import contacts to get started.</p>
                                   <div className="flex items-center justify-center gap-2 mt-4">
                                     <Button variant="outline" onClick={() => { try { navigator.clipboard?.writeText(window.location.href); toast({ title: 'Invite link copied' }); } catch (e) { toast({ title: 'Could not copy invite link', variant: 'destructive' }); } }}>
                                       Copy Invite Link
                                     </Button>
-                                    <Button onClick={() => toast({ title: 'Import CSV not configured' })}>Import CSV</Button>
+                                    {/* <Button onClick={() => toast({ title: 'Import CSV not configured' })}>Import CSV</Button> */}
                                   </div>
                                 </div>
                               </TableCell>

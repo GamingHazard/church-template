@@ -22,7 +22,7 @@ export default function LoginForm() {
     try {
       const success = await login(username, password);
       if (!success) {
-        setError('Invalid username or password. Try admin / faithlife2024');
+        setError('Invalid username or password. Try admin again');
       }
     } catch (err) {
       setError('Login failed. Please try again.');
@@ -96,11 +96,11 @@ export default function LoginForm() {
           </form>
 
           <div className="mt-6 p-4 bg-muted/20 rounded-lg">
-            <p className="text-sm text-muted-foreground text-center">
+            {/* <p className="text-sm text-muted-foreground text-center">
               <strong>Demo Credentials:</strong><br />
               Username: admin<br />
               Password: faithlife2024
-            </p>
+            </p> */}
           </div>
         </CardContent>
       </Card>
