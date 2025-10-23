@@ -12,10 +12,10 @@ import Donations from "@/pages/donations";
 import Admin from "@/pages/admin";
 import NotFound from "@/pages/not-found";
 import CustomizePage from './pages/customize';
-
+import { SermonProvider } from "./contexts/SermonContext";
 function Router() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-parent flex flex-col">
       <Navigation />
       <main className="flex-grow">
         <Switch>
@@ -38,8 +38,10 @@ function App() {
   return (
     <AuthProvider>
       <TooltipProvider>
-        <Toaster />
-        <Router />
+        <SermonProvider>
+          <Router />
+          <Toaster />
+        </SermonProvider>
       </TooltipProvider>
     </AuthProvider>
   );

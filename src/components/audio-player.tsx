@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Slider } from "./ui/slider";
@@ -11,6 +11,7 @@ import {
   VolumeX,
 } from "lucide-react";
 import { cn } from "../lib/utils";
+import useSound from "use-sound";
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -20,69 +21,113 @@ interface AudioPlayerProps {
 }
 
 export function AudioPlayer({ audioUrl, title, speaker, className }: AudioPlayerProps) {
-  const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
+  const [volume, setVolume] = useState(0.5);
   const [isMuted, setIsMuted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [play, { pause, sound, stop }] = useSound(audioUrl, {
+    volume: isMuted ? 0 : volume,
+    format: ['mp3', 'wav', 'ogg'],
+    html5: true,
+    preload: true,
+    onplay: () => {
+      console.log('Playing audio:', audioUrl);
+      setIsPlaying(true);
+      setError(null);
+    },
+    onload: () => {
+      console.log('Audio loaded successfully');
+      setIsLoading(false);
+      setError(null);
+    },
+    onloaderror: (_id: unknown, err: unknown) => {
+      console.error('Error loading audio:', err);
+      console.error('Audio URL:', audioUrl);
+      setIsLoading(false);
+      setError(`Failed to load audio file: ${err}`);
+      setIsPlaying(false);
+    },
+    onplayerror: (_id: unknown, err: unknown) => {
+      console.error('Error playing audio:', err);
+      setError('Failed to play audio');
+      setIsPlaying(false);
+    },
+    onend: () => {
+      console.log('Audio playback ended');
+      setIsPlaying(false);
+      setCurrentTime(0);
+    },
+    onpause: () => setIsPlaying(false),
+    onstop: () => {
+      setIsPlaying(false);
+      setCurrentTime(0);
+    },
+  });
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isPlaying && sound) {
+      interval = setInterval(() => {
+        setCurrentTime(sound.seek());
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isPlaying, sound]);
+
+  useEffect(() => {
+    if (sound) {
+      setDuration(sound.duration());
+    }
+  }, [sound]);
 
   const togglePlay = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
+    if (isPlaying) {
+      pause();
+    } else {
+      play();
     }
   };
 
   const toggleMute = () => {
-    if (audioRef.current) {
-      audioRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
-
-  const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
-    }
-  };
-
-  const handleLoadedMetadata = () => {
-    if (audioRef.current) {
-      setDuration(audioRef.current.duration);
-    }
+    setIsMuted(!isMuted);
   };
 
   const handleVolumeChange = (value: number[]) => {
     const newVolume = value[0];
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume;
-      setVolume(newVolume);
-      setIsMuted(newVolume === 0);
+    setVolume(newVolume);
+    setIsMuted(newVolume === 0);
+    if (sound) {
+      sound.volume(newVolume);
     }
   };
 
   const handleSeek = (value: number[]) => {
     const newTime = value[0];
-    if (audioRef.current) {
-      audioRef.current.currentTime = newTime;
+    if (sound) {
+      sound.seek(newTime);
       setCurrentTime(newTime);
     }
   };
 
   const skipForward = () => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = Math.min(audioRef.current.currentTime + 10, duration);
+    if (sound) {
+      const newTime = Math.min(currentTime + 10, duration);
+      sound.seek(newTime);
+      setCurrentTime(newTime);
     }
   };
 
   const skipBackward = () => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = Math.max(audioRef.current.currentTime - 10, 0);
+    if (sound) {
+      const newTime = Math.max(currentTime - 10, 0);
+      sound.seek(newTime);
+      setCurrentTime(newTime);
     }
   };
 
@@ -92,21 +137,26 @@ export function AudioPlayer({ audioUrl, title, speaker, className }: AudioPlayer
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  const handleError = (e: React.SyntheticEvent<HTMLAudioElement, Event>) => {
+    console.error("Audio playback error:", e);
+    const audio = e.currentTarget;
+    if (audio.error) {
+      console.error("Audio error code:", audio.error.code);
+      console.error("Audio error message:", audio.error.message);
+    }
+    setIsPlaying(false);
+  };
+
   return (
     <Card className={cn("p-4", className)}>
-      <audio
-        ref={audioRef}
-        src={audioUrl}
-        onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={handleLoadedMetadata}
-        onEnded={() => setIsPlaying(false)}
-      />
-      
       <div className="space-y-4">
         <div className="space-y-1">
           <h3 className="font-semibold leading-none">{title}</h3>
           {speaker && (
             <p className="text-sm text-muted-foreground">{speaker}</p>
+          )}
+          {error && (
+            <p className="text-sm text-red-500">Error: {error}</p>
           )}
         </div>
 
@@ -181,7 +231,7 @@ export function AudioPlayer({ audioUrl, title, speaker, className }: AudioPlayer
               max={1}
               step={0.1}
               onValueChange={handleVolumeChange}
-              className="w-24"
+              className="w-16 cursor-pointer"
             />
           </div>
         </div>

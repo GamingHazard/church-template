@@ -3,6 +3,7 @@ import { Card, CardContent } from "../components/ui/card";
 import { VideoPlayer } from "../components/video-player";
 import { AudioPlayer } from "../components/audio-player";
 import { Button } from "../components/ui/button";
+import { useSermonContext } from "../contexts/SermonContext";
 
 interface Sermon {
   _id: string;
@@ -30,17 +31,18 @@ import { useAppData } from "../hooks/use-AppData";
 
 export default function Sermons() {
   const { Sermons, loading } = useAppData();
-  const [searchQuery, setSearchQuery] = useState("");
+  const { 
+    currentSermon, 
+    setCurrentSermon,
+    watchedSermons,
+    setWatchedSermons,
+    searchQuery,
+    setSearchQuery
+  } = useSermonContext();
+  
   const [allSermons, setAllSermons] = useState(Sermons);
   const [sermonsLoading, setSermonsLoading] = useState(true);
-  const [watchedSermons, setWatchedSermons] = useState<string[]>(() => {
-    const saved = localStorage.getItem("watchedSermons");
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [currentSermon, setCurrentSermon] = useState<
-    (typeof Sermons)[0] | null
-  >(null);
-  
+
   // Function to handle sermon selection and tracking watched status
   const handleSelectSermon = (sermon: (typeof Sermons)[0]) => {
     setCurrentSermon(sermon);
@@ -48,7 +50,6 @@ export default function Sermons() {
     if (!watchedSermons.includes(sermon._id)) {
       const newWatched = [...watchedSermons, sermon._id];
       setWatchedSermons(newWatched);
-      localStorage.setItem("watchedSermons", JSON.stringify(newWatched));
     }
 
     // Scroll to the player
@@ -57,15 +58,15 @@ export default function Sermons() {
 
   useEffect(() => {
     if (!loading && Sermons?.length > 0) {
-      const filteredSermons = Sermons.filter(sermon =>sermon.isLive);
-
+      const filteredSermons = Sermons.filter(sermon => sermon.isLive);
       setAllSermons(Sermons);
-      if (!currentSermon && filteredSermons.length>0) {
-        setCurrentSermon(filteredSermons?.[0] || null);
+      
+      if (!currentSermon && filteredSermons.length > 0) {
+        setCurrentSermon(filteredSermons[0]);
       }
       setSermonsLoading(false);
     }
-  }, [loading, Sermons, currentSermon]);
+  }, [loading, Sermons]);
 
   const filteredSermons = allSermons.filter(
     (sermon) =>

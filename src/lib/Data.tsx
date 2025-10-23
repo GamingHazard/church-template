@@ -53,7 +53,7 @@ export const mockSermons = [
     date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), 
     description: 'An inspiring message on the freedom found in forgiveness.', 
     videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    audioUrl: '#', 
+    audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3', 
     thumbnailUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=225', 
     scripture: 'Ephesians 4:32', 
     series: 'Foundations' },

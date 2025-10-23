@@ -76,6 +76,8 @@ import {
   LoaderCircle,
   CameraIcon,
   ImageIcon,
+  Circle,
+  ArchiveIcon,
 } from "lucide-react";
 import { format, set } from "date-fns";
 import { useForm } from "react-hook-form";
@@ -1864,10 +1866,12 @@ function AdminDashboard() {
                             />
                           </div>
                           <div>
-                            <Label htmlFor="audioUrl">Audio URL</Label>
+                            <Label htmlFor="audioUrl" className="text-muted-foreground">Audio URL</Label>
                             <Input
                               {...sermonForm.register("audioUrl")}
                               data-testid="input-sermon-audio"
+                              disabled
+                              placeholder="Coming Soon!"
                             />
                           </div>
                         </div>
@@ -1966,9 +1970,12 @@ function AdminDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-12"></TableHead>
                         <TableHead>Title</TableHead>
                         <TableHead>Speaker</TableHead>
+                        <TableHead>Scripture</TableHead>
                         <TableHead>Date</TableHead>
+                        <TableHead>Status</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -1977,13 +1984,22 @@ function AdminDashboard() {
                         Array.from({ length: 3 }).map((_, i) => (
                           <TableRow key={i}>
                             <TableCell>
+                              <Skeleton className="h-12 w-12 rounded" />
+                            </TableCell>
+                            <TableCell>
                               <Skeleton className="h-4 w-48" />
                             </TableCell>
                             <TableCell>
                               <Skeleton className="h-4 w-32" />
                             </TableCell>
                             <TableCell>
+                              <Skeleton className="h-4 w-32" />
+                            </TableCell>
+                            <TableCell>
                               <Skeleton className="h-4 w-24" />
+                            </TableCell>
+                            <TableCell>
+                              <Skeleton className="h-4 w-16" />
                             </TableCell>
                             <TableCell>
                               <Skeleton className="h-4 w-20" />
@@ -1993,12 +2009,47 @@ function AdminDashboard() {
                       ) : sermons && sermons.length > 0 ? (
                         sermons.map((sermon) => (
                           <TableRow key={sermon._id}>
-                            <TableCell className="font-medium">
-                              {sermon.title}
+                            <TableCell>
+                              <div className="relative h-12 w-12 rounded-md overflow-hidden">
+                                <img
+                                  src={sermon.thumbnail?.url || sermon.thumbnailUrl || "https://via.placeholder.com/48?text=No+Image"}
+                                  alt={sermon.title}
+                                  className="h-full w-full object-cover"
+                                />
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="space-y-1">
+                                <div className="font-medium">{sermon.title}</div>
+                                {sermon.series && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    {sermon.series}
+                                  </Badge>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell>{sermon.speaker}</TableCell>
                             <TableCell>
+                              {sermon.scripture ? (
+                                <Badge variant="outline" className="text-xs">
+                                  {sermon.scripture}
+                                </Badge>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">-</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
                               {format(new Date(sermon.date), "MMM d, yyyy")}
+                            </TableCell>
+                            <TableCell>
+                              {sermon.isLive ? (
+                                <Badge variant="default" className="bg-green-500 text-white">
+                                  <Circle className="text-white mr-2 animate-pulse"/>Live Now
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline"><ArchiveIcon className=" mr-2"/> Recorded</Badge>
+                               
+                              )}
                             </TableCell>
                             <TableCell>
                               <div className="flex gap-2">

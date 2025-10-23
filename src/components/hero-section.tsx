@@ -32,7 +32,7 @@ export default function HeroSection() {
     return () => clearInterval(timer);
   }, []);
   return (
-    <section className="relative h-screen flex items-center justify-center text-center text-white">
+    <section className="relative top-0 h-screen flex items-center justify-center text-center text-white">
       {/* Background image with overlay */}
       <div className="absolute inset-0 hero-gradient">
         {heroImages.map((image, index) => (
