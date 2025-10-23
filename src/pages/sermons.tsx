@@ -3,9 +3,24 @@ import { Card, CardContent } from "../components/ui/card";
 import { VideoPlayer } from "../components/video-player";
 import { AudioPlayer } from "../components/audio-player";
 import { Button } from "../components/ui/button";
+
+interface Sermon {
+  _id: string;
+  title: string;
+  speaker: string;
+  date: string;
+  description: string;
+  videoUrl?: string;
+  audioUrl?: string;
+  thumbnailUrl?: string;
+  thumbnail?: { url: string };
+  series?: string;
+  scripture?: string;
+  isLive?: boolean;
+}
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
-import { Play, Search, Calendar, User } from "lucide-react";
+import { Play, Search, Calendar, User, EyeIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "../components/ui/skeleton";
 import { mockSermons } from "../lib/Data";
@@ -101,7 +116,11 @@ export default function Sermons() {
                       <VideoPlayer 
                         key={(currentSermon || allSermons[0])?._id}
                         videoUrl={(currentSermon || allSermons[0])?.videoUrl || ""}
-                        thumbnailUrl={(currentSermon || allSermons[0])?.thumbnailUrl || (currentSermon || allSermons[0])?.thumbnail?.url}
+                        thumbnailUrl={
+                          (currentSermon || allSermons[0])?.thumbnail?.url || 
+                          (currentSermon || allSermons[0])?.thumbnailUrl || 
+                          "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"
+                        }
                         title={(currentSermon || allSermons[0])?.title}
                         autoplay={false}
                       />
@@ -114,7 +133,9 @@ export default function Sermons() {
                           {(currentSermon || allSermons[0])?.series}
                         </Badge>
                       )}
-                      <Badge variant="outline" className="text-xs">
+                     <span  className="flex items-center text-muted-foreground text-sm w-full     flex-row">
+                       <span className="flex-1">
+                        <Badge variant="outline" className="text-xs">
                         {(currentSermon || allSermons[0])?.date
                           ? format(
                               new Date((currentSermon || allSermons[0])?.date),
@@ -122,6 +143,14 @@ export default function Sermons() {
                             )
                           : ""}
                       </Badge>
+                        <Badge variant="outline" className="text-xs">
+                         {(currentSermon || allSermons[0])?.isLive ? "Live" : "Recorded"}
+                      </Badge>
+                       </span>
+                      <Badge variant="outline" className="text-xs   ">
+                        <EyeIcon className="inline-block mr-1 h-4 w-4" />Views 10
+                      </Badge>
+                     </span>
                     </div>
                     <h3 className="text-xl font-semibold mb-2">
                       {(currentSermon || allSermons[0])?.title ||
@@ -143,9 +172,10 @@ export default function Sermons() {
                       </div>
                     )}
                     
-                    {/* Audio Player */}
+                    {/* Audio Player - Always show if available */}
                     {(currentSermon || allSermons[0])?.audioUrl && (
-                      <div className="mt-6">
+                      <div className="mt-6 border-t pt-6">
+                        <h4 className="text-sm font-semibold mb-3">Listen to Audio Version</h4>
                         <AudioPlayer
                           audioUrl={(currentSermon || allSermons[0])?.audioUrl || ""}
                           title={(currentSermon || allSermons[0])?.title || ""}
@@ -160,15 +190,26 @@ export default function Sermons() {
             {/* Side Sections */}
             <div className="col-span-12 lg:col-span-4 grid grid-rows-2 gap-6 h-full">
               {/* Watched Sermons */}
-              <Card className="overflow-hidden">
+              <Card className="overflow-hidden flex-1">
                 <CardContent className="p-4">
-                  <h3 className="font-semibold mb-4">Recently Watched</h3>
-                  {allSermons.length > 0 ? (
-                    <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
-                      {allSermons.slice(0, 3).map((sermon) => (
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold">Recently Watched</h3>
+                    {watchedSermons.length > 3 && (
+                      <Button variant="ghost" size="sm" className="text-xs">
+                        View All
+                      </Button>
+                    )}
+                  </div>
+                  {allSermons.length > 0 && watchedSermons.length > 0 ? (
+                    <div className="space-y-4  max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-rounded-full scrollbar-track-rounded-full">
+                      {allSermons
+                        .filter(sermon => watchedSermons.includes(sermon._id))
+                        
+                        .map((sermon) => (
                         <Card
                           key={sermon._id}
-                          className={`hover:shadow-md transition-all cursor-pointer hover:bg-slate-300 group transform hover:scale-[1.02] ${
+                          className={`hover:shadow-md transition-all 
+                            cursor-pointer hover:bg-slate-300 group transform hover:scale-[1.02] ${
                             currentSermon?._id === sermon._id
                               ? "ring-2 ring-primary bg-primary/5"
                               : "hover:bg-muted/50"
@@ -183,7 +224,9 @@ export default function Sermons() {
                           }}
                         >
                           <CardContent className="p-3">
-                            <div className="flex gap-3">
+                            <div className="flex flex-col gap-3">
+                        <div className="flex flex-col gap-3">
+                        <div className="flex gap-3">
                               <div className="w-24 h-16 relative flex-shrink-0">
                                 <img
                                   src={
@@ -193,7 +236,14 @@ export default function Sermons() {
                                   }
                                   alt={sermon.title}
                                   className="w-full h-full object-cover rounded"
+                                  onError={(e) => {
+                                    const img = e.target as HTMLImageElement;
+                                    if (img.src !== "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg") {
+                                      img.src = "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg";
+                                    }
+                                  }}
                                 />
+                                
                                 <div
                                   className={`absolute inset-0 bg-black/20 flex items-center justify-center 
                                   ${
@@ -206,6 +256,8 @@ export default function Sermons() {
                                   <Play className="h-6 w-6 text-white" />
                                 </div>
                               </div>
+
+                              {/* details */}
                               <div className="flex-1 min-w-0">
                                 <h4
                                   className={`font-medium text-sm line-clamp-1 mb-1
@@ -217,8 +269,7 @@ export default function Sermons() {
                                 `}
                                 >
                                   {sermon.title}
-                                </h4>
-                                <div className="flex items-center text-xs text-muted-foreground gap-2 mb-2">
+                                </h4> <div className="flex items-center text-xs text-muted-foreground gap-2 mb-2">
                                   <span>{sermon.speaker}</span>
                                   <span>•</span>
                                   <span>{format(new Date(sermon.date), "MMM d, yyyy")}</span>
@@ -226,24 +277,40 @@ export default function Sermons() {
                                 <p className="text-xs text-muted-foreground line-clamp-2">
                                   {sermon.description}
                                 </p>
+                                </div>
+                               
                               </div>
-                            </div>
+                        </div>
+                        {sermon.audioUrl && (
+                          <div className="w-full">
+                            <AudioPlayer
+                              audioUrl={sermon.audioUrl}
+                              title={sermon.title}
+                              speaker={sermon.speaker}
+                            />
+                          </div>
+                        )}
+                      </div>
                           </CardContent>
                         </Card>
                       ))}
                     </div>
                   ) : (
-                    <div className="flex flex-1 w-full h-52 justify-center items-center">
-                      <div className="text-gray-400 text-center">
-                        You have not watched any sermons yet.
+                    <div className="flex flex-col items-center justify-center h-[300px] text-center p-4">
+                      <div className="mb-4">
+                        <Play className="h-12 w-12 text-muted-foreground/30" />
                       </div>
+                      <h4 className="text-sm font-medium text-foreground mb-2">No Recently Watched Sermons</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Start watching sermons to see your history here.
+                      </p>
                     </div>
                   )}
                 </CardContent>
               </Card>
 
               {/* Unwatched & Recommended */}
-              <Card className="overflow-hidden">
+              {/* <Card className="overflow-hidden">
                 <CardContent className="p-4">
                   <h3 className="font-semibold mb-4">Up Next</h3>
                  {allSermons.length>0? <div className="space-y-4 max-h-[300px] overflow-y-auto">
@@ -251,9 +318,19 @@ export default function Sermons() {
                       <div key={sermon._id} className="flex gap-3 items-start p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => handleSelectSermon(sermon)}>
                         <div className="w-24 h-16 relative flex-shrink-0 overflow-hidden rounded">
                           <img
-                            src={ sermon?.thumbnailUrl}
+                            src={
+                              sermon.thumbnail?.url ||
+                              sermon.thumbnailUrl ||
+                              "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"
+                            }
                             alt={sermon.title}
                             className="w-full h-full object-cover rounded transform transition-transform group-hover:scale-105"
+                            onError={(e) => {
+                              const img = e.target as HTMLImageElement;
+                              if (img.src !== "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg") {
+                                img.src = "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg";
+                              }
+                            }}
                           />
                           <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100">
                             <Play className="h-6 w-6 text-white" />
@@ -275,7 +352,7 @@ export default function Sermons() {
                       </div>
                     </div>)}
                 </CardContent>
-              </Card>
+              </Card> */}
             </div>
           </div>
         </div>
@@ -348,11 +425,18 @@ export default function Sermons() {
                   <div className="relative">
                     <img
                       src={
+                        sermon.thumbnail?.url ||
                         sermon.thumbnailUrl ||
                         "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"
                       }
                       alt={sermon.title}
                       className="w-full aspect-video object-cover"
+                      onError={(e) => {
+                        const img = e.target as HTMLImageElement;
+                        if (img.src !== "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg") {
+                          img.src = "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg";
+                        }
+                      }}
                       data-testid={`sermon-thumbnail-${sermon._id}`}
                     />
                     <div
@@ -406,14 +490,6 @@ export default function Sermons() {
                         {format(new Date(sermon.date), "EEEE, MMMM d, yyyy")}
                       </span>
                     </div>
-
-                    <p
-                      className="text-muted-foreground text-sm mb-4 line-clamp-3"
-                      data-testid={`sermon-description-${sermon._id}`}
-                    >
-                      {sermon.description}
-                    </p>
-
                     {sermon.scripture && (
                       <div className="mb-4">
                         <Badge
@@ -425,38 +501,38 @@ export default function Sermons() {
                       </div>
                     )}
 
-                    <div className="flex gap-2">
-                      {sermon.videoUrl && (
-                        <Button
-                          size="sm"
-                          className="flex-1"
-                          data-testid={`button-watch-video-${sermon._id}`}
-                          onClick={() => {
-                            handleSelectSermon(sermon);
-                            // Scroll to the top where the video player is
-                            window.scrollTo({ top: 0, behavior: "smooth" });
-                          }}
-                        >
-                          <Play className="mr-2 h-4 w-4" />
-                          Watch Now
-                        </Button>
-                      )}
-                      {sermon.audioUrl && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex-1"
-                          data-testid={`button-listen-audio-${sermon._id}`}
-                          onClick={() => {
-                            handleSelectSermon(sermon);
-                            window.scrollTo({ top: 0, behavior: "smooth" });
-                          }}
-                        >
-                          <Play className="mr-2 h-4 w-4" />
-                          Listen
-                        </Button>
-                      )}
-                    </div>
+                    <p
+                      className="text-muted-foreground text-sm mb-4 line-clamp-3"
+                      data-testid={`sermon-description-${sermon._id}`}
+                    >
+                      {sermon.description}
+                    </p>
+
+                    
+
+                    {sermon.videoUrl && (
+                      <Button
+                        size="sm"
+                        className="w-full mb-2"
+                        data-testid={`button-watch-video-${sermon._id}`}
+                        onClick={() => {
+                          handleSelectSermon(sermon);
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                      >
+                        <Play className="mr-2 h-4 w-4" />
+                        Watch Now
+                      </Button>
+                    )}
+                    {sermon.audioUrl && (
+                      <div className="w-full">
+                        <AudioPlayer
+                          audioUrl={sermon.audioUrl}
+                          title={sermon.title}
+                          speaker={sermon.speaker}
+                        />
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))
