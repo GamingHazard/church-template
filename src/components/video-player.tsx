@@ -78,6 +78,7 @@ export function VideoPlayer({ videoUrl, thumbnailUrl, title, autoplay = false }:
         className="w-full h-full"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
+        
         frameBorder="0"
       />
     </div>
