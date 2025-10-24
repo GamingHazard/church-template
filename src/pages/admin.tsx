@@ -418,12 +418,7 @@ function AdminDashboard() {
         setEvents(response.data.events);
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        variant: "destructive",
-        description: error.response?.data?.message || "Failed to fetch events.",
-      });
-      console.error("Error fetching events:", error);
+       
     }
   };
 
@@ -712,11 +707,7 @@ function AdminDashboard() {
         setSermons(response.data.sermons);
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        variant: "destructive",
-        description: "Failed to fetch sermons.",
-      });
+       
     }
   };
   // Update Sermon
@@ -906,11 +897,7 @@ function AdminDashboard() {
         setGalleryImages(response.data.gallery);
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        variant: "destructive",
-        description: error.message || "Failed to fetch gallery images.",
-      });
+       
     }
   };
 
@@ -1255,11 +1242,7 @@ function AdminDashboard() {
         setUsers(normalized);
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        variant: "destructive",
-        description: "Failed to fetch users.",
-      });
+       
     }
   };
 

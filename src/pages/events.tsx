@@ -4,7 +4,7 @@ import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Badge } from "../components/ui/badge";
 import { Calendar, MapPin, Clock, User, Users } from "lucide-react";
-import { format, isPast } from "date-fns";
+import { format, isPast, isToday, parseISO, isFuture, set } from "date-fns";
 import { Skeleton } from "../components/ui/skeleton";
 import EventCard from "../components/event-card";
 import { useAppData } from "../hooks/use-AppData"; // <- ensure this path/name matches your hook file
@@ -26,9 +26,10 @@ export default function Events() {
   // destructure according to your hook's API
   const { events = [], loading: hookLoading = false } = useAppData();
 
-  const [activeTab, setActiveTab] = useState<"upcoming" | "past">("upcoming");
+  const [activeTab, setActiveTab] = useState<"upcoming" | "ongoing" | "past">("upcoming");
   const [allEvents, setAllEvents] = useState<EventItem[]>([]);
   const [eventsLoading, setEventsLoading] = useState<boolean>(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   // scroll to top on mount
   useEffect(() => {
@@ -44,24 +45,56 @@ export default function Events() {
     setAllEvents(Array.isArray(events) ? events : []);
   }, [events, hookLoading]);
 
-  // derive upcoming/past with useMemo for performance
-  const upcomingEvents = useMemo(() => {
-    return allEvents.filter((event) => {
-      if (!event?.date) return true; // keep it if no date (or adjust behavior)
-      const d = new Date(event.date);
-      if (isNaN(d.getTime())) return true; // invalid date => treat as upcoming (or change)
-      return !isPast(d);
-    });
-  }, [allEvents]);
+  // Update current time every minute
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
 
-  const pastEvents = useMemo(() => {
-    return allEvents.filter((event) => {
-      if (!event?.date) return false;
-      const d = new Date(event.date);
-      if (isNaN(d.getTime())) return false;
-      return isPast(d);
-    });
-  }, [allEvents]);
+  const getEventDateTime = (event: EventItem) => {
+    if (!event?.date || !event?.time) return null;
+    const [hours, minutes] = event.time.split(':').map(Number);
+    const date = parseISO(event.date);
+    if (isNaN(date.getTime()) || isNaN(hours) || isNaN(minutes)) return null;
+    return set(date, { hours, minutes });
+  };
+
+  const getEventStatus = (event: EventItem) => {
+    const eventDateTime = getEventDateTime(event);
+    if (!eventDateTime) return 'upcoming';
+
+    if (isPast(set(eventDateTime, { hours: 23, minutes: 59, seconds: 59 }))) {
+      return 'past';
+    }
+
+    if (isToday(eventDateTime)) {
+      const now = currentTime;
+      const eventTime = set(now, {
+        hours: eventDateTime.getHours(),
+        minutes: eventDateTime.getMinutes(),
+      });
+
+      if (eventTime.getTime() <= now.getTime()) {
+        return 'ongoing';
+      }
+    }
+
+    return 'upcoming';
+  };
+
+  // derive upcoming/ongoing/past with useMemo for performance
+  const { upcomingEvents, ongoingEvents, pastEvents } = useMemo(() => {
+    return allEvents.reduce(
+      (acc, event) => {
+        const status = getEventStatus(event);
+        if (status === 'upcoming') acc.upcomingEvents.push(event);
+        else if (status === 'ongoing') acc.ongoingEvents.push(event);
+        else acc.pastEvents.push(event);
+        return acc;
+      },
+      { upcomingEvents: [] as EventItem[], ongoingEvents: [] as EventItem[], pastEvents: [] as EventItem[] }
+    );
+  }, [allEvents, currentTime]);
 
   const getCategoryColor = (category: string) => {
     switch ((category || "").toLowerCase()) {
@@ -134,15 +167,15 @@ export default function Events() {
             <Skeleton className="h-96 w-full" />
           </div>
         </section>
-      ) : upcomingEvents.length > 0 ? (
+      ) : ongoingEvents.length > 0 || upcomingEvents.length > 0 ? (
         <section className="py-16 bg-card">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold text-card-foreground mb-4" data-testid="featured-event-title">
-                Next Event
+                {ongoingEvents.length > 0 ? "Happening Now" : "Next Event"}
               </h2>
               <p className="text-xl text-muted-foreground" data-testid="featured-event-description">
-                Don't miss our upcoming gathering
+                {ongoingEvents.length > 0 ? "Currently in progress" : "Don't miss our upcoming gathering"}
               </p>
             </div>
 
@@ -150,25 +183,32 @@ export default function Events() {
               <div className="grid md:grid-cols-2">
                 <div>
                   <img
-                    src={upcomingEvents[0]?.thumbnail?.url||upcomingEvents[0].thumbnailUrl || "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/1665px-No-Image-Placeholder.svg.png"}
-                    alt={upcomingEvents[0].title}
+                    src={
+                      (ongoingEvents[0] || upcomingEvents[0])?.thumbnail?.url ||
+                      (ongoingEvents[0] || upcomingEvents[0])?.thumbnailUrl ||
+                      "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/1665px-No-Image-Placeholder.svg.png"
+                    }
+                    alt={(ongoingEvents[0] || upcomingEvents[0]).title}
                     className="w-full h-64 md:h-full object-cover"
                     data-testid="featured-event-image"
                   />
                 </div>
                 <CardContent className="p-8">
-                  <div className="flex items-center mb-4">
-                    <Badge className={getCategoryColor(upcomingEvents[0].category)} data-testid="featured-event-category">
-                      {upcomingEvents[0].category?.toUpperCase()}
+                  <div className="flex items-center gap-3 mb-4">
+                    <Badge className={getCategoryColor((ongoingEvents[0] || upcomingEvents[0]).category)} data-testid="featured-event-category">
+                      {(ongoingEvents[0] || upcomingEvents[0]).category?.toUpperCase()}
                     </Badge>
+                    {ongoingEvents.length > 0 && (
+                      <Badge variant="">On Going</Badge>
+                    )}
                   </div>
 
                   <h3 className="text-3xl font-bold text-card-foreground mb-4" data-testid="featured-event-name">
-                    {upcomingEvents[0].title}
+                    {(ongoingEvents[0] || upcomingEvents[0]).title}
                   </h3>
 
                   <p className="text-muted-foreground mb-6 text-lg" data-testid="featured-event-desc">
-                    {upcomingEvents[0].description}
+                    {(ongoingEvents[0] || upcomingEvents[0]).description}
                   </p>
 
                   <div className="space-y-3 mb-6">
@@ -194,10 +234,7 @@ export default function Events() {
                     )}
                   </div>
 
-                  <Button size="lg" className="w-full bg-primary text-primary-foreground hover:opacity-90" data-testid="button-featured-event-register">
-                    <Users className="mr-2 h-5 w-5" />
-                    Set Reminder
-                  </Button>
+                  
                 </CardContent>
               </div>
             </Card>
@@ -218,9 +255,12 @@ export default function Events() {
           </div>
 
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "upcoming" | "past")} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto mb-12">
+            <TabsList className="grid w-full grid-cols-3 max-w-xl mx-auto mb-12">
               <TabsTrigger value="upcoming" data-testid="tab-upcoming">
                 Upcoming Events
+              </TabsTrigger>
+              <TabsTrigger value="ongoing" data-testid="tab-ongoing">
+                Happening Now
               </TabsTrigger>
               <TabsTrigger value="past" data-testid="tab-past">
                 Past Events
@@ -229,6 +269,10 @@ export default function Events() {
 
             <TabsContent value="upcoming" data-testid="upcoming-events-content">
               <EventsGrid events={upcomingEvents} loading={eventsLoading} />
+            </TabsContent>
+
+            <TabsContent value="ongoing" data-testid="ongoing-events-content">
+              <EventsGrid events={ongoingEvents} loading={eventsLoading} />
             </TabsContent>
 
             <TabsContent value="past" data-testid="past-events-content">
