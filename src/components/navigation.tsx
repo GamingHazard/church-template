@@ -64,11 +64,11 @@ export default function Navigation() {
     <div className="flex justify-between items-center h-16">
       <Link href="/">
         <a
-          className="flex items-center space-x-2 text-2xl font-bold text-primary"
+          className="flex items-center space-x-2 text-2xl font-bold text-white"
           data-testid="logo"
         >
           <img
-            src="/assets/FAITHLIFE LOGO.png"
+            src=   {"https://res.cloudinary.com/ghost150/image/upload/v1761304321/FAITHLIFE_LOGO_gtiwoq.png" }
             alt="Church Logo"
             className="h-20 w-20 object-contain"
           />
@@ -119,7 +119,7 @@ export default function Navigation() {
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild className="md:hidden">
           <Button variant="ghost" size="sm" data-testid="button-mobile-menu">
-            <Menu className="h-6 w-6" />
+            <Menu className="h-6 w-6 text-white" />
           </Button>
         </SheetTrigger>
         <SheetContent side="right" className="w-[300px] sm:w-[400px]">

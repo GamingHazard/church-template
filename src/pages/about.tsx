@@ -130,12 +130,12 @@ export default function About() {
               </div>
             </div>
             <div
-              style={{ flex: 1, width: "120%", position: "relative" }}
-              className="overflow-hidden rounded-xl  "
+              style={{ flex: 1, position: "relative" }}
+              className="overflow-hidden rounded-xl w-full md:w-[120%]"
             >
-              {/* White fade overlay (left → transparent) */}
+              {/* White fade overlay (left → transparent) - hidden on mobile */}
               <div
-                className="absolute inset-0 z-10"
+                className="absolute inset-0 z-10 hidden md:block"
                 style={{
                   background:
                     "linear-gradient(to right, white 5%, transparent 80%)",
@@ -146,7 +146,7 @@ export default function About() {
               <img
                 src="https://images.unsplash.com/photo-1519491050282-cf00c82424b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=500"
                 alt="Historic church exterior building"
-                className="object-cover w-full h-[500px] transform hover:scale-105 transition-transform duration-700"
+                className="object-cover w-full h-[300px] md:h-[500px] transform hover:scale-105 transition-transform duration-700"
                 data-testid="church-history-image"
               />
             </div>

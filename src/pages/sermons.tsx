@@ -118,11 +118,11 @@ export default function Sermons() {
       </section>
 
       {/* Sermon Player Section */}
-      <section className="py-8 bg-card">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1400px]">
-          <div className="grid grid-cols-12 gap-6">
+      <section className="py-4 sm:py-8 bg-card">
+        <div className="container mx-auto px-2 sm:px-4 lg:px-8 max-w-[1400px]">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
             {/* Main Video Player */}
-            <div className="col-span-12 lg:col-span-8">
+            <div className="col-span-1 lg:col-span-8">
               <Card className="overflow-hidden shadow-lg">
                 <CardContent className="p-0">
                   <div className="relative">
@@ -143,14 +143,14 @@ export default function Sermons() {
                     )}
                   </div>
                   <div className="p-6">
-                    <div className="flex items-center gap-2 mb-4">
+                    <div className="flex flex-wrap items-center gap-2 mb-4">
                       {(currentSermon || allSermons[0])?.series && (
                         <Badge variant="secondary" className="text-xs">
                           {(currentSermon || allSermons[0])?.series}
                         </Badge>
                       )}
-                      <span className="flex items-center text-muted-foreground text-sm w-full     flex-row">
-                        <span className="flex-1 flex items-center gap-2">
+                      <span className="flex flex-wrap items-center text-muted-foreground text-sm w-full">
+                        <span className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:flex-1">
                           <Badge variant="outline" className="text-xs">
                             {(currentSermon || allSermons[0])?.date
                               ? format(
@@ -252,10 +252,10 @@ export default function Sermons() {
               </Card>
             </div>{" "}
             {/* Side Sections */}
-            <div className="col-span-12 lg:col-span-4 grid grid-rows-2 gap-6 h-full">
+            <div className="col-span-1 lg:col-span-4 grid grid-rows-1 lg:grid-rows-2 gap-4 lg:gap-6">
               {/* Watched Sermons */}
               <Card className="overflow-hidden flex-1">
-                <CardContent className="p-4">
+                <CardContent className="p-2 sm:p-4">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-semibold">Recently Watched</h3>
                     {watchedSermons.length > 3 && (
@@ -385,26 +385,26 @@ export default function Sermons() {
                 </CardContent>
               </Card>
 
-              {/* Unwatched & Recommended */}
-              <Card className=" relative flex flex-col p-2 max-h-[360px]">
-                <CardContent className="overflow-y-auto ">
-                  <h3 className="font-semibold m-4">Comments</h3>
-                  <Card className="flex-1 w-full bg-background mb-3   border-0">
+              {/* Comments Section */}
+              <Card className="relative flex flex-col p-2 sm:p-4 max-h-[360px] lg:max-h-[400px]">
+                <CardContent className="overflow-y-auto">
+                  <h3 className="font-semibold m-2 sm:m-4">Comments</h3>
+                  <Card className="flex-1 w-full bg-background mb-3 border-0">
                     {/* comment card */}
-                    <span className="  shadow-lg mb-4  w-full pb-5   justify-center text-muted-foreground">
-                      <span className=" flex-row  flex items-center gap-2     p-3">
+                    <span className="shadow-lg mb-4 w-full pb-3 sm:pb-5 justify-center text-muted-foreground">
+                      <span className="flex items-center gap-2 p-2 sm:p-3">
                         <img
-                          className=" rounded-full size-10"
+                          className="rounded-full w-8 h-8 sm:w-10 sm:h-10"
                           src="https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740&q=80"
                         />
-                        <p className=" text-sm font-medium flex-1">
+                        <p className="text-sm font-medium flex-1 truncate">
                           User@gmail.com
                         </p>
-                        <p className=" text-xs text-muted font-medium">
+                        <p className="text-xs text-muted font-medium hidden sm:block">
                           User@gmail.com
                         </p>
                       </span>
-                      <p className=" text-sm flex-wrap p-3">
+                      <p className="text-sm flex-wrap p-2 sm:p-3 line-clamp-4 sm:line-clamp-none">
                         Lorem, ipsum dolor sit amet consectetur adipisicing
                         elit. Ipsum adipisci rem quod officiis, nulla distinctio
                         minus error, deserunt hic voluptatem numquam explicabo.
@@ -419,28 +419,30 @@ export default function Sermons() {
                         repellendus quia molestias. Obcaecati, sapiente.
                       </p>
 
-                      <span className=" flex-row  flex items-center gap-4     p-3 text-xs text-muted-foreground">
-                        <span className="flex-row cursor-pointer  flex items-center gap-1">
-                          65 Likes <ThumbsUpIcon size={16} />
+                      <span className="flex items-center gap-2 sm:gap-4 p-2 sm:p-3 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1 cursor-pointer">
+                          <span className="hidden sm:inline">65</span> <ThumbsUpIcon size={14} />
                         </span>
-                        <span className="flex-row cursor-pointer flex-1  flex items-center gap-1">
-                          Share <Share2 size={16} />
+                        <span className="flex items-center gap-1 cursor-pointer">
+                          <span className="hidden sm:inline">Share</span> <Share2 size={14} />
                         </span>
-                        <span className="text-xs text-muted">2 hours ago</span>
+                        <span className="text-xs text-muted ml-auto">2h ago</span>
                       </span>
                     </span>
                   </Card>
-                </CardContent>{" "}
-                <span className=" p-2  w-full flex-row items-center justify-between gap-2 flex">
-                  <Input
-                    type="text"
-                    placeholder="add comment..."
-                    className=" flex-1 bg-background max-h-16"
-                  />
-                  <span className="justify-center shadow-md p-3 bg-background rounded-full  flex-row items-center flex   ">
-                    <Send className="size-5   text-muted-foreground cursor-pointer" />
-                  </span>
-                </span>
+                </CardContent>
+                <div className="sticky bottom-0 p-2 w-full bg-card border-t">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="text"
+                      placeholder="Add comment..."
+                      className="flex-1 bg-background max-h-16"
+                    />
+                    <button className="flex items-center justify-center w-10 h-10 rounded-full bg-background shadow-md hover:bg-muted/50 transition-colors">
+                      <Send className="w-4 h-4 text-muted-foreground cursor-pointer" />
+                    </button>
+                  </div>
+                </div>
               </Card>
             </div>
           </div>
@@ -448,17 +450,17 @@ export default function Sermons() {
       </section>
 
       {/* Sermon Archive */}
-      <section className="py-16 bg-background">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-          <div className="text-center mb-12">
+      <section className="py-8 sm:py-16 bg-background">
+        <div className="container mx-auto px-2 sm:px-6 lg:px-8 max-w-6xl">
+          <div className="text-center mb-8 sm:mb-12">
             <h2
-              className="text-4xl font-bold text-foreground mb-4"
+              className="text-3xl sm:text-4xl font-bold text-foreground mb-3 sm:mb-4"
               data-testid="sermon-archive-title"
             >
               Sermon Archive
             </h2>
             <p
-              className="text-xl text-muted-foreground"
+              className="text-lg sm:text-xl text-muted-foreground px-4"
               data-testid="sermon-archive-description"
             >
               Browse and search through our collection of messages
@@ -466,7 +468,7 @@ export default function Sermons() {
           </div>
 
           {/* Search */}
-          <div className="max-w-md mx-auto mb-12">
+          <div className="max-w-md mx-auto mb-8 sm:mb-12 px-4">
             <form onSubmit={handleSearch} className="flex gap-2">
               <Input
                 type="text"
@@ -487,7 +489,7 @@ export default function Sermons() {
           </div>
 
           {/* Sermon Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 px-2 sm:px-0">
             {sermonsLoading || (searchQuery && searchLoading) ? (
               Array.from({ length: 6 }).map((_, i) => (
                 <Card key={i} className="overflow-hidden">
@@ -564,9 +566,9 @@ export default function Sermons() {
                     )}
                   </div>
 
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 sm:p-6">
                     <h3
-                      className={`text-xl font-semibold mb-2 line-clamp-2 ${
+                      className={`text-lg sm:text-xl font-semibold mb-2 line-clamp-2 ${
                         currentSermon?._id === sermon._id
                           ? "text-primary"
                           : "text-card-foreground"
@@ -576,17 +578,19 @@ export default function Sermons() {
                       {sermon.title}
                     </h3>
 
-                    <div className="flex items-center text-muted-foreground text-sm mb-2">
-                      <User className="mr-2 h-4 w-4" />
-                      <span data-testid={`sermon-speaker-${sermon._id}`}>
-                        {sermon.speaker}
+                    <div className="flex flex-wrap gap-y-2 items-center text-muted-foreground text-xs sm:text-sm mb-2">
+                      <span className="inline-flex items-center mr-4">
+                        <User className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                        <span data-testid={`sermon-speaker-${sermon._id}`}>
+                          {sermon.speaker}
+                        </span>
                       </span>
-                    </div>
 
-                    <div className="flex items-center text-muted-foreground text-sm mb-4">
-                      <Calendar className="mr-2 h-4 w-4" />
-                      <span data-testid={`sermon-date-${sermon._id}`}>
-                        {format(new Date(sermon.date), "EEEE, MMMM d, yyyy")}
+                      <span className="inline-flex items-center">
+                        <Calendar className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                        <span data-testid={`sermon-date-${sermon._id}`}>
+                          {format(new Date(sermon.date), "MMM d, yyyy")}
+                        </span>
                       </span>
                     </div>
                     {sermon.scripture && (
