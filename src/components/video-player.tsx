@@ -1,14 +1,21 @@
 import { useEffect, useState } from "react";
+import { useSermonContext } from "../contexts/SermonContext";
 
 interface VideoPlayerProps {
   videoUrl: string;
   thumbnailUrl?: string;
   title?: string;
   autoplay?: boolean;
+  isLiveStream?: boolean;
 }
 
-export function VideoPlayer({ videoUrl, thumbnailUrl, title, autoplay = false }: VideoPlayerProps) {
+export function VideoPlayer({ videoUrl, thumbnailUrl, title, autoplay: propAutoplay = false, isLiveStream = false }: VideoPlayerProps) {
   const [videoId, setVideoId] = useState<string | null>(null);
+  const [isLive, setIsLive] = useState(isLiveStream);
+  const { currentSermon } = useSermonContext();
+  
+  // Autoplay if there's a current sermon or if autoplay prop is true
+  const autoplay = currentSermon !== null || propAutoplay;
 
   useEffect(() => {
     if (!videoUrl) {
@@ -19,13 +26,25 @@ export function VideoPlayer({ videoUrl, thumbnailUrl, title, autoplay = false }:
     try {
       // Extract video ID from various YouTube URL formats
       let extractedId: string | null = null;
+      let isStreamLink = false;
       
       if (videoUrl.includes('youtube.com')) {
         const url = new URL(videoUrl);
-        extractedId = url.searchParams.get('v');
+        // Check for live stream URLs
+        if (url.pathname.includes('/live/')) {
+          extractedId = url.pathname.split('/live/')[1]?.split('/')[0];
+          isStreamLink = true;
+        } else if (url.searchParams.has('channel')) {
+          extractedId = url.searchParams.get('channel');
+          isStreamLink = true;
+        } else {
+          extractedId = url.searchParams.get('v');
+        }
       } else if (videoUrl.includes('youtu.be')) {
         extractedId = videoUrl.split('youtu.be/')[1]?.split('?')[0];
       }
+      
+      setIsLive(isStreamLink || isLiveStream);
 
       if (extractedId && extractedId.length === 11) {
         setVideoId(extractedId);
@@ -68,7 +87,9 @@ export function VideoPlayer({ videoUrl, thumbnailUrl, title, autoplay = false }:
 
   const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=${
     autoplay ? '1' : '0'
-  }&origin=${encodeURIComponent(window.location.origin)}&enablejsapi=1&rel=0&modestbranding=1`;
+  }&origin=${encodeURIComponent(window.location.origin)}&enablejsapi=1&rel=0&modestbranding=1${
+    isLive ? '&live=1' : ''
+  }`;
 
   return (
     <div className="w-full aspect-video bg-black">
