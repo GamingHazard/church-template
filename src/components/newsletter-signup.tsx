@@ -5,6 +5,8 @@ import { Send } from "lucide-react";
 import { useToast } from "../hooks/use-toast";
 import Axios from "axios";
 import { Configs } from "../lib/utils";
+import { v4 as uuidv4 } from "uuid";
+
 
 export default function NewsletterSignup() {
   const [email, setEmail] = useState("");
@@ -13,6 +15,7 @@ export default function NewsletterSignup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+   
     if (!email) {
       toast({
         title: "Email Required",
@@ -25,9 +28,15 @@ export default function NewsletterSignup() {
     setIsSubscribing(true);
 
     try {
+       const uuid = localStorage.getItem("visitor_id");
+if (!uuid) {
+  const uuid = uuidv4();
+  localStorage.setItem("visitor_id", uuid);
+}
+
       const Res = await Axios.post(
         `${Configs.url}/api/news-letter/register`,
-        { email }, // body
+        { email, uuid }, // body
         {
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",

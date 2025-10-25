@@ -59,16 +59,13 @@ export function useAuthProvider(): AuthContextType {
       }
     }
 
-    if (storedVisitorId ) {
+    if (storedVisitorId) {
       setVisitorId(storedVisitorId)
       
-      if (storedVisitorProfile) {
-        const parsedProfile = JSON.parse(storedVisitorProfile);
-        setVisitor(parsedProfile);
+       
+    }else {
+        createVisitorProfile();
       }
-    } else {
-      createVisitorProfile();
-    }
 
 
     setIsLoading(false);
@@ -124,6 +121,7 @@ export function useAuthProvider(): AuthContextType {
 
   return {
     user,
+    visitor,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'admin',
     login,

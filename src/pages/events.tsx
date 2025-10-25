@@ -8,6 +8,7 @@ import { format, isPast, isToday, parseISO, isFuture, set } from "date-fns";
 import { Skeleton } from "../components/ui/skeleton";
 import EventCard from "../components/event-card";
 import { useAppData } from "../hooks/use-AppData"; // <- ensure this path/name matches your hook file
+import axios from "axios";
 
 interface EventItem {
      _id: string;
@@ -199,7 +200,7 @@ export default function Events() {
                       {(ongoingEvents[0] || upcomingEvents[0]).category?.toUpperCase()}
                     </Badge>
                     {ongoingEvents.length > 0 && (
-                      <Badge variant="">On Going</Badge>
+                      <Badge >On Going</Badge>
                     )}
                   </div>
 
@@ -246,26 +247,43 @@ export default function Events() {
       <section className="py-16 bg-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-foreground mb-4" data-testid="all-events-title">
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4" data-testid="all-events-title">
               All Events
             </h2>
-            <p className="text-xl text-muted-foreground" data-testid="all-events-description">
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto" data-testid="all-events-description">
               Browse upcoming and past church events
             </p>
           </div>
 
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "upcoming" | "past")} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 max-w-xl mx-auto mb-12">
-              <TabsTrigger value="upcoming" data-testid="tab-upcoming">
-                Upcoming Events
-              </TabsTrigger>
-              <TabsTrigger value="ongoing" data-testid="tab-ongoing">
-                Happening Now
-              </TabsTrigger>
-              <TabsTrigger value="past" data-testid="tab-past">
-                Past Events
-              </TabsTrigger>
-            </TabsList>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "upcoming" | "ongoing" | "past")} className="w-full">
+            <div className="w-full overflow-x-auto pb-4 mb-8">
+              <TabsList className="inline-flex min-w-full sm:w-auto justify-start sm:justify-center gap-1 sm:gap-2 p-1">
+                <TabsTrigger 
+                  value="upcoming" 
+                  data-testid="tab-upcoming"
+                  className="flex-1 sm:flex-none whitespace-nowrap px-3 sm:px-6"
+                >
+                  <Calendar className="w-4 h-4 mr-2 hidden sm:inline-block" />
+                  Upcoming
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="ongoing" 
+                  data-testid="tab-ongoing"
+                  className="flex-1 sm:flex-none whitespace-nowrap px-3 sm:px-6"
+                >
+                  <Clock className="w-4 h-4 mr-2 hidden sm:inline-block" />
+                  Happening Now
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="past" 
+                  data-testid="tab-past"
+                  className="flex-1 sm:flex-none whitespace-nowrap px-3 sm:px-6"
+                >
+                  <Calendar className="w-4 h-4 mr-2 hidden sm:inline-block" />
+                  Past Events
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="upcoming" data-testid="upcoming-events-content">
               <EventsGrid events={upcomingEvents} loading={eventsLoading} />

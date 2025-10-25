@@ -4,14 +4,18 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
-import { Calendar, MapPin, Clock, User } from "lucide-react";
-import { format, isFuture } from "date-fns";
+import { Calendar, MapPin, Clock, User, Contact } from "lucide-react";
+import { format, isFuture, set } from "date-fns";
 import { useState } from "react";
 import { useToast } from "../hooks/use-toast";
+import { useAppData } from "../hooks/use-AppData";
+import axios from "axios";
+import { Configs } from "../lib/utils";
 
 // Define Event type locally
 export type Event = {
      _id: string;
+     id: string;
   title: string;
   description: string;
   date: string;
@@ -21,15 +25,23 @@ export type Event = {
   thumbnailUrl?: string;
   category: "general" | "service" | "youth" | "community";
   thumbnail: { url?: string; public_id?: string }
+  reminders: string[];
 };
+
+export type User = {
+  reminder: string[];
+}
 
 interface EventCardProps {
   event: Event;
 }
 
 export default function EventCard({ event }: EventCardProps) {
+  const { refresh } = useAppData();
   const [reminderEmail, setReminderEmail] = useState("");
   const [reminderPhone, setReminderPhone] = useState("");
+  const [visitorId] = useState(localStorage.getItem("visitor_id") || "");
+  const [user, setUser] = useState<User | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
   const [isSettingReminder, setIsSettingReminder] = useState(false);
@@ -37,8 +49,10 @@ export default function EventCard({ event }: EventCardProps) {
   // Check if event is upcoming (not past)
   const isUpcoming = isFuture(new Date(event.date));
 
-  const handleReminderSubmit = (e: React.FormEvent) => {
+  const handleReminderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const userId = localStorage.getItem("visitor_id");
+
     if (!reminderEmail && !reminderPhone) {
       toast({
         title: "Error",
@@ -50,17 +64,44 @@ export default function EventCard({ event }: EventCardProps) {
 
     setIsSettingReminder(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      toast({
-        title: "Reminder Set!",
-        description: "We'll remind you about this event.",
+    try {
+     
+
+       
+      const response = await axios.post(`${Configs.url}/api/events/reminders/new`, {
+        eventId: event._id,
+        userId,
+        contact: reminderPhone,
+        email: reminderEmail,
+        eventTitle: event.title,
       });
+
+      if (response.status === 200) {
+        toast({
+          title: "Reminder Set!",
+          description: `You'll be notified about "${event.title}"`,
+        });
+
+        if (response.data.user) {
+          localStorage.setItem("visitor_profile", JSON.stringify(response.data.user));
+          setUser(response.data.user);
+        }
+        refresh();
+      }
+      
       setIsDialogOpen(false);
       setReminderEmail("");
       setReminderPhone("");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to set reminder. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error setting reminder:", error);
+    } finally {
       setIsSettingReminder(false);
-    }, 1000);
+    }
   };
 
    
@@ -116,12 +157,13 @@ export default function EventCard({ event }: EventCardProps) {
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button 
-                className="w-full bg-secondary text-secondary-foreground hover:opacity-90"
+                className={`w-full bg-secondary text-${event?.reminders.includes(visitorId) ? "green-500" : "white"} hover:opacity-90 bg-${event?.reminders.includes(visitorId) ? "current" : "secondary"}`}
                 data-testid={`button-set-reminder-${event._id}`}
               >
-                Set Reminder
+                {isSettingReminder ? "Setting..." : event?.reminders.includes(visitorId) ? "Reminder Set" : "Set Reminder"}
               </Button>
-            </DialogTrigger>
+              
+                      </DialogTrigger>
           <DialogContent>
             <form onSubmit={handleReminderSubmit}>
               <DialogHeader>
