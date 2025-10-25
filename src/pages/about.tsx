@@ -492,17 +492,21 @@ export default function About() {
       ) : galleryImages && galleryImages.length > 0 ? (
         <Splide
           options={{
+            type: 'slide',
             perPage: 1,
             perMove: 1,
             gap: '1rem',
-            arrows: true,
+            arrows: false,
             pagination: true,
             drag: true,
             autoplay: true,
-            interval: 4000,
+            interval: 2000,
+            speed: 800,
             pauseOnHover: true,
+            pauseOnFocus: true,
             loop: true,
-            // pauseOnFocus: true,
+            easing: 'ease',
+            rewindByDrag: true
           }}
           className="splide-custom"
         >
