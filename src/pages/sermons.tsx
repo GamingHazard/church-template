@@ -17,6 +17,7 @@ interface Sermon {
   series?: string;
   scripture?: string;
   isLive?: boolean;
+  likes: string[];
 }
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -173,16 +174,7 @@ export default function Sermons() {
                       )}
                       <span className="flex flex-wrap items-center text-muted-foreground text-sm w-full">
                         <span className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:flex-1">
-                          <Badge variant="outline" className="text-xs">
-                            {(currentSermon || allSermons[0])?.date
-                              ? format(
-                                  new Date(
-                                    (currentSermon || allSermons[0])?.date
-                                  ),
-                                  "MMMM d, yyyy"
-                                )
-                              : ""}
-                          </Badge>
+                           
                           {(currentSermon || allSermons[0])?.isLive ? (
                             <Badge
                               variant="default"
@@ -224,37 +216,55 @@ export default function Sermons() {
                       {(currentSermon || allSermons[0])?.description}
                     </p>
 
-                    {(currentSermon || allSermons[0])?.scripture && (
-                      <span className=" flex-row mt-10 flex items-center gap-4     p-3 text-xs text-muted-foreground">
-                        <span className="flex-row cursor-pointer  flex items-center gap-1">
-                          {(currentSermon || allSermons[0])?.likes.length || 0} Likes <ThumbsUpIcon   onClick={() => likeSermon((currentSermon || allSermons[0])?._id)} size={16} />
-                        </span>
-                        <span className="flex-row cursor-pointer flex-1  flex items-center gap-1">
-                          Share
-                          <Share2
-                            size={16}
-                            onClick={() => {
-                              try {
-                                // or whatever your item ID variable is
-                                const url = `${
-                                  window.location.origin
-                                }/sermons/${
-                                  (currentSermon || allSermons[0])?._id
-                                }`;
-                                navigator.clipboard?.writeText(url);
-                                toast({ title: "Sermon link copied" });
-                              } catch (e) {
-                                toast({
-                                  title: "Could not copy sermon link",
-                                  variant: "destructive",
-                                });
-                              }
-                            }}
-                          />
-                        </span>
-                        <span className="text-xs text-muted">2 hours ago</span>
+                    {/* Likes and Share Section */}
+                    <span className="flex-row mt-10 flex items-center gap-4 p-3 text-xs text-muted-foreground">
+                      <span 
+                        className="flex-row cursor-pointer flex items-center gap-2 hover:text-primary transition-colors"
+                        onClick={() => !liking && likeSermon((currentSermon || allSermons[0])?._id)}
+                      >
+                        <span>{((currentSermon || allSermons[0])?.likes || []).length} Likes</span>
+                        <ThumbsUpIcon size={16} />
                       </span>
-                    )}
+                      <span className="flex-row cursor-pointer flex-1 flex items-center gap-2 hover:text-primary transition-colors"
+                        onClick={() => {
+                          try {
+                            const url = `${window.location.origin}/sermons/${(currentSermon || allSermons[0])?._id}`;
+                            navigator.clipboard?.writeText(url);
+                            toast({ title: "Sermon link copied" });
+                          } catch (e) {
+                            toast({
+                              title: "Could not copy sermon link",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                      >
+                        <span>Share</span>
+                        <Share2 size={16} />
+                      </span>
+                      <span className="text-xs text-muted">
+                        {(currentSermon || allSermons[0])?.createdAt && (
+                          format(
+                                  new Date(
+                                    (currentSermon || allSermons[0])?.createdAt
+                                  ),
+                                  "MMMM d, yyyy"
+                                )
+                        )
+                               }
+                      </span>
+                      <span className="text-xs text-muted">
+                        {(currentSermon || allSermons[0])?.date && (
+                          format(
+                                  new Date(
+                                    (currentSermon || allSermons[0])?.date
+                                  ),
+                                  "MMMM d, yyyy"
+                                )
+                        )
+                               }
+                      </span>
+                    </span>
 {/* Liking Spinner */}
                     {liking && (
                       <span className=" flex-row  flex items-center gap-2     p-3 text-xs text-muted-foreground">  
@@ -416,12 +426,12 @@ export default function Sermons() {
               </Card>
 
               {/* Comments Section */}
-              <Card className="relative flex flex-col p-2 sm:p-4 max-h-[360px] lg:max-h-[400px]">
+              <Card className="relative hidden  flex-col p-2 sm:p-4 max-h-[360px] lg:max-h-[400px]">
                 <CardContent className="overflow-y-auto">
                   <h3 className="font-semibold m-2 sm:m-4">Comments</h3>
                   <Card className="flex-1 w-full bg-background mb-3 border-0">
                     {/* comment card */}
-                    <span className="shadow-lg mb-4 w-full pb-3 sm:pb-5 justify-center text-muted-foreground">
+                    <span className="shadow-lg hidden mb-4 w-full pb-3 sm:pb-5 justify-center text-muted-foreground">
                       <span className="flex items-center gap-2 p-2 sm:p-3">
                         <img
                           className="rounded-full w-8 h-8 sm:w-10 sm:h-10"

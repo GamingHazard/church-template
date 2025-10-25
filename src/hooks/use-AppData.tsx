@@ -17,7 +17,7 @@ interface Event {
 }
 
 interface Sermon {
- _id: string;
+  _id: string;
   title: string;
   speaker: string;
   date: string;
@@ -27,6 +27,8 @@ interface Sermon {
   thumbnailUrl?: string;
   scripture?: string;
   series?: string;
+  isLive?: boolean;
+  likes: string[];
   thumbnail: { url?: string; public_id?: string }}
 
 interface AppData {
