@@ -58,9 +58,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/donations">
-                  <a className="hover:text-primary transition-colors" data-testid="footer-contact">Contact</a>
-                </Link>
+                <a target="_blank" href="https://kisibojonathan-technologies.vercel.app/" className="hover:text-primary transition-colors" data-testid="footer-contact">Website Development</a>
               </li>
             </ul>
           </div>
@@ -79,18 +77,18 @@ export default function Footer() {
                   <a className="hover:text-primary transition-colors" data-testid="footer-events">Events</a>
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link href="/sermons">
                   <a className="hover:text-primary transition-colors" data-testid="footer-bible-studies">Bible Studies</a>
                 </Link>
-              </li>
+              </li> */}
               <li>
-                <Link href="/donations">
+                <Link href="#">
                   <a className="hover:text-primary transition-colors" data-testid="footer-prayer">Prayer Requests</a>
                 </Link>
               </li>
               <li>
-                <Link href="/donations">
+                <Link href="#">
                   <a className="hover:text-primary transition-colors" data-testid="footer-give">Give Online</a>
                 </Link>
               </li>

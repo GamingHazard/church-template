@@ -94,13 +94,13 @@ export default function Navigation() {
         {isAdmin && (
           <>
             <Link href="/admin">
-              <Button variant="outline" size="sm" data-testid="button-admin">
+              <Button variant="outline" className="border-0" size="sm" data-testid="button-admin">
                 <Settings className="h-4 w-4 mr-2" />
                 Admin
               </Button>
             </Link>
             <Link href="/customize">
-              <Button variant="outline" size="sm" data-testid="button-customize">
+              <Button variant="outline" className="hidden" size="sm" data-testid="button-customize">
                 <Brush className="h-4 w-4 mr-2" />
                 Customize
               </Button>
@@ -129,7 +129,7 @@ export default function Navigation() {
             ))}
             <Link href="/donations">
               <Button
-                className="bg-accent text-accent-foreground hover:opacity-90 w-full mt-4"
+                className="bg-accent hidden text-accent-foreground hover:opacity-90 w-full mt-4"
                 onClick={() => setIsOpen(false)}
                 data-testid="button-give-online-mobile"
               >
@@ -152,7 +152,7 @@ export default function Navigation() {
                 <Link href="/customize">
                   <Button
                     variant="outline"
-                    className="w-full"
+                    className="w-full hidden"
                     onClick={() => setIsOpen(false)}
                     data-testid="button-customize-mobile"
                   >

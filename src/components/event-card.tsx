@@ -192,7 +192,7 @@ export default function EventCard({ event }: EventCardProps) {
                     type="tel"
                     value={reminderPhone}
                     onChange={(e) => setReminderPhone(e.target.value)}
-                    placeholder="(555) 123-4567"
+                    placeholder="(+256) 7xx-xxx-xxx"
                     data-testid="input-reminder-phone"
                   />
                 </div>
