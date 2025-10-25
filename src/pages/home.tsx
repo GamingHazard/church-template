@@ -1,7 +1,8 @@
 import HeroSection from "../components/hero-section";
 import NewsletterSignup from "../components/newsletter-signup";
-import EventCard from "../components/event-card";
+import EventCardHome from "../components/event-card-home";
 import { Card, CardContent } from "../components/ui/card";
+import { isFuture } from "date-fns";
 import { Button } from "../components/ui/button";
 import { Clock, Play } from "lucide-react";
 import { Link } from "wouter";
@@ -33,7 +34,7 @@ interface Sermon {
 export default function Home() {
   const { events, Sermons, loading, error, refresh,Pastors } = useAppData();
 
-  const [upcomingEvents, setUpcomingEvents] = useState<any[]>(events);
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [recentSermons, setRecentSermons] = useState<any[]>(Sermons);
   const [currentSermon, setCurrentSermon] = useState<any>(Sermons?.[0] || null);
   const [leadPastor, setLeadPastor] = useState<any>(null);
@@ -53,8 +54,9 @@ if (Sermons) {
   }else{setCurrentSermon(Sermons?.[0] || null);}
 }
 
-      
-      setUpcomingEvents(events);
+      // Filter only upcoming events
+      const upcoming = (events || []).filter(event => isFuture(new Date(event.date)));
+      setUpcomingEvents(upcoming);
       setRecentSermons(Sermons);
       setLeadPastor(Pastors);
       setEventsLoading(false);
@@ -155,8 +157,8 @@ if (Sermons) {
                 </Card>
               ))
             ) : events && events.length > 0 ? (
-              events.slice(0, 3).map((event) => (
-                <EventCard key={event._id} event={event} />
+              upcomingEvents.slice(0, 3).map((event) => (
+                <EventCardHome key={event._id} event={event} />
               ))
             ) : (
               <div className="col-span-full text-center py-12">
