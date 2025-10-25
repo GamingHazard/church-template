@@ -1,0 +1,35 @@
+.splide-custom {
+  padding-bottom: 2.5rem;
+}
+
+.splide__pagination {
+  bottom: 0;
+}
+
+.splide__pagination__page {
+  background:whitesmoke;
+  width: 8px;
+  height: 8px;
+  margin: 0 4px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  opacity: 1;
+}
+
+.splide__pagination__page.is-active {
+  background:royalblue;
+  transform: scale(1.4);
+  opacity: 1;
+}
+
+.splide__pagination__page:hover {
+  background:skyblue;
+  opacity: 0.8;
+}
+
+@media (max-width: 640px) {
+  .splide-custom {
+    margin: 0 -1rem;
+    padding: 0 1rem 2.5rem 1rem;
+  }
+}

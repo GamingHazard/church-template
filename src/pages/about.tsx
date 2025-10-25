@@ -13,7 +13,9 @@ import { useEffect, useState } from "react";
 import { useAppData } from "../hooks/use-AppData";
 import axios from "axios";
 import { Configs } from "../lib/utils";
-import { get } from "http";
+import { Splide, SplideSlide } from '@splidejs/react-splide';
+import '@splidejs/react-splide/css';
+import '../styles/splide-custom.css';
 
 // Define types locally
 export type Pastor = {
@@ -465,74 +467,80 @@ export default function About() {
       </section>
 
       {/* Photo Gallery */}
-      {galleryImages.length > 0 && (
-        <section className="py-16 bg-card">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-            <div className="text-center mb-12">
-              <h2
-                className="text-4xl font-bold text-foreground mb-4"
-                data-testid="gallery-title"
-              >
-                Our Church Family
-              </h2>
-              <p
-                className="text-xl text-muted-foreground"
-                data-testid="gallery-description"
-              >
-                Glimpses of our community in worship, fellowship, and service
-              </p>
-            </div>
+     
+{/* Photo Gallery */}
+{galleryImages.length > 0 && (
+  <section className="py-16 bg-card">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
+      <div className="text-center mb-12">
+        <h2 className="text-4xl font-bold text-foreground mb-4" data-testid="gallery-title">
+          Our Gallery
+        </h2>
+        <p className="text-xl text-muted-foreground" data-testid="gallery-description">
+          Glimpses of our community in worship, fellowship, and service
+        </p>
+      </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {galleryLoading ? (
-                Array.from({ length: 6 }).map((_, i) => (
-                  <Skeleton key={i} className="aspect-square rounded-lg" />
-                ))
-              ) : galleryImages && galleryImages.length > 0 ? (
-                galleryImages.slice(0, 6).map((image) => (
-                  <div
-                    key={image._id}
-                    className="relative group overflow-hidden rounded-lg"
-                    data-testid={`gallery-image-${image._id}`}
-                  >
-                    <img
-                      src={
-                        image?.image?.url ||
-                        image?.imageUrl ||
-                        "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"
-                      }
-                      alt={image.title}
-                      className="w-full aspect-square object-cover transition-transform duration-300 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/20 transition-colors duration-300" />
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-                      <p
-                        className="text-white font-medium"
-                        data-testid={`gallery-title-${image._id}`}
-                      >
-                        {image.title}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="col-span-full text-center py-12">
-                  <p
-                    className="text-muted-foreground text-lg"
-                    data-testid="no-gallery"
-                  >
-                    Gallery images coming soon!
+      {galleryLoading ? (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="w-full">
+              <Skeleton className="aspect-square rounded-lg" />
+            </div>
+          ))}
+        </div>
+      ) : galleryImages && galleryImages.length > 0 ? (
+        <Splide
+          options={{
+            perPage: 1,
+            perMove: 1,
+            gap: '1rem',
+            arrows: true,
+            pagination: true,
+            drag: true,
+            autoplay: true,
+            interval: 4000,
+            pauseOnHover: true,
+            loop: true,
+            // pauseOnFocus: true,
+          }}
+          className="splide-custom"
+        >
+          {galleryImages.map((image) => (
+            <SplideSlide key={image._id}>
+              <div
+                className="relative group overflow-hidden rounded-lg aspect-square"
+                data-testid={`gallery-image-${image._id}`}
+              >
+                <img
+                  src={
+                    image?.image?.url ||
+                    image?.imageUrl ||
+                    "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"
+                  }
+                  alt={image.title}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/20 transition-colors duration-300" />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+                  <p className="text-white font-medium" data-testid={`gallery-title-${image._id}`}>
+                    {image.title}
                   </p>
                 </div>
-              )}
-            </div>
-            {/* <p className="mt-10 justify-end flex flex-row flex-1 text-center cursor-pointer text-sm font-semibold hover:text-md">
-            See More
-            <ArrowRight className="ml-2 text-sm hover:text-lg" />
-          </p> */}
-          </div>
-        </section>
+              </div>
+            </SplideSlide>
+          ))}
+        </Splide>
+      ) : (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground text-lg" data-testid="no-gallery">
+            Gallery images coming soon!
+          </p>
+        </div>
       )}
+    </div>
+  </section>
+)}
     </div>
   );
 }
