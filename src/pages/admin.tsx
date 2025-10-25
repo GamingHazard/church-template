@@ -79,6 +79,7 @@ import {
   Circle,
   ArchiveIcon,
   Settings,
+  Loader,
 } from "lucide-react";
 import { format, set } from "date-fns";
 import { useForm } from "react-hook-form";
@@ -1161,9 +1162,7 @@ function AdminDashboard() {
           error.response?.data?.err || error.message
         }`,
       });
-      console.log("====================================");
-      console.log(error);
-      console.log("====================================");
+       
     } finally {
       setdeleteLoading("");
     }
@@ -2438,7 +2437,8 @@ function AdminDashboard() {
                     <CardContent>
                       <form
                         className="space-y-4"
-                        onSubmit={(e) => {
+                        onSubmit={async (e) => {
+                          setLoading(true);
                           e.preventDefault();
                           const form = e.target as HTMLFormElement;
                           const subject = (
@@ -2451,20 +2451,40 @@ function AdminDashboard() {
                               "broadcast-message"
                             ) as HTMLTextAreaElement
                           ).value;
-                          if (subject && message) {
-                            toast({
-                              title: "Broadcast Sent!",
-                              description: `Message with subject "${subject}" sent to ${users.length} users.`,
-                            });
-                            form.reset();
-                          } else {
+
+                          if (!subject || !message) {
                             toast({
                               title: "Error",
-                              description:
-                                "Subject and message cannot be empty.",
+                              description: "Subject and message cannot be empty.",
                               variant: "destructive",
                             });
+                            return;
                           }
+
+                          
+
+                          try {
+                            const response = await axios.post(`${Configs.url}/api/news-letter/broadcast`, {
+                              subject,
+                              message,
+                              recipientCount: users.length
+                            });
+
+                            if (response.status === 200) {
+                              toast({
+                                title: "Broadcast Sent!",
+                                description: `Message with subject "${subject}" sent to ${users.length} users.`,
+                              });
+                              form.reset();
+                            }
+                          } catch (error) {
+                            console.error("Broadcast error:", error);
+                            toast({
+                              title: "Error sending broadcast",
+                              description: "An error occurred while sending the broadcast. Please try again.",
+                              variant: "destructive",
+                            });
+                          }finally{setLoading(false)}
                         }}
                       >
                         <div className="space-y-2">
@@ -2483,7 +2503,10 @@ function AdminDashboard() {
                           />
                         </div>
                         <Button type="submit" className="w-full">
-                          Send Broadcast
+                          {loading ? <span className=" flex-row  flex items-center gap-2     p-3 text-xs text-white">
+                                                  
+                                                  Broadcasting Message...<Loader className="animate-spin" size={16} />
+                                                </span> : "Send Broadcast"}
                         </Button>
                       </form>
                     </CardContent>

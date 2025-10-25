@@ -493,20 +493,28 @@ export default function About() {
         <Splide
           options={{
             type: 'loop',
-            perPage: 3,
+            perPage: 3,          // default for large screens (>= ~1024px)
             perMove: 1,
             gap: '1rem',
             arrows: true,
             pagination: true,
             drag: true,
             autoplay: true,
-            interval: 2000,
-            speed: 800,
+            interval: 3000,
+            speed: 600,
             pauseOnHover: true,
             pauseOnFocus: true,
-            loop: true,
-            rewind: false,
-            width: '100%'
+            width: '100%',
+            breakpoints: {
+              // <= 1024px -> show 2 slides per page (optional intermediate)
+              1024: {
+                perPage: 2
+              },
+              // <= 640px -> show 1 slide per page (mobile)
+              640: {
+                perPage: 1
+              }
+            }
           }}
           className="splide-custom"
         >
@@ -522,7 +530,7 @@ export default function About() {
                     image?.imageUrl ||
                     "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"
                   }
-                  alt={image.title}
+                  alt={image.title || "Gallery image"}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/20 transition-colors duration-300" />
@@ -545,6 +553,7 @@ export default function About() {
     </div>
   </section>
 )}
+
     </div>
   );
 }
