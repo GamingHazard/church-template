@@ -13,60 +13,60 @@ export default function NewsletterSignup() {
   const { toast } = useToast();
   const [isSubscribing, setIsSubscribing] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-   
-    if (!email) {
-      toast({
-        title: "Email Required",
-        description: "Please enter your email address.",
-        variant: "destructive",
-      });
-      return;
+ 
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsSubscribing(true);
+
+  if (!email) {
+    toast({
+      title: "Email Required",
+      description: "Please enter your email address.",
+      variant: "destructive",
+    });
+    setIsSubscribing(false);
+    return;
+  }
+
+  try {
+    // Get or create UUID
+    let uuid = localStorage.getItem("visitor_id");
+    if (!uuid) {
+      uuid = uuidv4();
+      localStorage.setItem("visitor_id", uuid);
     }
 
-    setIsSubscribing(true);
-
-    try {
-       const uuid = localStorage.getItem("visitor_id");
-if (!uuid) {
-  const uuid = uuidv4();
-  localStorage.setItem("visitor_id", uuid);
-   const Res = await Axios.post(
-        `${Configs.url}/api/news-letter/register`,
-        { email, uuid }, // body
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        }
-      );
-      if (Res.status === 201) {
-        toast({
-          title: "Successfully Subscribed!",
-          description:
-            "Please Check your Emails for a verification link to verify your email",
-        });
-        setEmail("");
-         
+    // Send request
+    const Res = await Axios.post(
+      `${Configs.url}/api/news-letter/register`,
+      { email, uuid },
+      {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
       }
-}
+    );
 
-     
-    } catch (error: any) {
+    // Handle response
+    if (Res.status === 201) {
       toast({
-        title: "Subscription Error!",
-        description: `Error,${
-          error.response.data.message || "Failed to register Email, try again!"
-        }`,
-        variant: "destructive",
+        title: "Successfully Subscribed!",
+        description:
+          "Please check your email for a verification link to verify your email.",
       });
-
-       
-    } finally {
-      setIsSubscribing(false);
+      setEmail("");
     }
-  };
+  } catch (error: any) {
+    toast({
+      title: "Subscription Error!",
+      description: `Error: ${
+        error.response?.data?.message || "Failed to register email, try again!"
+      }`,
+      variant: "destructive",
+    });
+  } finally {
+    setIsSubscribing(false);
+  }
+};
+
 
   return (
     <section className="py-16 bg-primary text-primary-foreground">
