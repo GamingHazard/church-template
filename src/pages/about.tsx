@@ -496,7 +496,7 @@ export default function About() {
             perPage: 3,          // default for large screens (>= ~1024px)
             perMove: 1,
             gap: '1rem',
-            arrows: true,
+            arrows: false,
             pagination: true,
             drag: true,
             autoplay: true,
@@ -519,7 +519,9 @@ export default function About() {
           className="splide-custom"
         >
           {galleryImages.map((image) => (
-            <SplideSlide key={image._id}>
+            <SplideSlide
+              
+              key={image._id}>
               <div
                 className="relative group overflow-hidden rounded-lg aspect-square"
                 data-testid={`gallery-image-${image._id}`}
