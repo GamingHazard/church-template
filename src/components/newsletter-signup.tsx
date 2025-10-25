@@ -32,9 +32,7 @@ export default function NewsletterSignup() {
 if (!uuid) {
   const uuid = uuidv4();
   localStorage.setItem("visitor_id", uuid);
-}
-
-      const Res = await Axios.post(
+   const Res = await Axios.post(
         `${Configs.url}/api/news-letter/register`,
         { email, uuid }, // body
         {
@@ -49,10 +47,12 @@ if (!uuid) {
           description:
             "Please Check your Emails for a verification link to verify your email",
         });
-
         setEmail("");
-        setIsSubscribing(false);
+         
       }
+}
+
+     
     } catch (error: any) {
       toast({
         title: "Subscription Error!",
