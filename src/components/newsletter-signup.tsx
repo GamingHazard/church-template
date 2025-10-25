@@ -62,9 +62,7 @@ if (!uuid) {
         variant: "destructive",
       });
 
-      console.log("====================================");
-      console.log(error);
-      console.log("====================================");
+       
     } finally {
       setIsSubscribing(false);
     }
