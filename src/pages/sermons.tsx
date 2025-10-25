@@ -47,7 +47,7 @@ import { Configs } from "../lib/utils";
 export default function Sermons() {
   const { toast } = useToast();
 
-  const { Sermons, loading ,refresh} = useAppData();
+  const { Sermons, loading, refresh } = useAppData();
   const [searchQuery, setSearchQuery] = useState("");
   const [userId] = useState(localStorage.getItem("visitor_id") || "");
   const [allSermons, setAllSermons] = useState(Sermons);
@@ -107,17 +107,19 @@ export default function Sermons() {
     setLiking(true);
     const userId = localStorage.getItem("visitor_id");
     try {
-      const res = await axios.post(`${Configs.url}/api/sermons/like/sermon/${sermonId}`, { userId });
+      const res = await axios.post(
+        `${Configs.url}/api/sermons/like/sermon/${sermonId}`,
+        { userId }
+      );
       if (res.status === 200) {
         toast({ title: `${res.data.message}` });
         refresh();
       }
-     } catch (error) {
-      console.log(error);
-
-     } finally {
-       setLiking(false);
-     }
+    } catch (error) {
+      toast({ title: `An Error occurred while liking the sermon, please try again!.` ,variant:"destructive"});
+    } finally {
+      setLiking(false);
+    }
   };
 
   return (
@@ -174,7 +176,6 @@ export default function Sermons() {
                       )}
                       <span className="flex flex-wrap items-center text-muted-foreground text-sm w-full">
                         <span className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:flex-1">
-                           
                           {(currentSermon || allSermons[0])?.isLive ? (
                             <Badge
                               variant="default"
@@ -184,16 +185,18 @@ export default function Sermons() {
                               Live Now
                             </Badge>
                           ) : (
-                              <Badge variant="outline" className="text-xs">
-                                <Archive size={20} className=" mr-2" /> Recorded
-                              </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              <Archive size={20} className=" mr-2" /> Recorded
+                            </Badge>
                           )}
                         </span>
-                        <Badge variant="outline" className="text-xs mt-4 sm:mt-0  ">
+                        <Badge
+                          variant="outline"
+                          className="text-xs mt-4 sm:mt-0  "
+                        >
                           <EyeIcon className="inline-block mr-1 h-4 w-4" />
                           Views 10
                         </Badge>
-                         
                       </span>
                     </div>
                     <h3 className="text-xl font-semibold mb-2">
@@ -218,17 +221,29 @@ export default function Sermons() {
 
                     {/* Likes and Share Section */}
                     <span className="flex-row mt-10 flex items-center gap-4 p-3 text-xs text-muted-foreground">
-                      <span 
+                      <span
                         className="flex-row cursor-pointer flex items-center gap-2 hover:text-primary transition-colors"
-                        onClick={() => !liking && likeSermon((currentSermon || allSermons[0])?._id)}
+                        onClick={() =>
+                          !liking &&
+                          likeSermon((currentSermon || allSermons[0])?._id)
+                        }
                       >
-                        <span>{((currentSermon || allSermons[0])?.likes || []).length} Likes</span>
+                        <span>
+                          {
+                            ((currentSermon || allSermons[0])?.likes || [])
+                              .length
+                          }{" "}
+                          Likes
+                        </span>
                         <ThumbsUpIcon size={16} />
                       </span>
-                      <span className="flex-row cursor-pointer flex-1 flex items-center gap-2 hover:text-primary transition-colors"
+                      <span
+                        className="flex-row cursor-pointer flex-1 flex items-center gap-2 hover:text-primary transition-colors"
                         onClick={() => {
                           try {
-                            const url = `${window.location.origin}/sermons/${(currentSermon || allSermons[0])?._id}`;
+                            const url = `${window.location.origin}/sermons/${
+                              (currentSermon || allSermons[0])?._id
+                            }`;
                             navigator.clipboard?.writeText(url);
                             toast({ title: "Sermon link copied" });
                           } catch (e) {
@@ -243,32 +258,27 @@ export default function Sermons() {
                         <Share2 size={16} />
                       </span>
                       <span className="text-xs text-muted">
-                        {(currentSermon || allSermons[0])?.createdAt && (
+                        {(currentSermon || allSermons[0])?.createdAt &&
                           format(
-                                  new Date(
-                                    (currentSermon || allSermons[0])?.createdAt
-                                  ),
-                                  "MMMM d, yyyy"
-                                )
-                        )
-                               }
+                            new Date(
+                              (currentSermon || allSermons[0])?.createdAt
+                            ),
+                            "MMMM d, yyyy"
+                          )}
                       </span>
                       <span className="text-xs text-muted">
-                        {(currentSermon || allSermons[0])?.date && (
+                        {(currentSermon || allSermons[0])?.date &&
                           format(
-                                  new Date(
-                                    (currentSermon || allSermons[0])?.date
-                                  ),
-                                  "MMMM d, yyyy"
-                                )
-                        )
-                               }
+                            new Date((currentSermon || allSermons[0])?.date),
+                            "MMMM d, yyyy"
+                          )}
                       </span>
                     </span>
-{/* Liking Spinner */}
+                    {/* Liking Spinner */}
                     {liking && (
-                      <span className=" flex-row  flex items-center gap-2     p-3 text-xs text-muted-foreground">  
-                        <Loader className="animate-spin" size={16} /> processing...
+                      <span className=" flex-row  flex items-center gap-2     p-3 text-xs text-muted-foreground">
+                        <Loader className="animate-spin" size={16} />{" "}
+                        processing...
                       </span>
                     )}
 

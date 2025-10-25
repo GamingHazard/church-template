@@ -297,16 +297,32 @@ function AdminDashboard() {
       thumbnailUrl: "",
       category: "general",
     },
-    resolver: zodResolver(z.object({
-      title: z.string().min(1, "Title is required").max(100, "Title is too long"),
-      description: z.string().min(1, "Description is required"),
-      date: z.string().min(1, "Date is required").regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
-      time: z.string().min(1, "Time is required").regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
-      location: z.string().min(1, "Location is required"),
-      speaker: z.string().optional().or(z.literal("")),
-      thumbnailUrl: z.string().optional().or(z.literal("")),
-      category: z.enum(["general", "service", "youth", "community"]).optional().default("general"),
-    }).partial({ speaker: true, thumbnailUrl: true })),
+    resolver: zodResolver(
+      z
+        .object({
+          title: z
+            .string()
+            .min(1, "Title is required")
+            .max(100, "Title is too long"),
+          description: z.string().min(1, "Description is required"),
+          date: z
+            .string()
+            .min(1, "Date is required")
+            .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
+          time: z
+            .string()
+            .min(1, "Time is required")
+            .regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
+          location: z.string().min(1, "Location is required"),
+          speaker: z.string().optional().or(z.literal("")),
+          thumbnailUrl: z.string().optional().or(z.literal("")),
+          category: z
+            .enum(["general", "service", "youth", "community"])
+            .optional()
+            .default("general"),
+        })
+        .partial({ speaker: true, thumbnailUrl: true })
+    ),
   });
 
   // Sermon form
@@ -323,18 +339,46 @@ function AdminDashboard() {
       series: "",
       isLive: false,
     },
-    resolver: zodResolver(z.object({
-      title: z.string().min(1, "Title is required").max(100, "Title is too long"),
-      speaker: z.string().min(1, "Speaker is required"),
-      date: z.string().min(1, "Date is required").regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
-      description: z.string().min(1, "Description is required"),
-      videoUrl: z.string().url("Invalid video URL").optional().or(z.literal("")),
-      audioUrl: z.string().url("Invalid audio URL").optional().or(z.literal("")),
-      thumbnailUrl: z.string().url("Invalid thumbnail URL").optional().or(z.literal("")),
-      scripture: z.string().optional().or(z.literal("")),
-      series: z.string().optional().or(z.literal("")),
-      isLive: z.boolean().optional().default(false),
-    }).partial({ videoUrl: true, audioUrl: true, thumbnailUrl: true, scripture: true, series: true })),
+    resolver: zodResolver(
+      z
+        .object({
+          title: z
+            .string()
+            .min(1, "Title is required")
+            .max(100, "Title is too long"),
+          speaker: z.string().min(1, "Speaker is required"),
+          date: z
+            .string()
+            .min(1, "Date is required")
+            .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
+          description: z.string().min(1, "Description is required"),
+          videoUrl: z
+            .string()
+            .url("Invalid video URL")
+            .optional()
+            .or(z.literal("")),
+          audioUrl: z
+            .string()
+            .url("Invalid audio URL")
+            .optional()
+            .or(z.literal("")),
+          thumbnailUrl: z
+            .string()
+            .url("Invalid thumbnail URL")
+            .optional()
+            .or(z.literal("")),
+          scripture: z.string().optional().or(z.literal("")),
+          series: z.string().optional().or(z.literal("")),
+          isLive: z.boolean().optional().default(false),
+        })
+        .partial({
+          videoUrl: true,
+          audioUrl: true,
+          thumbnailUrl: true,
+          scripture: true,
+          series: true,
+        })
+    ),
   });
 
   // Gallery form
@@ -344,13 +388,22 @@ function AdminDashboard() {
       imageUrl: "",
       category: "general",
     },
-    resolver: zodResolver(z.object({
-      title: z.string().min(1, "Title is required").max(100, "Title is too long"),
-      imageUrl: z.string().url("Invalid image URL").optional().or(z.literal("")),
-      category: z.enum(["general", "events", "worship", "community"], {
-        required_error: "Please select a category",
-      }),
-    })),
+    resolver: zodResolver(
+      z.object({
+        title: z
+          .string()
+          .min(1, "Title is required")
+          .max(100, "Title is too long"),
+        imageUrl: z
+          .string()
+          .url("Invalid image URL")
+          .optional()
+          .or(z.literal("")),
+        category: z.enum(["general", "events", "worship", "community"], {
+          required_error: "Please select a category",
+        }),
+      })
+    ),
   });
 
   // Pastor form
@@ -364,15 +417,37 @@ function AdminDashboard() {
       isLead: false,
       order: 0,
     },
-    resolver: zodResolver(z.object({
-      name: z.string().min(1, "Name is required").max(100, "Name is too long"),
-      title: z.string().min(1, "Title is required"),
-      bio: z.string().min(1, "Bio is required").max(1000, "Bio is too long"),
-      imageUrl: z.string().url("Invalid image URL").optional().or(z.literal("")),
-      email: z.string().min(1, "Email is required").email("Invalid email format"),
-      isLead: z.boolean().optional().default(false),
-      order: z.number().int().min(0, "Order must be 0 or greater").optional().default(0),
-    }).partial({ imageUrl: true, isLead: true, order: true })),
+    resolver: zodResolver(
+      z
+        .object({
+          name: z
+            .string()
+            .min(1, "Name is required")
+            .max(100, "Name is too long"),
+          title: z.string().min(1, "Title is required"),
+          bio: z
+            .string()
+            .min(1, "Bio is required")
+            .max(1000, "Bio is too long"),
+          imageUrl: z
+            .string()
+            .url("Invalid image URL")
+            .optional()
+            .or(z.literal("")),
+          email: z
+            .string()
+            .min(1, "Email is required")
+            .email("Invalid email format"),
+          isLead: z.boolean().optional().default(false),
+          order: z
+            .number()
+            .int()
+            .min(0, "Order must be 0 or greater")
+            .optional()
+            .default(0),
+        })
+        .partial({ imageUrl: true, isLead: true, order: true })
+    ),
   });
 
   // 2) File chosen
@@ -418,9 +493,7 @@ function AdminDashboard() {
       if (response.status === 200) {
         setEvents(response.data.events);
       }
-    } catch (error: any) {
-       
-    }
+    } catch (error: any) {}
   };
 
   // Create Event
@@ -545,7 +618,7 @@ function AdminDashboard() {
         eventData = {
           ...eventData,
           thumbnail: { url, public_id },
-          thumbnailUrl: ""
+          thumbnailUrl: "",
         };
       }
 
@@ -559,7 +632,7 @@ function AdminDashboard() {
           },
         }
       );
-      
+
       if (res.status === 200) {
         // Update local state
         if (res.data.events) {
@@ -577,7 +650,10 @@ function AdminDashboard() {
       toast({
         title: "Error updating event",
         variant: "destructive",
-        description: error.response?.data?.message || error.message || "Failed to update event",
+        description:
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to update event",
       });
     } finally {
       setLoading(false);
@@ -606,11 +682,6 @@ function AdminDashboard() {
     }
   };
 
-
-
-
-
-
   // Create Sermon
   const createSermon = async (data: SermonForm) => {
     setLoading(true);
@@ -632,7 +703,6 @@ function AdminDashboard() {
         return;
       }
 
-       
       if (file !== null) {
         const { url, public_id } = await uploadFileToServer(file, "sermons");
         const eventData = { ...data, url, public_id };
@@ -707,9 +777,7 @@ function AdminDashboard() {
       if (response.status === 200) {
         setSermons(response.data.sermons);
       }
-    } catch (error) {
-       
-    }
+    } catch (error) {}
   };
   // Update Sermon
   const updateSermon = async (id: string, data: Partial<SermonForm>) => {
@@ -780,7 +848,10 @@ function AdminDashboard() {
       toast({
         title: "Error updating sermon",
         variant: "destructive",
-        description: error.response?.data?.message || error.message || "Failed to update sermon",
+        description:
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to update sermon",
       });
     } finally {
       setLoading(false);
@@ -809,9 +880,6 @@ function AdminDashboard() {
       setdeleteLoading("");
     }
   };
-
-
-
 
   // Create Gallery Image
   const createGalleryImage = async (data: GalleryForm) => {
@@ -897,9 +965,7 @@ function AdminDashboard() {
       if (response.status === 200) {
         setGalleryImages(response.data.gallery);
       }
-    } catch (error: any) {
-       
-    }
+    } catch (error: any) {}
   };
 
   // Delete Gallery Image
@@ -922,10 +988,6 @@ function AdminDashboard() {
       setdeleteLoading("");
     }
   };
-
-
-
-
 
   // Create Pastor
   const createPastor = async (data: PastorForm) => {
@@ -1037,7 +1099,6 @@ function AdminDashboard() {
         pastorData = { ...pastorData, profileImg: { url, public_id } };
       }
 
-     
       const res = await axios.put(
         `${Configs.url}/api/pastors/update-profile/${id}`,
         pastorData,
@@ -1069,7 +1130,10 @@ function AdminDashboard() {
       toast({
         title: "Error updating pastor",
         variant: "destructive",
-        description: error.response?.data?.message || error.message || "Failed to update pastor profile",
+        description:
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to update pastor profile",
       });
     } finally {
       setLoading(false);
@@ -1093,13 +1157,13 @@ function AdminDashboard() {
       toast({
         title: "Error",
         variant: "destructive",
-        description: `Failed to delete pastor: ${error.response?.data?.err || error.message
-          }`,
-
+        description: `Failed to delete pastor: ${
+          error.response?.data?.err || error.message
+        }`,
       });
-      console.log('====================================');
+      console.log("====================================");
       console.log(error);
-      console.log('====================================');
+      console.log("====================================");
     } finally {
       setdeleteLoading("");
     }
@@ -1160,8 +1224,6 @@ function AdminDashboard() {
     } finally {
       setdeleteLoading("");
     }
-
-     
   };
 
   // Unarchive notifications
@@ -1241,9 +1303,7 @@ function AdminDashboard() {
         }));
         setUsers(normalized);
       }
-    } catch (error) {
-       
-    }
+    } catch (error) {}
   };
 
   // Event handlers
@@ -1274,7 +1334,7 @@ function AdminDashboard() {
       toast({
         title: "Error",
         description: error.message || "Failed to save event",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -1290,7 +1350,7 @@ function AdminDashboard() {
       toast({
         title: "Error",
         description: error.message || "Failed to save sermon",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -1312,7 +1372,7 @@ function AdminDashboard() {
       toast({
         title: "Error",
         description: error.message || "Failed to save gallery image",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -1328,7 +1388,7 @@ function AdminDashboard() {
       toast({
         title: "Error",
         description: error.message || "Failed to save pastor",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -1379,8 +1439,7 @@ function AdminDashboard() {
     getGalleryImages();
 
     const interval = setInterval(() => {
-
-      getSubscribers()
+      getSubscribers();
     }, 5000);
 
     return () => clearInterval(interval);
@@ -1437,10 +1496,10 @@ function AdminDashboard() {
                 Notifications{" "}
                 {notifications.filter((n) => !n.read && !n.archived).length >
                   0 && (
-                    <span className="ml-2 text-primary ">
-                      {notifications.filter((n) => !n.read).length}
-                    </span>
-                  )}
+                  <span className="ml-2 text-primary ">
+                    {notifications.filter((n) => !n.read).length}
+                  </span>
+                )}
               </TabsTrigger>
               <TabsTrigger value="settings" data-testid="tab-settings">
                 Settings
@@ -1504,8 +1563,12 @@ function AdminDashboard() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="general">General</SelectItem>
-                                  <SelectItem value="service">Service</SelectItem>
+                                  <SelectItem value="general">
+                                    General
+                                  </SelectItem>
+                                  <SelectItem value="service">
+                                    Service
+                                  </SelectItem>
                                   <SelectItem value="youth">Youth</SelectItem>
                                   <SelectItem value="community">
                                     Community
@@ -1551,7 +1614,9 @@ function AdminDashboard() {
 
                           <div className="grid md:grid-cols-2 gap-4">
                             <div>
-                              <Label htmlFor="speaker">Speaker (Optional)</Label>
+                              <Label htmlFor="speaker">
+                                Speaker (Optional)
+                              </Label>
                               <Input
                                 {...eventForm.register("speaker")}
                                 data-testid="input-event-speaker"
@@ -1588,19 +1653,19 @@ function AdminDashboard() {
                               </div>
                               {(previewUrl ||
                                 eventForm.watch("thumbnailUrl")) && (
-                                  <div className="col-span-2 mt-4">
-                                    <div className="relative aspect-video w-full overflow-hidden rounded-lg border">
-                                      <img
-                                        src={
-                                          previewUrl ||
-                                          eventForm.watch("thumbnailUrl")
-                                        }
-                                        alt="Event preview"
-                                        className="h-full w-full object-cover"
-                                      />
-                                    </div>
+                                <div className="col-span-2 mt-4">
+                                  <div className="relative aspect-video w-full overflow-hidden rounded-lg border">
+                                    <img
+                                      src={
+                                        previewUrl ||
+                                        eventForm.watch("thumbnailUrl")
+                                      }
+                                      alt="Event preview"
+                                      className="h-full w-full object-cover"
+                                    />
                                   </div>
-                                )}
+                                </div>
+                              )}
                             </div>
                           </div>
 
@@ -1619,15 +1684,23 @@ function AdminDashboard() {
                               disabled={loading}
                               data-testid="button-save-event"
                               className="min-w-[90px]"
-                              onClick={eventForm.handleSubmit(handleSubmitEvent)}
+                              onClick={eventForm.handleSubmit(
+                                handleSubmitEvent
+                              )}
                             >
                               {loading ? (
                                 <div className="flex items-center gap-2">
                                   <Loader2 className="h-4 w-4 animate-spin" />
-                                  <span>{editingEvent ? "Updating..." : "Creating..."}</span>
+                                  <span>
+                                    {editingEvent
+                                      ? "Updating..."
+                                      : "Creating..."}
+                                  </span>
                                 </div>
+                              ) : editingEvent ? (
+                                "Update Event"
                               ) : (
-                                editingEvent ? "Update Event" : "Create Event"
+                                "Create Event"
                               )}
                             </Button>
                           </DialogFooter>
@@ -1667,94 +1740,94 @@ function AdminDashboard() {
                               <Skeleton className="h-4 w-20" />
                             </TableCell>
                           </TableRow>
-                        )))
-                        : events && events.length > 0 ? (
-                          events.map((event) => (
-                            <TableRow
-                              key={event._id}
-                              data-testid={`event-row-${event._id}`}
-                            >
-                              <TableCell className="font-medium">
-                                {event.title}
-                              </TableCell>
-                              <TableCell>
-                                {format(new Date(event.date), "MMM d, yyyy")}
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant="outline">{event.category}</Badge>
-                              </TableCell>
-                              <TableCell>{event.location}</TableCell>
-                              <TableCell>
-                                <div className="flex gap-2">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleEditEvent(event)}
-                                    data-testid={`button-edit-event-${event._id}`}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button
-                                        size="sm"
-                                        variant="destructive"
-                                        data-testid={`button-delete-event-${event._id}`}
+                        ))
+                      ) : events && events.length > 0 ? (
+                        events.map((event) => (
+                          <TableRow
+                            key={event._id}
+                            data-testid={`event-row-${event._id}`}
+                          >
+                            <TableCell className="font-medium">
+                              {event.title}
+                            </TableCell>
+                            <TableCell>
+                              {format(new Date(event.date), "MMM d, yyyy")}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{event.category}</Badge>
+                            </TableCell>
+                            <TableCell>{event.location}</TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleEditEvent(event)}
+                                  data-testid={`button-edit-event-${event._id}`}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      data-testid={`button-delete-event-${event._id}`}
+                                    >
+                                      {deleteLoading === event._id ? (
+                                        <LoaderCircle
+                                          size={20}
+                                          color="white"
+                                          className="top-2 right-2 h-6 w-6 absolute mx-auto animate-spin"
+                                        />
+                                      ) : (
+                                        <Trash2 className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>
+                                        Delete Event
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete "
+                                        {event.title}"? This action cannot be
+                                        undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>
+                                        Cancel
+                                      </AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => deleteEvent(event._id)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                       >
                                         {deleteLoading === event._id ? (
                                           <LoaderCircle
                                             size={20}
                                             color="white"
-                                            className="top-2 right-2 h-6 w-6 absolute mx-auto animate-spin"
+                                            className=" top-2 right-2 h-6 w-6 aboslute mx-auto animate-spin"
                                           />
                                         ) : (
-                                          <Trash2 className="h-4 w-4" />
+                                          "Delete"
                                         )}
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>
-                                          Delete Event
-                                        </AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          Are you sure you want to delete "
-                                          {event.title}"? This action cannot be
-                                          undone.
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>
-                                          Cancel
-                                        </AlertDialogCancel>
-                                        <AlertDialogAction
-                                          onClick={() => deleteEvent(event._id)}
-                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                        >
-                                          {deleteLoading === event._id ? (
-                                            <LoaderCircle
-                                              size={20}
-                                              color="white"
-                                              className=" top-2 right-2 h-6 w-6 aboslute mx-auto animate-spin"
-                                            />
-                                          ) : (
-                                            "Delete"
-                                          )}
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        ) : (
-                          <TableRow>
-                            <TableCell colSpan={5} className="text-center py-8">
-                              No events found. Create your first event!
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
                             </TableCell>
                           </TableRow>
-                        )}
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8">
+                            No events found. Create your first event!
+                          </TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </CardContent>
@@ -1790,7 +1863,9 @@ function AdminDashboard() {
                       <div className="max-h-[80vh] overflow-y-auto pr-3">
                         <DialogHeader>
                           <DialogTitle>
-                            {editingSermon ? "Edit Sermon" : "Create New Sermon"}
+                            {editingSermon
+                              ? "Edit Sermon"
+                              : "Create New Sermon"}
                           </DialogTitle>
                         </DialogHeader>
                         <form
@@ -1850,7 +1925,12 @@ function AdminDashboard() {
                               />
                             </div>
                             <div>
-                              <Label htmlFor="audioUrl" className="text-muted-foreground">Audio URL</Label>
+                              <Label
+                                htmlFor="audioUrl"
+                                className="text-muted-foreground"
+                              >
+                                Audio URL
+                              </Label>
                               <Input
                                 {...sermonForm.register("audioUrl")}
                                 data-testid="input-sermon-audio"
@@ -1867,8 +1947,17 @@ function AdminDashboard() {
                                   ? "This sermon will be shown as currently streaming live"
                                   : "Toggle this to mark the sermon as currently streaming live"}
                               </p>
-                              <p className={`text-xs mt-1 ${sermonForm.watch("isLive") ? "text-green-600" : "text-gray-400"}`}>
-                                Status: {sermonForm.watch("isLive") ? "Live Now" : "Not Live"}
+                              <p
+                                className={`text-xs mt-1 ${
+                                  sermonForm.watch("isLive")
+                                    ? "text-green-600"
+                                    : "text-gray-400"
+                                }`}
+                              >
+                                Status:{" "}
+                                {sermonForm.watch("isLive")
+                                  ? "Live Now"
+                                  : "Not Live"}
                               </p>
                             </div>
                             <Switch
@@ -1907,7 +1996,8 @@ function AdminDashboard() {
                                 Upload
                               </Button>
                             </div>
-                            {(previewUrl || sermonForm.watch("thumbnailUrl")) && (
+                            {(previewUrl ||
+                              sermonForm.watch("thumbnailUrl")) && (
                               <div className="mt-2 space-y-2">
                                 <div className="relative w-full rounded-lg overflow-hidden border">
                                   <img
@@ -1931,17 +2021,18 @@ function AdminDashboard() {
                             >
                               Cancel
                             </Button>
-                            <Button
-                              type="submit"
-                              disabled={loading}
-                            >
+                            <Button type="submit" disabled={loading}>
                               {loading ? (
                                 <div className="flex items-center gap-2">
                                   <Loader2 className="h-4 w-4 animate-spin" />
-                                  {editingSermon ? "Updating Sermon..." : "Creating Sermon..."}
+                                  {editingSermon
+                                    ? "Updating Sermon..."
+                                    : "Creating Sermon..."}
                                 </div>
+                              ) : editingSermon ? (
+                                "Update Sermon"
                               ) : (
-                                editingSermon ? "Update Sermon" : "Create Sermon"
+                                "Create Sermon"
                               )}
                             </Button>
                           </DialogFooter>
@@ -1996,7 +2087,11 @@ function AdminDashboard() {
                             <TableCell>
                               <div className="relative h-12 w-12 rounded-md overflow-hidden">
                                 <img
-                                  src={sermon.thumbnail?.url || sermon.thumbnailUrl || "https://via.placeholder.com/48?text=No+Image"}
+                                  src={
+                                    sermon.thumbnail?.url ||
+                                    sermon.thumbnailUrl ||
+                                    "https://via.placeholder.com/48?text=No+Image"
+                                  }
                                   alt={sermon.title}
                                   className="h-full w-full object-cover"
                                 />
@@ -2004,9 +2099,14 @@ function AdminDashboard() {
                             </TableCell>
                             <TableCell>
                               <div className="space-y-1">
-                                <div className="font-medium">{sermon.title}</div>
+                                <div className="font-medium">
+                                  {sermon.title}
+                                </div>
                                 {sermon.series && (
-                                  <Badge variant="secondary" className="text-xs">
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
                                     {sermon.series}
                                   </Badge>
                                 )}
@@ -2019,7 +2119,9 @@ function AdminDashboard() {
                                   {sermon.scripture}
                                 </Badge>
                               ) : (
-                                <span className="text-muted-foreground text-sm">-</span>
+                                <span className="text-muted-foreground text-sm">
+                                  -
+                                </span>
                               )}
                             </TableCell>
                             <TableCell>
@@ -2027,12 +2129,17 @@ function AdminDashboard() {
                             </TableCell>
                             <TableCell>
                               {sermon.isLive ? (
-                                <Badge variant="default" className="bg-green-500 text-white">
-                                  <Circle className="text-white mr-2 animate-pulse" />Live Now
+                                <Badge
+                                  variant="default"
+                                  className="bg-green-500 text-white"
+                                >
+                                  <Circle className="text-white mr-2 animate-pulse" />
+                                  Live Now
                                 </Badge>
                               ) : (
-                                <Badge variant="outline"><ArchiveIcon className=" mr-2" /> Recorded</Badge>
-                               
+                                <Badge variant="outline">
+                                  <ArchiveIcon className=" mr-2" /> Recorded
+                                </Badge>
                               )}
                             </TableCell>
                             <TableCell>
@@ -2056,7 +2163,6 @@ function AdminDashboard() {
                                       ) : (
                                         <Trash2 className="h-4 w-4" />
                                       )}
-                                      
                                     </Button>
                                   </AlertDialogTrigger>
                                   <AlertDialogContent>
@@ -2147,20 +2253,23 @@ function AdminDashboard() {
                             users.map((user, index) => {
                               const key = user._id || index;
                               // ensure we show 0 if remindersCount is 0; otherwise derive from reminders array or fallback to 0
-  
 
                               // friendly fallback values
-                              const displayName = user.name?.trim() || `User ${index + 1}`;
+                              const displayName =
+                                user.name?.trim() || `User ${index + 1}`;
                               const displayEmail = user.email?.trim() || "—";
                               // const displayPhone = user.phone?.trim() || "—";
                               const subscribedAt = user.subscribedAt
                                 ? (() => {
-                                  try {
-                                    return format(new Date(user.subscribedAt), "MMM d, yyyy");
-                                  } catch {
-                                    return "—";
-                                  }
-                                })()
+                                    try {
+                                      return format(
+                                        new Date(user.subscribedAt),
+                                        "MMM d, yyyy"
+                                      );
+                                    } catch {
+                                      return "—";
+                                    }
+                                  })()
                                 : "—";
 
                               const avatarSrc =
@@ -2180,8 +2289,12 @@ function AdminDashboard() {
                                         loading="lazy"
                                       />
                                       <div>
-                                        <p className="font-medium">{displayName}</p>
-                                        <p className="text-sm text-muted-foreground text-gray-400">{displayEmail}</p>
+                                        <p className="font-medium">
+                                          {displayName}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground text-gray-400">
+                                          {displayEmail}
+                                        </p>
                                       </div>
                                     </div>
                                   </TableCell>
@@ -2190,7 +2303,9 @@ function AdminDashboard() {
                                   {/* <TableCell className="text-gray-400">{displayPhone}</TableCell> */}
 
                                   {/* Subscribed at */}
-                                  <TableCell className="text-gray-400 p-1">{subscribedAt}</TableCell>
+                                  <TableCell className="text-gray-400 p-1">
+                                    {subscribedAt}
+                                  </TableCell>
 
                                   {/* Reminders count */}
                                   {/* <TableCell className="text-center text-gray-400">
@@ -2203,7 +2318,11 @@ function AdminDashboard() {
                                       <Button
                                         variant="outline"
                                         size="icon"
-                                        onClick={() => toast({ title: `Emailing ${displayName}` })}
+                                        onClick={() =>
+                                          toast({
+                                            title: `Emailing ${displayName}`,
+                                          })
+                                        }
                                       >
                                         <Mail className="h-4 w-4" />
                                       </Button>
@@ -2211,7 +2330,11 @@ function AdminDashboard() {
                                       <Button
                                         variant="outline"
                                         size="icon"
-                                        onClick={() => toast({ title: `Sending SMS to ${displayName}` })}
+                                        onClick={() =>
+                                          toast({
+                                            title: `Sending SMS to ${displayName}`,
+                                          })
+                                        }
                                       >
                                         <MessageSquare className="h-4 w-4" />
                                       </Button>
@@ -2219,7 +2342,11 @@ function AdminDashboard() {
                                       <Button
                                         className="bg-red-200 hover:bg-red-300"
                                         size="icon"
-                                        onClick={() => toast({ title: `Banning ${displayName}` })}
+                                        onClick={() =>
+                                          toast({
+                                            title: `Banning ${displayName}`,
+                                          })
+                                        }
                                       >
                                         <Ban className="h-4 w-4 text-red-600" />
                                       </Button>
@@ -2237,20 +2364,31 @@ function AdminDashboard() {
                                     alt="No users"
                                     className="mx-auto h-36 w-auto"
                                   />
-                                  <h3 className="text-lg font-semibold">No users yet</h3>
+                                  <h3 className="text-lg font-semibold">
+                                    No users yet
+                                  </h3>
                                   <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-                                    It looks like no one has signed up for the newsletter yet. Invite your congregation,
-                                    share the site link, or import contacts to get started.
+                                    It looks like no one has signed up for the
+                                    newsletter yet. Invite your congregation,
+                                    share the site link, or import contacts to
+                                    get started.
                                   </p>
                                   <div className="flex items-center justify-center gap-2 mt-4">
                                     <Button
                                       variant="outline"
                                       onClick={() => {
                                         try {
-                                          navigator.clipboard?.writeText(window.location.href);
-                                          toast({ title: "Invite link copied" });
+                                          navigator.clipboard?.writeText(
+                                            window.location.href
+                                          );
+                                          toast({
+                                            title: "Invite link copied",
+                                          });
                                         } catch (e) {
-                                          toast({ title: "Could not copy invite link", variant: "destructive" });
+                                          toast({
+                                            title: "Could not copy invite link",
+                                            variant: "destructive",
+                                          });
                                         }
                                       }}
                                     >
@@ -2268,10 +2406,15 @@ function AdminDashboard() {
                               variant="outline"
                               onClick={() => {
                                 try {
-                                  navigator.clipboard?.writeText(window.location.href);
+                                  navigator.clipboard?.writeText(
+                                    window.location.href
+                                  );
                                   toast({ title: "Invite link copied" });
                                 } catch (e) {
-                                  toast({ title: "Could not copy invite link", variant: "destructive" });
+                                  toast({
+                                    title: "Could not copy invite link",
+                                    variant: "destructive",
+                                  });
                                 }
                               }}
                             >
@@ -2428,8 +2571,8 @@ function AdminDashboard() {
                                   donation.status === "completed"
                                     ? "default"
                                     : donation.status === "failed"
-                                      ? "destructive"
-                                      : "secondary"
+                                    ? "destructive"
+                                    : "secondary"
                                 }
                               >
                                 {donation.status}
@@ -2533,7 +2676,8 @@ function AdminDashboard() {
                                 <div className="relative w-full rounded-lg overflow-hidden border">
                                   <img
                                     src={
-                                      previewUrl || galleryForm.watch("imageUrl")
+                                      previewUrl ||
+                                      galleryForm.watch("imageUrl")
                                     }
                                     alt="Gallery image preview"
                                     className="w-full object-contain"
@@ -2767,17 +2911,18 @@ function AdminDashboard() {
                             >
                               Cancel
                             </Button>
-                            <Button
-                              type="submit"
-                              disabled={loading}
-                            >
+                            <Button type="submit" disabled={loading}>
                               {loading ? (
                                 <div className="flex items-center gap-2">
                                   <Loader2 className="h-4 w-4 animate-spin" />
-                                  {editingPastor ? "Updating..." : "Creating..."}
+                                  {editingPastor
+                                    ? "Updating..."
+                                    : "Creating..."}
                                 </div>
+                              ) : editingPastor ? (
+                                "Update Pastor"
                               ) : (
-                                editingPastor ? "Update Pastor" : "Add Pastor"
+                                "Add Pastor"
                               )}
                             </Button>
                           </DialogFooter>
@@ -2790,6 +2935,7 @@ function AdminDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>Avatar</TableHead>
                         <TableHead>Name</TableHead>
                         <TableHead>Title</TableHead>
                         <TableHead>Email</TableHead>
@@ -2816,7 +2962,7 @@ function AdminDashboard() {
                         ))
                       ) : pastors && pastors.length > 0 ? (
                         pastors.map((pastor) => (
-                          <TableRow key={pastor._id}>
+                          <TableRow className="border-b-2 border-gray-400" key={pastor._id}>
                             <img
                               src={
                                 pastor.profileImg?.url ||
@@ -2853,7 +2999,6 @@ function AdminDashboard() {
                                       ) : (
                                         <Trash2 className="h-4 w-4" />
                                       )}
-                                     
                                     </Button>
                                   </AlertDialogTrigger>
                                   <AlertDialogContent>
@@ -2911,8 +3056,9 @@ function AdminDashboard() {
                         size="sm"
                         onClick={UnArchiveNotifications}
                       >
-                        {`Unarchive All (${notifications.filter((n) => n.archived).length
-                          })`}
+                        {`Unarchive All (${
+                          notifications.filter((n) => n.archived).length
+                        })`}
                       </Button>
                     )}
 
@@ -2964,16 +3110,17 @@ function AdminDashboard() {
                         </div>
                       ))
                     ) : notifications.filter((n) => !n.read && !n.archived)
-                      .length > 0 ? (
+                        .length > 0 ? (
                       notifications
                         .filter((n) => !n.read && !n.archived)
                         .map((notification) => (
                           <div
                             key={notification._id}
-                            className={`flex items-start gap-4 p-4 rounded-lg border ${notification.read
+                            className={`flex items-start gap-4 p-4 rounded-lg border ${
+                              notification.read
                                 ? "bg-muted/50"
                                 : "bg-background"
-                              }`}
+                            }`}
                           >
                             <div className="flex-shrink-0 mt-1">
                               {notification.type === "donation" && (
@@ -3111,27 +3258,44 @@ function AdminDashboard() {
                   <Tabs defaultValue="general" orientation="vertical">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                       <TabsList className="flex flex-col h-full bg-transparent p-0">
-                        <TabsTrigger value="general" className="justify-start w-full">
+                        <TabsTrigger
+                          value="general"
+                          className="justify-start w-full"
+                        >
                           General
                         </TabsTrigger>
-                        <TabsTrigger value="social" className="justify-start w-full">
+                        <TabsTrigger
+                          value="social"
+                          className="justify-start w-full"
+                        >
                           Social Media
                         </TabsTrigger>
-                        <TabsTrigger value="streaming" className="justify-start w-full">
+                        <TabsTrigger
+                          value="streaming"
+                          className="justify-start w-full"
+                        >
                           Live Streaming
                         </TabsTrigger>
-                        <TabsTrigger value="donations" className="justify-start w-full">
+                        <TabsTrigger
+                          value="donations"
+                          className="justify-start w-full"
+                        >
                           Donations
                         </TabsTrigger>
-                        <TabsTrigger value="email" className="justify-start w-full">
+                        <TabsTrigger
+                          value="email"
+                          className="justify-start w-full"
+                        >
                           Email
                         </TabsTrigger>
-                        <TabsTrigger value="system" className="justify-start w-full">
+                        <TabsTrigger
+                          value="system"
+                          className="justify-start w-full"
+                        >
                           System
                         </TabsTrigger>
                       </TabsList>
                       <div className="md:col-span-3">
-
                         {/* General Settings */}
                         <TabsContent value="general">
                           <Card>
@@ -3140,27 +3304,52 @@ function AdminDashboard() {
                             </CardHeader>
                             <CardContent className="space-y-4">
                               <div className="space-y-4">
-                                <h3 className="text-lg font-semibold">Church Information</h3>
+                                <h3 className="text-lg font-semibold">
+                                  Church Information
+                                </h3>
                                 <div className="grid md:grid-cols-2 gap-4">
                                   <div>
-                                    <Label htmlFor="churchName">Church Name</Label>
-                                    <Input id="churchName" placeholder="Enter church name" />
+                                    <Label htmlFor="churchName">
+                                      Church Name
+                                    </Label>
+                                    <Input
+                                      id="churchName"
+                                      placeholder="Enter church name"
+                                    />
                                   </div>
                                   <div>
-                                    <Label htmlFor="churchEmail">Contact Email</Label>
-                                    <Input id="churchEmail" type="email" placeholder="contact@church.com" />
+                                    <Label htmlFor="churchEmail">
+                                      Contact Email
+                                    </Label>
+                                    <Input
+                                      id="churchEmail"
+                                      type="email"
+                                      placeholder="contact@church.com"
+                                    />
                                   </div>
                                   <div>
-                                    <Label htmlFor="churchPhone">Phone Number</Label>
-                                    <Input id="churchPhone" placeholder="+1 (555) 000-0000" />
+                                    <Label htmlFor="churchPhone">
+                                      Phone Number
+                                    </Label>
+                                    <Input
+                                      id="churchPhone"
+                                      placeholder="+1 (555) 000-0000"
+                                    />
                                   </div>
                                   <div>
-                                    <Label htmlFor="churchAddress">Address</Label>
-                                    <Input id="churchAddress" placeholder="Church address" />
+                                    <Label htmlFor="churchAddress">
+                                      Address
+                                    </Label>
+                                    <Input
+                                      id="churchAddress"
+                                      placeholder="Church address"
+                                    />
                                   </div>
                                 </div>
                                 <div>
-                                  <Label htmlFor="churchDescription">About Church</Label>
+                                  <Label htmlFor="churchDescription">
+                                    About Church
+                                  </Label>
                                   <Textarea
                                     id="churchDescription"
                                     placeholder="Enter a brief description about your church"
@@ -3172,7 +3361,6 @@ function AdminDashboard() {
                           </Card>
                         </TabsContent>
 
-
                         {/* Social Media Settings */}
                         <TabsContent value="social">
                           <Card>
@@ -3182,20 +3370,40 @@ function AdminDashboard() {
                             <CardContent className="space-y-4">
                               <div className="grid md:grid-cols-2 gap-4">
                                 <div>
-                                  <Label htmlFor="facebookUrl">Facebook URL</Label>
-                                  <Input id="facebookUrl" placeholder="https://facebook.com/..." />
+                                  <Label htmlFor="facebookUrl">
+                                    Facebook URL
+                                  </Label>
+                                  <Input
+                                    id="facebookUrl"
+                                    placeholder="https://facebook.com/..."
+                                  />
                                 </div>
                                 <div>
-                                  <Label htmlFor="instagramUrl">Instagram URL</Label>
-                                  <Input id="instagramUrl" placeholder="https://instagram.com/..." />
+                                  <Label htmlFor="instagramUrl">
+                                    Instagram URL
+                                  </Label>
+                                  <Input
+                                    id="instagramUrl"
+                                    placeholder="https://instagram.com/..."
+                                  />
                                 </div>
                                 <div>
-                                  <Label htmlFor="youtubeUrl">YouTube Channel</Label>
-                                  <Input id="youtubeUrl" placeholder="https://youtube.com/..." />
+                                  <Label htmlFor="youtubeUrl">
+                                    YouTube Channel
+                                  </Label>
+                                  <Input
+                                    id="youtubeUrl"
+                                    placeholder="https://youtube.com/..."
+                                  />
                                 </div>
                                 <div>
-                                  <Label htmlFor="twitterUrl">Twitter/X URL</Label>
-                                  <Input id="twitterUrl" placeholder="https://twitter.com/..." />
+                                  <Label htmlFor="twitterUrl">
+                                    Twitter/X URL
+                                  </Label>
+                                  <Input
+                                    id="twitterUrl"
+                                    placeholder="https://twitter.com/..."
+                                  />
                                 </div>
                               </div>
                             </CardContent>
@@ -3210,33 +3418,48 @@ function AdminDashboard() {
                             </CardHeader>
                             <CardContent className="space-y-4">
                               <div>
-                                <Label htmlFor="streamingPlatform">Default Streaming Platform</Label>
+                                <Label htmlFor="streamingPlatform">
+                                  Default Streaming Platform
+                                </Label>
                                 <Select>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select platform" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="youtube">YouTube</SelectItem>
-                                    <SelectItem value="facebook">Facebook Live</SelectItem>
-                                    <SelectItem value="custom">Custom RTMP</SelectItem>
+                                    <SelectItem value="youtube">
+                                      YouTube
+                                    </SelectItem>
+                                    <SelectItem value="facebook">
+                                      Facebook Live
+                                    </SelectItem>
+                                    <SelectItem value="custom">
+                                      Custom RTMP
+                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
                               <div>
-                                <Label htmlFor="defaultStreamUrl">Default Stream URL</Label>
-                                <Input id="defaultStreamUrl" placeholder="https://..." />
+                                <Label htmlFor="defaultStreamUrl">
+                                  Default Stream URL
+                                </Label>
+                                <Input
+                                  id="defaultStreamUrl"
+                                  placeholder="https://..."
+                                />
                               </div>
                               <div className="flex items-center justify-between p-4 rounded-lg border">
                                 <div>
                                   <Label>Auto-publish Live Streams</Label>
-                                  <p className="text-sm text-muted-foreground">Automatically publish streams when they go live</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    Automatically publish streams when they go
+                                    live
+                                  </p>
                                 </div>
                                 <Switch />
                               </div>
                             </CardContent>
                           </Card>
                         </TabsContent>
-                        
 
                         {/* Donation Settings */}
                         <TabsContent value="donations">
@@ -3246,20 +3469,30 @@ function AdminDashboard() {
                             </CardHeader>
                             <CardContent className="space-y-4">
                               <div>
-                                <Label htmlFor="paymentProcessor">Payment Processor</Label>
+                                <Label htmlFor="paymentProcessor">
+                                  Payment Processor
+                                </Label>
                                 <Select>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select payment processor" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="stripe">Stripe</SelectItem>
-                                    <SelectItem value="paypal">PayPal</SelectItem>
-                                    <SelectItem value="square">Square</SelectItem>
+                                    <SelectItem value="stripe">
+                                      Stripe
+                                    </SelectItem>
+                                    <SelectItem value="paypal">
+                                      PayPal
+                                    </SelectItem>
+                                    <SelectItem value="square">
+                                      Square
+                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
                               <div>
-                                <Label htmlFor="donationCategories">Donation Categories</Label>
+                                <Label htmlFor="donationCategories">
+                                  Donation Categories
+                                </Label>
                                 <Textarea
                                   id="donationCategories"
                                   placeholder="Enter donation categories (one per line)"
@@ -3269,7 +3502,9 @@ function AdminDashboard() {
                               <div className="flex items-center justify-between p-4 rounded-lg border">
                                 <div>
                                   <Label>Enable Recurring Donations</Label>
-                                  <p className="text-sm text-muted-foreground">Allow donors to set up recurring donations</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    Allow donors to set up recurring donations
+                                  </p>
                                 </div>
                                 <Switch />
                               </div>
@@ -3285,24 +3520,40 @@ function AdminDashboard() {
                             </CardHeader>
                             <CardContent className="space-y-4">
                               <div>
-                                <Label htmlFor="emailService">Email Service</Label>
+                                <Label htmlFor="emailService">
+                                  Email Service
+                                </Label>
                                 <Select>
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select email service" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="sendgrid">SendGrid</SelectItem>
-                                    <SelectItem value="mailchimp">Mailchimp</SelectItem>
-                                    <SelectItem value="smtp">Custom SMTP</SelectItem>
+                                    <SelectItem value="sendgrid">
+                                      SendGrid
+                                    </SelectItem>
+                                    <SelectItem value="mailchimp">
+                                      Mailchimp
+                                    </SelectItem>
+                                    <SelectItem value="smtp">
+                                      Custom SMTP
+                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
                               <div>
-                                <Label htmlFor="senderEmail">Sender Email</Label>
-                                <Input id="senderEmail" type="email" placeholder="noreply@church.com" />
+                                <Label htmlFor="senderEmail">
+                                  Sender Email
+                                </Label>
+                                <Input
+                                  id="senderEmail"
+                                  type="email"
+                                  placeholder="noreply@church.com"
+                                />
                               </div>
                               <div>
-                                <Label htmlFor="emailTemplate">Default Email Template</Label>
+                                <Label htmlFor="emailTemplate">
+                                  Default Email Template
+                                </Label>
                                 <Textarea
                                   id="emailTemplate"
                                   placeholder="Enter default email template"
@@ -3313,8 +3564,7 @@ function AdminDashboard() {
                           </Card>
                         </TabsContent>
 
-
-                         {/* System settings */}
+                        {/* System settings */}
                         <TabsContent className="" value="system">
                           <Card className="max-h-[400px] overflow-y-auto">
                             <CardHeader>
@@ -3329,42 +3579,72 @@ function AdminDashboard() {
                                 <div className="space-y-6">
                                   <div className="flex items-center gap-2">
                                     <Bell className="w-5 h-5 text-muted-foreground" />
-                                    <h3 className="text-lg font-semibold">Notifications & Reminders</h3>
+                                    <h3 className="text-lg font-semibold">
+                                      Notifications & Reminders
+                                    </h3>
                                   </div>
                                   <div className="grid gap-4">
                                     <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
                                       <div className="space-y-0.5">
-                                        <Label className="text-base">System Notifications</Label>
-                                        <p className="text-sm text-muted-foreground">Enable push notifications for important updates</p>
+                                        <Label className="text-base">
+                                          System Notifications
+                                        </Label>
+                                        <p className="text-sm text-muted-foreground">
+                                          Enable push notifications for
+                                          important updates
+                                        </p>
                                       </div>
                                       <Switch defaultChecked />
                                     </div>
                                     <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
                                       <div className="space-y-0.5">
-                                        <Label className="text-base">Event Reminders</Label>
-                                        <p className="text-sm text-muted-foreground">Automatic reminders for upcoming events</p>
+                                        <Label className="text-base">
+                                          Event Reminders
+                                        </Label>
+                                        <p className="text-sm text-muted-foreground">
+                                          Automatic reminders for upcoming
+                                          events
+                                        </p>
                                       </div>
                                       <Switch defaultChecked />
                                     </div>
                                     <div className="p-4 rounded-lg border bg-card space-y-4">
                                       <div className="space-y-2">
-                                        <Label htmlFor="reminderTime" className="text-base">Default Reminder Settings</Label>
+                                        <Label
+                                          htmlFor="reminderTime"
+                                          className="text-base"
+                                        >
+                                          Default Reminder Settings
+                                        </Label>
                                         <Select defaultValue="60">
                                           <SelectTrigger className="w-full">
                                             <SelectValue placeholder="Select when to send reminders" />
                                           </SelectTrigger>
                                           <SelectContent>
-                                            <SelectItem value="15">15 minutes before</SelectItem>
-                                            <SelectItem value="30">30 minutes before</SelectItem>
-                                            <SelectItem value="60">1 hour before</SelectItem>
-                                            <SelectItem value="120">2 hours before</SelectItem>
-                                            <SelectItem value="1440">1 day before</SelectItem>
+                                            <SelectItem value="15">
+                                              15 minutes before
+                                            </SelectItem>
+                                            <SelectItem value="30">
+                                              30 minutes before
+                                            </SelectItem>
+                                            <SelectItem value="60">
+                                              1 hour before
+                                            </SelectItem>
+                                            <SelectItem value="120">
+                                              2 hours before
+                                            </SelectItem>
+                                            <SelectItem value="1440">
+                                              1 day before
+                                            </SelectItem>
                                           </SelectContent>
                                         </Select>
                                       </div>
                                       <div className="flex items-center space-x-2 pt-2">
                                         <Switch id="multiple-reminders" />
-                                        <Label htmlFor="multiple-reminders" className="text-sm text-muted-foreground">
+                                        <Label
+                                          htmlFor="multiple-reminders"
+                                          className="text-sm text-muted-foreground"
+                                        >
                                           Allow multiple reminders per event
                                         </Label>
                                       </div>
@@ -3376,32 +3656,51 @@ function AdminDashboard() {
                                 <div className="space-y-6">
                                   <div className="flex items-center gap-2">
                                     <Settings className="w-5 h-5 text-muted-foreground" />
-                                    <h3 className="text-lg font-semibold">System Configuration</h3>
+                                    <h3 className="text-lg font-semibold">
+                                      System Configuration
+                                    </h3>
                                   </div>
                                   <div className="grid gap-4">
                                     <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
                                       <div className="space-y-0.5">
-                                        <Label className="text-base">Maintenance Mode</Label>
-                                        <p className="text-sm text-muted-foreground">Temporarily disable public access</p>
+                                        <Label className="text-base">
+                                          Maintenance Mode
+                                        </Label>
+                                        <p className="text-sm text-muted-foreground">
+                                          Temporarily disable public access
+                                        </p>
                                       </div>
                                       <Switch />
                                     </div>
                                     <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
                                       <div className="space-y-0.5">
-                                        <Label className="text-base">System Cache</Label>
-                                        <p className="text-sm text-muted-foreground">Enable caching for better performance</p>
+                                        <Label className="text-base">
+                                          System Cache
+                                        </Label>
+                                        <p className="text-sm text-muted-foreground">
+                                          Enable caching for better performance
+                                        </p>
                                       </div>
                                       <Switch defaultChecked />
                                     </div>
                                     <div className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
                                       <div className="space-y-0.5">
-                                        <Label className="text-base">Debug Mode</Label>
-                                        <p className="text-sm text-muted-foreground">Show detailed error messages</p>
+                                        <Label className="text-base">
+                                          Debug Mode
+                                        </Label>
+                                        <p className="text-sm text-muted-foreground">
+                                          Show detailed error messages
+                                        </p>
                                       </div>
                                       <Switch />
                                     </div>
                                     <div className="p-4 rounded-lg border bg-card space-y-3">
-                                      <Label htmlFor="maxUploadSize" className="text-base">Maximum Upload Size</Label>
+                                      <Label
+                                        htmlFor="maxUploadSize"
+                                        className="text-base"
+                                      >
+                                        Maximum Upload Size
+                                      </Label>
                                       <div className="flex items-center space-x-2">
                                         <Input
                                           id="maxUploadSize"
@@ -3411,7 +3710,9 @@ function AdminDashboard() {
                                           max={100}
                                           className="max-w-[120px]"
                                         />
-                                        <span className="text-sm text-muted-foreground">MB</span>
+                                        <span className="text-sm text-muted-foreground">
+                                          MB
+                                        </span>
                                       </div>
                                     </div>
                                   </div>
@@ -3421,11 +3722,16 @@ function AdminDashboard() {
                                   <Button
                                     variant="outline"
                                     onClick={() => {
-                                      if (confirm("Are you sure you want to reset all settings to default?")) {
+                                      if (
+                                        confirm(
+                                          "Are you sure you want to reset all settings to default?"
+                                        )
+                                      ) {
                                         toast({
                                           title: "Settings Reset",
-                                          description: "All settings have been restored to default values."
-                                        })
+                                          description:
+                                            "All settings have been restored to default values.",
+                                        });
                                       }
                                     }}
                                   >
@@ -3437,8 +3743,9 @@ function AdminDashboard() {
                                     onClick={() => {
                                       toast({
                                         title: "Settings Saved",
-                                        description: "Your system settings have been updated successfully."
-                                      })
+                                        description:
+                                          "Your system settings have been updated successfully.",
+                                      });
                                     }}
                                   >
                                     Save Changes
@@ -3458,37 +3765,33 @@ function AdminDashboard() {
           </Tabs>
 
           {/* Other tabs would be implemented similarly... */}
-
         </div>
       </section>
     </div>
-  
-
   );
-// export default Admin;
-
+  // export default Admin;
 }
- const Admin = () => {
-    const { isAuthenticated, isAdmin, isLoading } = useAuth();
+const Admin = () => {
+  const { isAuthenticated, isAdmin, isLoading } = useAuth();
 
-    // Show loading spinner while checking authentication
-    if (isLoading) {
-      return (
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading...</p>
-          </div>
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
-      );
-    }
+      </div>
+    );
+  }
 
-    // Show login form if not authenticated or not admin
-    if (!isAuthenticated || !isAdmin) {
-      return <LoginForm />;
-    }
+  // Show login form if not authenticated or not admin
+  if (!isAuthenticated || !isAdmin) {
+    return <LoginForm />;
+  }
 
-    return <AdminDashboard />;
-  };
+  return <AdminDashboard />;
+};
 
-  export default Admin;
+export default Admin;

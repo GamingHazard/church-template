@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { useForm } from "react-hook-form";
-import { useToast } from "@/hooks/use-toast";
-import { Heart, DollarSign, MapPin, Mail, Phone, Clock } from "lucide-react";
+import { useToast } from "../hooks/use-toast";
+import { Heart, DollarSign, MapPin, Mail, Phone, Clock, PhoneCall } from "lucide-react";
 
 // Mock schema for form validation
 const donationFormSchema = {
@@ -286,11 +286,17 @@ export default function Donations() {
                     </span>
                   </p>
                   <p className="flex items-start">
+                    <Phone className="h-5 w-5 mr-3 mt-1 text-primary" />
+                    <span>
+                      <strong>Mobile Money:</strong>(+256)-7xx-xxx-xxx.
+                    </span>
+                  </p>
+                  {/* <p className="flex items-start">
                     <Mail className="h-5 w-5 mr-3 mt-1 text-primary" />
                     <span>
                       <strong>By Mail:</strong> Mail checks to FaithLife Church, 123 Faith Ave, kitetika, UG 12345.
                     </span>
-                  </p>
+                  </p> */}
                 </CardContent>
               </Card>
 
@@ -309,7 +315,16 @@ export default function Donations() {
                   </p>
                   <p className="flex items-center">
                     <Clock className="h-5 w-5 mr-3 text-primary" />
-                    <span>Service Times: Sundays at 10:00 AM</span>
+                    <span>Service Times: </span>
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    <span>Sundays: 7:00 AM & 10:00 AM</span>
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    <span>Wednesdays: 6:00 PM - 8:00 PM</span>
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    <span>Fridays: 6:00 PM - 8:00 PM </span>
                   </p>
                 </CardContent>
               </Card>
