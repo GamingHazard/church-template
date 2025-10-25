@@ -51,7 +51,7 @@ export default function EventCardHome({ event }: EventCardProps) {
           {event.description}
         </p>
 
-        <div className="space-y-2 mb-4">
+        <div className="space-y-2 mb-4 hidden">
           <div className="flex items-center text-muted-foreground text-sm">
             <Clock className="mr-2 h-4 w-4" />
             <span data-testid={`event-time-${event._id}`}>{event.time}</span>

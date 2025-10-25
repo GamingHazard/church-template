@@ -31,22 +31,27 @@ import {
   Share2,
   Circle,
   Archive,
+  Loader,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "../components/ui/skeleton";
 import { mockSermons } from "../lib/Data";
 import { useAppData } from "../hooks/use-AppData";
 import { useToast } from "../hooks/use-toast";
+import axios from "axios";
+import { Configs } from "../lib/utils";
 
 // Mock Data
 
 export default function Sermons() {
   const { toast } = useToast();
 
-  const { Sermons, loading } = useAppData();
+  const { Sermons, loading ,refresh} = useAppData();
   const [searchQuery, setSearchQuery] = useState("");
+  const [userId] = useState(localStorage.getItem("visitor_id") || "");
   const [allSermons, setAllSermons] = useState(Sermons);
   const [sermonsLoading, setSermonsLoading] = useState(true);
+  const [liking, setLiking] = useState(false);
   const [watchedSermons, setWatchedSermons] = useState<string[]>(() => {
     const saved = localStorage.getItem("watchedSermons");
     return saved ? JSON.parse(saved) : [];
@@ -95,6 +100,23 @@ export default function Sermons() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     // Search is now handled synchronously by filtering
+  };
+
+  const likeSermon = async (sermonId: string) => {
+    setLiking(true);
+    const userId = localStorage.getItem("visitor_id");
+    try {
+      const res = await axios.post(`${Configs.url}/api/sermons/like/sermon/${sermonId}`, { userId });
+      if (res.status === 200) {
+        toast({ title: `${res.data.message}` });
+        refresh();
+      }
+     } catch (error) {
+      console.log(error);
+
+     } finally {
+       setLiking(false);
+     }
   };
 
   return (
@@ -170,14 +192,16 @@ export default function Sermons() {
                               Live Now
                             </Badge>
                           ) : (
-                                                            <Badge variant="outline"><Archive className=" mr-2"/> Recorded</Badge>
-                             
+                              <Badge variant="outline" className="text-xs">
+                                <Archive size={20} className=" mr-2" /> Recorded
+                              </Badge>
                           )}
                         </span>
-                        <Badge variant="outline" className="text-xs   ">
+                        <Badge variant="outline" className="text-xs mt-4 sm:mt-0  ">
                           <EyeIcon className="inline-block mr-1 h-4 w-4" />
                           Views 10
                         </Badge>
+                         
                       </span>
                     </div>
                     <h3 className="text-xl font-semibold mb-2">
@@ -189,7 +213,7 @@ export default function Sermons() {
                       <span>{(currentSermon || allSermons[0])?.speaker}</span>
                     </div>
                     {(currentSermon || allSermons[0])?.scripture && (
-                      <div className="mt-4">
+                      <div className="mt-4 mb-5">
                         <Badge variant="outline" className="text-xs">
                           Scripture:{" "}
                           {(currentSermon || allSermons[0])?.scripture}
@@ -203,7 +227,7 @@ export default function Sermons() {
                     {(currentSermon || allSermons[0])?.scripture && (
                       <span className=" flex-row mt-10 flex items-center gap-4     p-3 text-xs text-muted-foreground">
                         <span className="flex-row cursor-pointer  flex items-center gap-1">
-                          65 Likes <ThumbsUpIcon size={16} />
+                          {(currentSermon || allSermons[0])?.likes.length || 0} Likes <ThumbsUpIcon   onClick={() => likeSermon((currentSermon || allSermons[0])?._id)} size={16} />
                         </span>
                         <span className="flex-row cursor-pointer flex-1  flex items-center gap-1">
                           Share
@@ -229,6 +253,12 @@ export default function Sermons() {
                           />
                         </span>
                         <span className="text-xs text-muted">2 hours ago</span>
+                      </span>
+                    )}
+{/* Liking Spinner */}
+                    {liking && (
+                      <span className=" flex-row  flex items-center gap-2     p-3 text-xs text-muted-foreground">  
+                        <Loader className="animate-spin" size={16} /> processing...
                       </span>
                     )}
 
@@ -421,12 +451,16 @@ export default function Sermons() {
 
                       <span className="flex items-center gap-2 sm:gap-4 p-2 sm:p-3 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1 cursor-pointer">
-                          <span className="hidden sm:inline">65</span> <ThumbsUpIcon size={14} />
+                          <span className="hidden sm:inline">65</span>{" "}
+                          <ThumbsUpIcon size={14} />
                         </span>
                         <span className="flex items-center gap-1 cursor-pointer">
-                          <span className="hidden sm:inline">Share</span> <Share2 size={14} />
+                          <span className="hidden sm:inline">Share</span>{" "}
+                          <Share2 size={14} />
                         </span>
-                        <span className="text-xs text-muted ml-auto">2h ago</span>
+                        <span className="text-xs text-muted ml-auto">
+                          2h ago
+                        </span>
                       </span>
                     </span>
                   </Card>
