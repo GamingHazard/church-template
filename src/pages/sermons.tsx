@@ -24,6 +24,34 @@ interface Sermon {
   likes: string[];
   createdAt: string;
 }
+
+interface User { 
+    name: String;
+      email: String;
+    profileImage: {
+      url: String;
+      public_id: String;
+    };
+    reminders: [
+      
+    ],
+ 
+    banned: {
+        status:  Boolean,
+      reason:  String,
+      
+       
+    },
+    
+    verificationToken: {
+      type: String,
+      
+    },
+    isVerified:  Boolean,
+    visitorId: String,
+    contact: String,
+    savedSermons: string[],
+}
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
 import {
@@ -38,6 +66,8 @@ import {
   Circle,
   Archive,
   Loader,
+  Bookmark,
+  BookmarkCheck,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "../components/ui/skeleton";
@@ -56,6 +86,10 @@ export default function Sermons() {
   const { Sermons, loading, refresh } = useAppData();
   const [searchQuery, setSearchQuery] = useState("");
   const [userId] = useState(localStorage.getItem("visitor_id") || "");
+  const [user, setUser] = useState< User | null>(() => {
+    const saved = localStorage.getItem("visitor_profile");
+    return saved ? JSON.parse(saved) : null;
+  });
   const [allSermons, setAllSermons] = useState(Sermons);
   const [sermonsLoading, setSermonsLoading] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);
@@ -91,7 +125,7 @@ export default function Sermons() {
   };
   const [currentPage, setCurrentPage] = useState(0);
   const sermonsPerPage = 6;
-  const [liking, setLiking] = useState(false);
+  const [liking, setLiking] = useState("");
   const [watchedSermons, setWatchedSermons] = useState<string[]>(() => {
     const saved = localStorage.getItem("watchedSermons");
     return saved ? JSON.parse(saved) : [];
@@ -187,7 +221,7 @@ export default function Sermons() {
   };
 
   const likeSermon = async (sermonId: string) => {
-    setLiking(true);
+    setLiking("liking");
     const userId = localStorage.getItem("visitor_id");
     try {
       const res = await axios.post(
@@ -201,9 +235,36 @@ export default function Sermons() {
     } catch (error) {
       toast({ title: `An Error occurred while liking the sermon, please try again!.` ,variant:"destructive"});
     } finally {
-      setLiking(false);
+      setLiking("");
     }
   };
+  const saveSermon = async (sermonId: string) => {
+    setLiking("saving");
+    const userId = localStorage.getItem("visitor_id");
+
+    console.log(`Saving sermon ${sermonId} for user ${userId}`);
+    try {
+      const res = await axios.post(
+        `${Configs.url}/api/sermons/save/sermon/${sermonId}`,
+        { userId }
+      );
+      if (res.status === 200) {
+        toast({ title: `${res.data.message}` });
+        if (res.data.user) {
+          localStorage.setItem("visitor_profile", JSON.stringify(res.data.user));
+          setUser(res.data.user);
+        }
+        refresh();
+      }
+    } catch (error) {
+       console.error(error);
+      toast({ title: `An Error occurred while liking the sermon, please try again!.` ,variant:"destructive"});
+    } finally {
+      setLiking("");
+    }
+  };
+
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -303,6 +364,8 @@ export default function Sermons() {
 
                     {/* Likes and Share Section */}
                     <span className="flex-row mt-10 flex items-center gap-4 p-3 text-xs text-muted-foreground">
+
+                      {/* Liking Btn */}
                       <span
                         className="flex-row cursor-pointer flex items-center gap-2 hover:text-primary transition-colors"
                         onClick={() =>
@@ -319,6 +382,23 @@ export default function Sermons() {
                         </span>
                         <ThumbsUpIcon size={16} />
                       </span>
+
+                      {/* Saving Btn */}
+                      <span
+                        className="flex-row cursor-pointer flex items-center gap-2 hover:text-primary transition-colors"
+                        onClick={() =>
+                          !liking &&
+                          saveSermon((currentSermon || allSermons[0])?._id)
+                        }
+                      >
+                        <span>
+                            {user && user?.savedSermons?.length > 0 && user?.savedSermons.includes((currentSermon || allSermons[0])?._id) ? "Saved" : "Save"}
+                          {/* Likes */}
+                        </span>
+                        {user && user?.savedSermons?.length > 0 && user?.savedSermons.includes((currentSermon || allSermons[0])?._id) ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
+                      </span>
+
+                      {/* Sharing Btn */}
                       <span
                         className="flex-row cursor-pointer flex-1 flex items-center gap-2 hover:text-primary transition-colors"
                         onClick={() => {
@@ -357,10 +437,10 @@ export default function Sermons() {
                       </span>
                     </span>
                     {/* Liking Spinner */}
-                    {liking && (
+                    {liking !== "" && (
                       <span className=" flex-row  flex items-center gap-2     p-3 text-xs text-muted-foreground">
                         <Loader className="animate-spin" size={16} />{" "}
-                        processing...
+                        {liking === "liking" ? "Liking..." : "Saving..."}
                       </span>
                     )}
 
