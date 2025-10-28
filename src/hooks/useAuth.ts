@@ -117,7 +117,7 @@ export function useAuthProvider(): AuthContextType {
 
   const login = async (username: string, password: string): Promise<boolean> => {
     
-    if (username === 'admin' && password === 'faithlife2024') {
+    if (username === 'admin' && password === "faithlife2024") {
       const adminUser: User = {
         id: '1',
         username: 'admin',

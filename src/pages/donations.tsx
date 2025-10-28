@@ -8,16 +8,35 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { useForm } from "react-hook-form";
 import { useToast } from "../hooks/use-toast";
 import { Heart, DollarSign, MapPin, Mail, Phone, Clock, PhoneCall } from "lucide-react";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-// Mock schema for form validation
-const donationFormSchema = {
-  amount: (val: string) => (val && !isNaN(parseFloat(val)) ? "" : "Amount is required and must be a number."),
-  purpose: (val: string) => (val ? "" : "Purpose is required."),
-};
+// Form validation schema using Zod
+const donationFormSchema = z.object({
+  amount: z.string()
+    .min(1, "Amount is required")
+    .refine((val) => !isNaN(parseFloat(val)), "Must be a valid number")
+    .refine((val) => parseFloat(val) > 0, "Amount must be greater than 0")
+    .refine((val) => Number.isInteger(parseFloat(val)), "Amount must be a whole number"),
+  purpose: z.string().min(1, "Purpose is required"),
+  currency: z.enum(["USD", "EUR", "GBP", "UGX"], {
+    required_error: "Please select a currency",
+  }),
+  donorName: z.string().optional(),
+  donorEmail: z.string()
+    .email("Please enter a valid email address")
+    .optional()
+    .or(z.literal("")),
+  comment: z.string()
+    .max(500, "Comment must not exceed 500 characters")
+    .optional()
+    .or(z.literal(""))
+});
 
 type DonationForm = {
   amount: string;
   purpose: string;
+  currency: string;
   donorName?: string;
   donorEmail?: string;
   comment?: string;
@@ -33,11 +52,19 @@ export default function Donations() {
     setValue,
     watch,
     reset,
-    formState: { errors },
-  } = useForm<DonationForm>({
+    trigger,
+    formState: { errors, isValid, isSubmitting },
+  } = useForm<z.infer<typeof donationFormSchema>>({
+    resolver: zodResolver(donationFormSchema),
     defaultValues: {
-      purpose: "general",
+      purpose: "offertory",
+      currency: "USD",
+      amount: "",
+      donorName: "",
+      donorEmail: "",
+      comment: ""
     },
+    mode: "onChange"
   });
 
   useEffect(() => {
@@ -70,7 +97,7 @@ export default function Donations() {
         public_key: flutterwavePublicKey,
         tx_ref: donation.id,
         amount: parseFloat(donation.amount),
-        currency: "USD",
+        currency: donation.currency,
         payment_options: "card,mobilemoney,ussd",
         customer: {
           email: donation.donorEmail || "donor@faithlifechurch.org",
@@ -164,99 +191,209 @@ export default function Donations() {
               <CardContent>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                   {/* Donation Purpose */}
-                  <div>
-                    <Label htmlFor="purpose">Donation Purpose</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="purpose" className={errors.purpose ? "text-destructive" : ""}>
+                      Donation Purpose <span className="text-destructive">*</span>
+                    </Label>
                     <Select 
                       value={selectedPurpose} 
-                      onValueChange={(value) => setValue("purpose", value as any)}
+                      onValueChange={(value) => {
+                        setValue("purpose", value as any);
+                        trigger("purpose");
+                      }}
                     >
-                      <SelectTrigger data-testid="select-donation-purpose">
+                      <SelectTrigger 
+                        data-testid="select-donation-purpose"
+                        className={errors.purpose ? "border-destructive ring-destructive" : ""}
+                      >
                         <SelectValue placeholder="Select donation purpose" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="seed">Seed</SelectItem>
+                        <SelectItem value="tithe">Tithe</SelectItem>
+                        <SelectItem value="first_fruit">First Fruit</SelectItem>
+                        <SelectItem value="offertory">Offertory</SelectItem>
                         <SelectItem value="general">General Fund</SelectItem>
                         <SelectItem value="missions">Missions</SelectItem>
                         <SelectItem value="building">Building Fund</SelectItem>
                         <SelectItem value="special">Special Projects</SelectItem>
+                        <SelectItem value="others">Others</SelectItem>
                       </SelectContent>
                     </Select>
                     {errors.purpose && (
-                      <p className="text-destructive text-sm mt-1">{errors.purpose.message}</p>
+                      <p className="text-destructive text-sm">{errors.purpose.message}</p>
                     )}
                   </div>
-
+ {/* Currency and Amount */}
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="currency" className={errors.currency ? "text-destructive" : ""}>
+                        Currency <span className="text-destructive">*</span>
+                      </Label>
+                      <Select 
+                        defaultValue="USD"
+                        onValueChange={(value: "USD" | "EUR" | "GBP" | "UGX") => {
+                          setValue("currency", value);
+                          trigger("currency");
+                        }}
+                      >
+                        <SelectTrigger 
+                          className={`w-full ${errors.currency ? "border-destructive ring-destructive" : ""}`} 
+                          data-testid="select-currency"
+                        >
+                          <SelectValue placeholder="Select currency" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="USD">USD ($)</SelectItem>
+                          <SelectItem value="EUR">EUR (€)</SelectItem>
+                          <SelectItem value="GBP">GBP (£)</SelectItem>
+                          <SelectItem value="UGX">UGX (USh)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {errors.currency && (
+                        <p className="text-destructive text-sm">{errors.currency.message}</p>
+                      )}
+                    </div>
+                    
+                   
+                  </div>
                   {/* Quick Amount Buttons */}
                   <div>
                     <Label>Quick Amounts</Label>
-                    <div className="grid grid-cols-5 gap-2 mt-2">
-                      {quickAmounts.map((amount) => (
-                        <Button
-                          key={amount}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setValue("amount", amount.toString())}
-                          data-testid={`button-amount-${amount}`}
-                        >
-                          ${amount}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
+                    <div className="grid sm:grid-cols-5 grid-cols-3 gap-2 mt-2">
+                      {quickAmounts.map((amount) => {
+                        const selectedCurrency = watch("currency");
+                        const symbol = selectedCurrency === "USD" ? "$" : 
+                                     selectedCurrency === "EUR" ? "€" : 
+                                     selectedCurrency === "GBP" ? "£" : 
+                                     selectedCurrency === "UGX" ? "USh" : "$";
+                        
+                        // Currency conversion rates (approximate)
+                        const rates = {
+                          USD: 1,
+                          EUR: 1, // 1 USD = 1 EUR (rounded)
+                          GBP: 1, // 1 USD = 1 GBP (rounded)
+                          UGX: 3800  // 1 USD = 3800 UGX (rounded)
+                        };
 
-                  {/* Custom Amount */}
-                  <div>
-                    <Label htmlFor="amount">Amount ($)</Label>
-                    <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="amount"
-                        type="number"
-                        step="0.01"
-                        min="1"
-                        placeholder="0.00"
-                        className="pl-10"
-                        {...register("amount")}
-                        data-testid="input-donation-amount"
-                      />
+                        const convertedAmount = Math.round(amount * rates[selectedCurrency as keyof typeof rates]);
+                        const formattedAmount = convertedAmount.toLocaleString('en-US', { maximumFractionDigits: 0 });
+                        
+                        // Calculate button width class based on amount length
+                        const amountLength = formattedAmount.length + symbol.length;
+                        const widthClass = amountLength > 8 
+                          ? 'col-span-2' 
+                          : selectedCurrency === 'UGX' 
+                            ? 'col-span-2'
+                            : '';
+                        
+                        return (
+                          <Button
+                            key={amount}
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setValue("amount", convertedAmount.toString())}
+                            data-testid={`button-amount-${amount}`}
+                            className={`${widthClass} text-sm font-medium transition-all hover:scale-105`}
+                          >
+                            {symbol}{formattedAmount}
+                          </Button>
+                        );
+                      })}
                     </div>
-                    {errors.amount && (
-                      <p className="text-destructive text-sm mt-1">{errors.amount.message}</p>
-                    )}
                   </div>
+                    {/* Donation Amount */}
+                   <div>
+                      <Label 
+                        htmlFor="amount" 
+                        className={errors.amount ? "text-destructive" : ""}
+                      >
+                        Amount <span className="text-destructive">*</span>
+                      </Label>
+                      <div className="relative">
+                        <DollarSign className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${
+                          errors.amount ? "text-destructive" : "text-muted-foreground"
+                        }`} />
+                        <Input
+                          id="amount"
+                          type="number"
+                          min="1"
+                          placeholder="0"
+                          className={`pl-10 ${errors.amount ? "border-destructive ring-destructive" : ""}`}
+                          {...register("amount", {
+                            onChange: (e) => {
+                              // Remove decimal points
+                              e.target.value = e.target.value.split('.')[0];
+                            }
+                          })}
+                          data-testid="input-donation-amount"
+                        />
+                      </div>
+                      {errors.amount && (
+                        <p className="text-destructive text-sm mt-1">{errors.amount.message}</p>
+                      )}
+                    </div>
 
                   {/* Donor Information */}
                   <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="donorName">Full Name (Optional)</Label>
+                    <div className="space-y-2">
+                      <Label 
+                        htmlFor="donorName" 
+                        className={`text-xs ${errors.donorName ? "text-destructive" : ""}`}
+                      >
+                        Full Name (Optional)
+                      </Label>
                       <Input
                         id="donorName"
                         {...register("donorName")}
                         placeholder="Your full name"
                         data-testid="input-donor-name"
+                        className={errors.donorName ? "border-destructive ring-destructive" : ""}
                       />
+                      {errors.donorName && (
+                        <p className="text-destructive text-sm">{errors.donorName.message}</p>
+                      )}
                     </div>
-                    <div>
-                      <Label htmlFor="donorEmail">Email Address (Optional)</Label>
+                    <div className="space-y-2">
+                      <Label 
+                        htmlFor="donorEmail" 
+                        className={`text-xs ${errors.donorEmail ? "text-destructive" : ""}`}
+                      >
+                        Email Address (Optional)
+                      </Label>
                       <Input
                         id="donorEmail"
                         type="email"
                         {...register("donorEmail")}
                         placeholder="your@email.com"
                         data-testid="input-donor-email"
+                        className={errors.donorEmail ? "border-destructive ring-destructive" : ""}
                       />
+                      {errors.donorEmail && (
+                        <p className="text-destructive text-sm">{errors.donorEmail.message}</p>
+                      )}
                     </div>
                   </div>
 
                   {/* Comment */}
-                  <div>
-                    <Label htmlFor="comment">Comment (Optional)</Label>
+                  <div className="space-y-2">
+                    <Label 
+                      htmlFor="comment" 
+                      className={errors.comment ? "text-destructive" : ""}
+                    >
+                      Comment (Optional)
+                    </Label>
                     <Textarea
                       id="comment"
                       {...register("comment")}
                       placeholder="Leave a comment or prayer request"
                       data-testid="input-donation-comment"
+                      className={errors.comment ? "border-destructive ring-destructive" : ""}
                     />
+                    {errors.comment && (
+                      <p className="text-destructive text-sm">{errors.comment.message}</p>
+                    )}
                   </div>
 
                   {/* Submit Button */}

@@ -19,6 +19,7 @@ interface Sermon {
   scripture?: string;
   isLive?: boolean;
   likes: string[];
+  createdAt: string;
 }
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -171,11 +172,7 @@ export default function Sermons() {
                         videoUrl={
                           (currentSermon || allSermons[0])?.videoUrl || ""
                         }
-                        thumbnailUrl={
-                          (currentSermon || allSermons[0])?.thumbnail?.url ||
-                          (currentSermon || allSermons[0])?.thumbnailUrl ||
-                          "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"
-                        }
+                         
                         title={(currentSermon || allSermons[0])?.title}
                         autoplay={false}
                       />
@@ -204,13 +201,13 @@ export default function Sermons() {
                             </Badge>
                           )}
                         </span>
-                        <Badge
+                        {/* <Badge
                           variant="outline"
                           className="text-xs mt-4 sm:mt-0  "
                         >
                           <EyeIcon className="inline-block mr-1 h-4 w-4" />
                           Views 10
-                        </Badge>
+                        </Badge> */}
                       </span>
                     </div>
                     <h3 className="text-xl font-semibold mb-2">

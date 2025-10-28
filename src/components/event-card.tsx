@@ -47,8 +47,7 @@ export default function EventCard({ event }: EventCardProps) {
   const { toast } = useToast();
   const [isSettingReminder, setIsSettingReminder] = useState(false);
 
-  // Debug log to check if refresh is defined
-  console.log('AppData context:', { refresh, setEvents });
+   
 
   // Check if event is upcoming (not past)
   const isUpcoming = isFuture(new Date(event.date));
