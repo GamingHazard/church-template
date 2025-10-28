@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
+import { useRoute } from "wouter";
 import { Card, CardContent } from "../components/ui/card";
 import { VideoPlayer } from "../components/video-player";
 import { AudioPlayer } from "../components/audio-player";
+import { Configs } from "../lib/utils";
+import axios from "axios";
 import ReactPaginate from "react-paginate";
 import { Button } from "../components/ui/button";
 
@@ -41,19 +44,51 @@ import { Skeleton } from "../components/ui/skeleton";
 import { mockSermons } from "../lib/Data";
 import { useAppData } from "../hooks/use-AppData";
 import { useToast } from "../hooks/use-toast";
-import axios from "axios";
-import { Configs } from "../lib/utils";
+ 
 
 // Mock Data
 
 export default function Sermons() {
   const { toast } = useToast();
-
+  const [match, params] = useRoute("/sermons/:sermonId");
+  const sermonId = params?.sermonId;
+  
   const { Sermons, loading, refresh } = useAppData();
   const [searchQuery, setSearchQuery] = useState("");
   const [userId] = useState(localStorage.getItem("visitor_id") || "");
   const [allSermons, setAllSermons] = useState(Sermons);
   const [sermonsLoading, setSermonsLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
+  const [fetchingSermon, setFetchingSermon] = useState(false);
+
+  // Function to fetch a specific sermon by ID
+  const fetchSermonById = async (id: string) => {
+    setFetchingSermon(true);
+    try {
+      const response = await axios.get(`${Configs.url}/api/sermons/sermon/${id}`);
+      if (response.status === 200 && response.data) {
+        setCurrentSermon(response.data.sermon);
+        // Add to watched sermons
+        if (!watchedSermons.includes(response.data.sermon._id)) {
+          const newWatched = [...watchedSermons, response.data.sermon._id];
+          setWatchedSermons(newWatched);
+          localStorage.setItem("watchedSermons", JSON.stringify(newWatched));
+        }
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error fetching sermon:', error);
+      toast({
+        title: "Error loading sermon",
+        description: "Could not load the requested sermon. Please try again.",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setFetchingSermon(false);
+    }
+  };
   const [currentPage, setCurrentPage] = useState(0);
   const sermonsPerPage = 6;
   const [liking, setLiking] = useState(false);
@@ -80,16 +115,49 @@ export default function Sermons() {
   };
 
   useEffect(() => {
-    if (!loading && Sermons?.length > 0) {
-      const filteredSermons = Sermons.filter((sermon) => sermon.isLive);
-
-      setAllSermons(Sermons);
-      if (!currentSermon && filteredSermons.length > 0) {
-        setCurrentSermon(filteredSermons?.[0] || null);
+    const initializeSermons = async () => {
+      if (!loading && Sermons?.length > 0) {
+        setAllSermons(Sermons);
+        
+        if (initialLoad) {
+          if (sermonId) {
+            // First try to fetch the specific sermon from API
+            const success = await fetchSermonById(sermonId);
+            
+            if (!success) {
+              // Fallback to local data if API fails
+              const targetSermon = Sermons.find(sermon => sermon._id === sermonId);
+              if (targetSermon) {
+                setCurrentSermon(targetSermon);
+                if (!watchedSermons.includes(targetSermon._id)) {
+                  const newWatched = [...watchedSermons, targetSermon._id];
+                  setWatchedSermons(newWatched);
+                  localStorage.setItem("watchedSermons", JSON.stringify(newWatched));
+                }
+              } else {
+                toast({
+                  title: "Sermon not found",
+                  description: "The requested sermon could not be found.",
+                  variant: "destructive"
+                });
+              }
+            }
+          } else {
+            // If no sermon ID, load the latest live sermon or first sermon
+            const filteredSermons = Sermons.filter((sermon) => sermon.isLive);
+            if (!currentSermon && filteredSermons.length > 0) {
+              setCurrentSermon(filteredSermons[0] || Sermons[0]);
+            }
+          }
+          setInitialLoad(false);
+        }
+        
+        setSermonsLoading(false);
       }
-      setSermonsLoading(false);
-    }
-  }, [loading, Sermons, currentSermon]);
+    };
+
+    initializeSermons();
+  }, [loading, Sermons, currentSermon, sermonId, initialLoad, watchedSermons, toast, fetchSermonById]);
 
   const filteredSermons = allSermons.filter(
     (sermon) =>
@@ -166,15 +234,18 @@ export default function Sermons() {
               <Card className="overflow-hidden shadow-lg">
                 <CardContent className="p-0">
                   <div className="relative">
-                    {(currentSermon || allSermons[0]) && (
+                    {fetchingSermon ? (
+                      <div className="w-full aspect-video bg-muted flex items-center justify-center">
+                        <Loader className="w-8 h-8 animate-spin" />
+                      </div>
+                    ) : (currentSermon || allSermons[0]) && (
                       <VideoPlayer
                         key={(currentSermon || allSermons[0])?._id}
                         videoUrl={
                           (currentSermon || allSermons[0])?.videoUrl || ""
                         }
-                         
                         title={(currentSermon || allSermons[0])?.title}
-                        autoplay={false}
+                        autoplay={sermonId ? true : false}
                       />
                     )}
                   </div>

@@ -22,6 +22,7 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/about" component={About} />
           <Route path="/sermons" component={Sermons} />
+          <Route path="/sermons/:sermonId" component={Sermons} />
           <Route path="/events" component={Events} />
           <Route path="/donations" component={Donations} />
           <Route path="/admin" component={Admin} />
