@@ -15,19 +15,7 @@ import { VideoPlayer } from "../components/video-player";
 
 
 
-interface Sermon {
-  _id: string;
-  title: string;
-  speaker: string;
-  date: string;
-  description: string;
-  videoUrl: string;
-  thumbnailUrl?: string;
-  thumbnail?: {
-    url: string;
-  };
-  isLive?: boolean;
-}
+ 
  
 
  
@@ -264,7 +252,6 @@ if (Sermons) {
                 <CardContent className="p-0">
                   <VideoPlayer
                     videoUrl={currentSermon?.videoUrl || ""}
-                    thumbnailUrl={currentSermon?.thumbnailUrl || currentSermon?.thumbnail?.url}
                     title={currentSermon?.title}
                     autoplay={false}
                   />

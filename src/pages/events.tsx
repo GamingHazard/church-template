@@ -21,6 +21,7 @@ interface EventItem {
   thumbnailUrl?: string;
   category: "general" | "service" | "youth" | "community";
   thumbnail: { url?: string; public_id?: string }
+  reminders: string[];
 }
 
 export default function Events() {
