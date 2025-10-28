@@ -7,7 +7,7 @@ import { Textarea } from "../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { useForm } from "react-hook-form";
 import { useToast } from "../hooks/use-toast";
-import { Heart, DollarSign, MapPin, Mail, Phone, Clock, PhoneCall } from "lucide-react";
+import { Heart, DollarSign, MapPin, Mail, Phone, Clock, EuroIcon,PoundSterling, } from "lucide-react";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -297,7 +297,7 @@ export default function Donations() {
                             data-testid={`button-amount-${amount}`}
                             className={`${widthClass} text-sm font-medium transition-all hover:scale-105`}
                           >
-                            {symbol}{formattedAmount}
+                            {symbol}{" "}{formattedAmount}
                           </Button>
                         );
                       })}
@@ -311,10 +311,16 @@ export default function Donations() {
                       >
                         Amount <span className="text-destructive">*</span>
                       </Label>
-                      <div className="relative">
-                        <DollarSign className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${
+                    <div className="relative">
+                      {/* Dynamic Currency Icon */}
+                      <div className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${
                           errors.amount ? "text-destructive" : "text-muted-foreground"
-                        }`} />
+                        }`}>
+                        {watch("currency") === "USD" && <DollarSign className="h-4 w-4" />}
+                        {watch("currency") === "EUR" && <EuroIcon className="h-4 w-4" />}
+                        {watch("currency") === "GBP" && <PoundSterling className="h-4 w-4" />}
+                        {watch("currency") === "UGX" && <span className="text-xs font-medium">USh</span>}
+                      </div>
                         <Input
                           id="amount"
                           type="number"
