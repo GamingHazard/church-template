@@ -29,7 +29,10 @@ interface Sermon {
   series?: string;
   isLive?: boolean;
   likes: string[];
-  thumbnail: { url?: string; public_id?: string }}
+  thumbnail: { url?: string; public_id?: string }
+  createdAt: string;
+}
+  
 
 interface AppData {
   events: Event[];
