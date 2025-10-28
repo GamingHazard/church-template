@@ -39,6 +39,7 @@ interface AppData {
   loading: boolean;
   error: string | null;
   refresh: () => void;
+  setEvents: (events: Event[]) => void;
 }
   export type GalleryImage = {
   _id: string;
@@ -68,37 +69,57 @@ export const useAppData = (): AppData => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  const updateEvents = useCallback((newEvents: Event[]) => {
+    setEvents(newEvents);
+  }, []);
+
   const fetchData = useCallback(async () => {
-   
     setError(null);
+    setLoading(true);
 
     try {
       // Fetch both endpoints in parallel
-      const [eventsRes, sermonsRes,galleryRes,pastorsRes] = await Promise.all([
+      const [eventsRes, sermonsRes, galleryRes, pastorsRes] = await Promise.all([
         axios.get(`${Configs.url}/api/events/all`),
         axios.get(`${Configs.url}/api/sermons/all`),
         axios.get(`${Configs.url}/api/gallery/all`),
         axios.get(`${Configs.url}/api/pastors/all`),
       ]);
+ 
 
-      setEvents(eventsRes.data.events || []);
-      setSermons(sermonsRes.data.sermons || []);
-      setGallery(galleryRes.data.gallery || []);
-      setPastors(pastorsRes.data.pastors || []);
+      // Batch state updates
+      const updates = () => {
+        setEvents(eventsRes.data.events || []);
+        setSermons(sermonsRes.data.sermons || []);
+        setGallery(galleryRes.data.gallery || []);
+        setPastors(pastorsRes.data.pastors || []);
+         // Force refresh
+      };
+
+      updates();
       
     } catch (err: any) {
       console.error("API Error:", err);
       setError(err.response?.data?.message || "Failed to load data");
-    }  
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Automatically fetch on mount
+  // Effect to fetch data on mount and when updateTrigger changes
   useEffect(() => {
-    setLoading(true);
-    fetchData().then(() => {
-      setLoading(false);
-    });
+    console.log('Effect triggered, fetching data...');
+    fetchData();
   }, [fetchData]);
 
-  return { events, Sermons,gallery,Pastors, loading, error, refresh: fetchData };
+  return { 
+    events, 
+    Sermons,
+    gallery,
+    Pastors, 
+    loading, 
+    error, 
+    refresh: fetchData, 
+    setEvents: updateEvents // Use our new memoized setter
+  };
 };

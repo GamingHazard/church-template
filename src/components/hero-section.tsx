@@ -86,7 +86,7 @@ export default function HeroSection() {
         ))}
       </div>
 
-      <div className="relative z-10 w-full h-full mx-auto px-4 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center">
+      <div className="absolute left-0  z-10 w-full h-full mx-auto px-4 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center" >
         <div className="mb-6">
           <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight" data-testid="hero-title">
             Welcome Home

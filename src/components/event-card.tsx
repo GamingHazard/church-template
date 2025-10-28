@@ -11,6 +11,7 @@ import { useToast } from "../hooks/use-toast";
 import { useAppData } from "../hooks/use-AppData";
 import axios from "axios";
 import { Configs } from "../lib/utils";
+import { useAuth } from "../hooks/useAuth";
 
 // Define Event type locally
 export type Event = {
@@ -37,65 +38,90 @@ interface EventCardProps {
 }
 
 export default function EventCard({ event }: EventCardProps) {
-  const { refresh } = useAppData();
+  const appData = useAppData();
+  const { refresh, setEvents } = appData;
   const [reminderEmail, setReminderEmail] = useState("");
   const [reminderPhone, setReminderPhone] = useState("");
-  const [visitorId] = useState(localStorage.getItem("visitor_id") || "");
-  const [user, setUser] = useState<User | null>(null);
+  const [userId] = useState(localStorage.getItem("visitor_id") || "");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
   const [isSettingReminder, setIsSettingReminder] = useState(false);
+
+  // Debug log to check if refresh is defined
+  console.log('AppData context:', { refresh, setEvents });
 
   // Check if event is upcoming (not past)
   const isUpcoming = isFuture(new Date(event.date));
 
   const handleReminderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const userId = localStorage.getItem("visitor_id");
-
-    if (!reminderEmail && !reminderPhone) {
-      toast({
-        title: "Error",
-        description: "Please provide either email or phone number",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsSettingReminder(true);
 
     try {
-     
+      // Input validation
+      if (!reminderEmail && !reminderPhone) {
+        throw new Error("Please provide either email or phone number");
+      }
 
-       
+      // Email validation
+      if (reminderEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reminderEmail)) {
+        throw new Error("Please provide a valid email address");
+      }
+
+      
+
+      // Check if userId exists
+      if (!userId) {
+        throw new Error("User identification not found. Please refresh the page");
+      }
+
+      // Make API request
       const response = await axios.post(`${Configs.url}/api/events/reminders/new`, {
         eventId: event._id,
         userId,
-        contact: reminderPhone,
-        email: reminderEmail,
+        contact: reminderPhone ? reminderPhone.replace(/[\s-]/g, '') : undefined,
+        email: reminderEmail || undefined,
         eventTitle: event.title,
+        eventDate: event.date,
+        eventTime: event.time,
+        eventLocation: event.location
       });
 
-      if (response.status === 200) {
-        toast({
-          title: "Reminder Set!",
-          description: `You'll be notified about "${event.title}"`,
-        });
+      if (response.status === 200 && response.data) {
+        try {
+          // Update visitor profile if provided
+          if (response.data.user) {
+            localStorage.setItem("visitor_profile", JSON.stringify(response.data.user));
+          }
 
-        if (response.data.user) {
-          localStorage.setItem("visitor_profile", JSON.stringify(response.data.user));
-          setUser(response.data.user);
+          // Update the events state only once with the response data
+          if (response.data.events) {
+            setEvents(response.data.events);
+          }
+
+          // Show success message and reset form
+          toast({
+            title: "Reminder Set Successfully!",
+            description: `You'll be notified about "${event.title}" on ${format(new Date(event.date), 'MMMM d')} at ${event.time}`,
+          });
+
+          setIsDialogOpen(false);
+          setReminderEmail("");
+          setReminderPhone("");
+        } catch (refreshError) {
+          console.error('Error during update:', refreshError);
+          throw refreshError;
         }
-        refresh();
-      }
-      
-      setIsDialogOpen(false);
-      setReminderEmail("");
-      setReminderPhone("");
+}
     } catch (error) {
+      // Error handling
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : (error as any)?.response?.data?.err || "Failed to set reminder";
+
       toast({
-        title: "Error",
-        description: "Failed to set reminder. Please try again.",
+        title: "Error Setting Reminder",
+        description: errorMessage,
         variant: "destructive",
       });
       console.error("Error setting reminder:", error);
@@ -157,10 +183,10 @@ export default function EventCard({ event }: EventCardProps) {
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button 
-                className={`w-full bg-secondary text-${event?.reminders.includes(visitorId) ? "green-500" : "white"} hover:opacity-90 bg-${event?.reminders.includes(visitorId) ? "current" : "secondary"}`}
+                className={`w-full bg-secondary text-${event?.reminders.includes(userId) ? "green-500" : "white"} hover:opacity-90 bg-${event?.reminders.includes(userId) ? "current" : "secondary"}`}
                 data-testid={`button-set-reminder-${event._id}`}
               >
-                {isSettingReminder ? "Setting..." : event?.reminders.includes(visitorId) ? "Reminder Set" : "Set Reminder"}
+                {isSettingReminder ? "Setting..." : event?.reminders.includes(userId) ? "Reminder Set" : "Set Reminder"}
               </Button>
               
                       </DialogTrigger>

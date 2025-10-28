@@ -26,6 +26,8 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
+  refreshVisitor: () => Promise<void>; // Add ability to manually refresh visitor data
+  visitorError: string | null; // Add error state for visitor operations
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,59 +45,73 @@ export function useAuthProvider(): AuthContextType {
   const [visitorId, setVisitorId] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
-  
-  // Check for stored authentication on load
-  useEffect(() => {
-    const storedUser = localStorage.getItem('auth_user');
-     const storedVisitorId = localStorage.getItem('visitor_id');
-     const storedVisitorProfile = localStorage.getItem('visitor_profile');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-      } catch (error) {
-        localStorage.removeItem('auth_user');
-      }
-    }
+  const [visitorError, setVisitorError] = useState<string | null>(null);
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY = 1000; // 1 second
 
-    if (storedVisitorId) {
-      setVisitorId(storedVisitorId)
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+  
+  const createVisitorProfile = async (retryCount = 0): Promise<Visitor | null> => {
+    const storedVisitorId = localStorage.getItem('visitor_id');
+    try {
+      setVisitorError(null);
       
-       
-    }else {
-        createVisitorProfile();
-      }
+      // Generate new UUID if no stored visitor ID exists
+      const visitorUuid: string = storedVisitorId || uuidv4();
+      const isNewVisitor = !storedVisitorId;
 
+      // Try to create/retrieve visitor profile
+      const response = await axios.post(`${Configs.url}/api/news-letter/new/visitor`, {
+        uuid: visitorUuid
+      });
 
-    setIsLoading(false);
-     
-  }, []);
-
-  const createVisitorProfile = async ()  => {
-   
-    
-      try { 
-        const newVisitorId = uuidv4();
-
-         
-        
-        const response = await axios.post(`${Configs.url}/api/news-letter/new/visitor`, {
-          uuid: newVisitorId,
-        });
-        if (response.status === 201) {
-          const data = response.data.visitor as Visitor;
-          localStorage.setItem('visitor_id', newVisitorId);
-          localStorage.setItem('visitor_profile', JSON.stringify(data));
-          setVisitorId(newVisitorId);
-      setVisitor(data);
+      if (response.status === 201 || response.status === 200 && response.data.visitor) {
+        // Store the visitor ID if it's new
+        if (isNewVisitor) {
+          localStorage.setItem('visitor_id', visitorUuid);
         }
-
-      } catch (error) {
-        console.error('Error creating visitor profile:', error);
-        return null;
+        
+        // Update visitor ID and visitor state
+        setVisitorId(visitorUuid);
+        
+        console.log(isNewVisitor ? "New visitor created" : "Existing visitor retrieved");
+        return response.data.visitor;
       }
-    }  
+      
+      throw new Error('Invalid response from server');
+    } catch (error) {
+      console.error('Error in visitor profile creation:', error);
+      
+      // Implement retry logic
+      if (retryCount < MAX_RETRIES) {
+        await delay(RETRY_DELAY * (retryCount + 1)); // Exponential backoff
+        return createVisitorProfile(retryCount + 1);
+      }
+      
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create/retrieve visitor profile';
+      setVisitorError(errorMessage);
+      return null;
+    }
+  };
+
+  const refreshVisitor = async () => {
+    if (!visitorId) return;
+    
+    try {
+      setVisitorError(null);
+      const response = await axios.get(`${Configs.url}/api/news-letter/visitor/${visitorId}`);
+      
+      if (response.status === 200 && response.data.visitor) {
+        setVisitor(response.data.visitor);
+      } else {
+        throw new Error('Failed to refresh visitor profile');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to refresh visitor profile';
+      setVisitorError(errorMessage);
+      console.error('Error refreshing visitor profile:', error);
+    }
+  };
    
   
 
@@ -119,6 +135,46 @@ export function useAuthProvider(): AuthContextType {
     localStorage.removeItem('auth_user');
   };
 
+    // Check for stored authentication on load
+  useEffect(() => {
+    let isActive = true;
+    const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+    
+    const initialize = async () => {
+      // Load stored user
+      const storedUser = localStorage.getItem('auth_user');
+      if (storedUser && isActive) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+        } catch (error) {
+          localStorage.removeItem('auth_user');
+        }
+      }
+
+      // Create or retrieve visitor profile
+      await createVisitorProfile();
+      if (isActive) {
+        setIsLoading(false);
+      }
+    };
+
+    initialize();
+
+    // Set up periodic refresh
+    const refreshInterval = setInterval(() => {
+      if (visitorId) {
+        refreshVisitor();
+      }
+    }, REFRESH_INTERVAL);
+
+    // Cleanup function
+    return () => {
+      isActive = false;
+      clearInterval(refreshInterval);
+    };
+  }, [visitorId]); // Add visitorId as dependency
+
   return {
     user,
     visitor,
@@ -126,7 +182,9 @@ export function useAuthProvider(): AuthContextType {
     isAdmin: user?.role === 'admin',
     login,
     logout,
-    isLoading
+    isLoading,
+    refreshVisitor,
+    visitorError
   };
 }
 

@@ -1,21 +1,101 @@
 import { useEffect, useState } from "react";
 import { useSermonContext } from "../contexts/SermonContext";
 
+import axios from "axios";
+import { Configs } from "../lib/utils";
+import { useAppData } from "../hooks/use-AppData";
+
 interface VideoPlayerProps {
   videoUrl: string;
-  thumbnailUrl?: string;
   title?: string;
   autoplay?: boolean;
   isLiveStream?: boolean;
+  sermonId?: string; // Add sermon ID prop
 }
 
-export function VideoPlayer({ videoUrl, thumbnailUrl, title, autoplay: propAutoplay = false, isLiveStream = false }: VideoPlayerProps) {
+declare global {
+  interface Window {
+    YT: {
+      Player: any;
+      PlayerState: {
+        PLAYING: number;
+        PAUSED: number;
+        ENDED: number;
+      };
+    };
+    onYouTubeIframeAPIReady: () => void;
+  }
+}
+
+export function VideoPlayer({ 
+  videoUrl, 
+  title, 
+  autoplay: propAutoplay = false, 
+  isLiveStream = false,
+  sermonId 
+}: VideoPlayerProps) {
   const [videoId, setVideoId] = useState<string | null>(null);
   const [isLive, setIsLive] = useState(isLiveStream);
   const { currentSermon } = useSermonContext();
+  const [hasTrackedView, setHasTrackedView] = useState(false);
+  const [player, setPlayer] = useState<any>(null);
+  const{refresh} = useAppData();
   
   // Autoplay if there's a current sermon or if autoplay prop is true
   const autoplay = currentSermon !== null || propAutoplay;
+
+ // --- inside your component ---
+const trackVideoView = async () => {
+  if (hasTrackedView || !sermonId) return; // prevent duplicates in same session
+
+  try {
+    const userId = localStorage.getItem('visitor_id') || crypto.randomUUID();
+    if (!localStorage.getItem('visitor_id')) {
+      localStorage.setItem('visitor_id', userId);
+    }
+
+    // Optional: prevent redundant request if this view was already recorded locally
+    const viewedKey = `viewed_${sermonId}_${userId}`;
+    if (localStorage.getItem(viewedKey)) {
+      console.log("Already viewed (local)");
+      return;
+    }
+
+    console.log("Tracking view for sermon:", sermonId);
+    const response = await axios.post(`${Configs.url}/api/views/sermon/${sermonId}/${userId}`);
+
+    if (response.status === 200 || response.status === 201) {
+      localStorage.setItem(viewedKey, "true"); // mark locally as viewed
+      setHasTrackedView(true);
+      refresh(); // update UI
+    }
+  } catch (error) {
+    console.error("Error tracking view:", error);
+  }
+};
+
+
+  // Initialize YouTube API
+  useEffect(() => {
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+
+    // Setup YouTube API callback
+    window.onYouTubeIframeAPIReady = () => {
+      if (videoId) {
+        const newPlayer = new window.YT.Player(`youtube-player-${videoId}`);
+        setPlayer(newPlayer);
+      }
+    };
+
+    return () => {
+      if (player) {
+        player.destroy();
+      }
+    };
+  }, [videoId]);
 
   useEffect(() => {
     if (!videoUrl) {
@@ -89,19 +169,42 @@ export function VideoPlayer({ videoUrl, thumbnailUrl, title, autoplay: propAutop
     autoplay ? '1' : '0'
   }&origin=${encodeURIComponent(window.location.origin)}&enablejsapi=1&rel=0&modestbranding=1${
     isLive ? '&live=1' : ''
+  }&controls=1&showinfo=0&playlist=${videoId}&playsinline=1&fs=1${
+    !autoplay ? '&start=0' : ''
   }`;
 
   return (
-    <div className="w-full aspect-video bg-black">
-      <iframe
-        src={embedUrl}
-        title={title || "Video Player"}
-        className="w-full h-full"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        
-        frameBorder="0"
-      />
-    </div>
+   <div className="w-full aspect-video bg-black">
+    <iframe
+      id={`youtube-player-${videoId}`}
+      src={embedUrl}
+      title={title || "Video Player"}
+      className="w-full h-full"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowFullScreen
+      frameBorder="0"
+      onLoad={() => {
+        // Wait a bit to ensure the iframe is ready
+        const checkPlayer = setInterval(() => {
+          if (window.YT && window.YT.Player) {
+            clearInterval(checkPlayer);
+
+            const newPlayer = new window.YT.Player(`youtube-player-${videoId}`, {
+              events: {
+                onStateChange: (event: any) => {
+                  // Detect when user actually clicks play
+                  if (event.data === window.YT.PlayerState.PLAYING) {
+                    trackVideoView();
+                  }
+                },
+              },
+            });
+
+            setPlayer(newPlayer);
+          }
+        }, 300);
+      }}
+    />
+  </div>
   );
 }

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "../components/ui/card";
 import { VideoPlayer } from "../components/video-player";
 import { AudioPlayer } from "../components/audio-player";
+import ReactPaginate from "react-paginate";
 import { Button } from "../components/ui/button";
 
 interface Sermon {
@@ -52,6 +53,8 @@ export default function Sermons() {
   const [userId] = useState(localStorage.getItem("visitor_id") || "");
   const [allSermons, setAllSermons] = useState(Sermons);
   const [sermonsLoading, setSermonsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(0);
+  const sermonsPerPage = 6;
   const [liking, setLiking] = useState(false);
   const [watchedSermons, setWatchedSermons] = useState<string[]>(() => {
     const saved = localStorage.getItem("watchedSermons");
@@ -97,9 +100,20 @@ export default function Sermons() {
 
   const displaySermons = searchQuery ? filteredSermons : allSermons;
   const searchLoading = false; // No async search, so always false
+  
+  // Calculate pagination
+  const pageCount = Math.ceil(displaySermons.length / sermonsPerPage);
+  const offset = currentPage * sermonsPerPage;
+  const currentSermons = displaySermons.slice(offset, offset + sermonsPerPage);
+
+  const handlePageChange = ({ selected }: { selected: number }) => {
+    setCurrentPage(selected);
+    window.scrollTo({ top: document.getElementById('sermon-grid')?.offsetTop || 0, behavior: 'smooth' });
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setCurrentPage(0); // Reset to first page when searching
     // Search is now handled synchronously by filtering
   };
 
@@ -543,7 +557,7 @@ export default function Sermons() {
           </div>
 
           {/* Sermon Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 px-2 sm:px-0">
+          <div id="sermon-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 px-2 sm:px-0">
             {sermonsLoading || (searchQuery && searchLoading) ? (
               Array.from({ length: 6 }).map((_, i) => (
                 <Card key={i} className="overflow-hidden">
@@ -559,7 +573,7 @@ export default function Sermons() {
                 </Card>
               ))
             ) : displaySermons && displaySermons.length > 0 ? (
-              displaySermons.map((sermon) => (
+              currentSermons.map((sermon) => (
                 <Card
                   key={sermon._id}
                   className={`overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] ${
@@ -704,6 +718,25 @@ export default function Sermons() {
               </div>
             )}
           </div>
+          
+          {/* Pagination */}
+          {displaySermons.length > sermonsPerPage && (
+            <div className="mt-8 flex justify-center">
+              <ReactPaginate
+                previousLabel="Previous"
+                nextLabel="Next"
+                pageCount={pageCount}
+                onPageChange={handlePageChange}
+                containerClassName="flex gap-2 items-center"
+                previousClassName="px-3 py-1 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+                nextClassName="px-3 py-1 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+                pageClassName="px-3 py-1 border rounded-md hover:bg-muted"
+                activeClassName="!bg-primary text-primary-foreground"
+                disabledClassName="opacity-50 cursor-not-allowed"
+                forcePage={currentPage}
+              />
+            </div>
+          )}
         </div>
       </section>
     </div>
