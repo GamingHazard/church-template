@@ -169,16 +169,12 @@ export type User = {
   _id: string;
   name?: string;
   email?: string;
-  // profile image url (optional)
   profileImage?: { url?: string; public_id?: string };
-  // normalized count of reminders (optional)
-  remindersCount?: number;
-  // legacy boolean flag some responses may include
   reminder?: boolean;
-  // banned flag (optional)
   banned?: boolean;
-  subscribedAt?: string | null;
+  createdAt?: string | null;
   imageUrl?: string;
+  contact?:string
 };
 
 const mockNewsletters: Newsletter[] = [
@@ -1287,16 +1283,10 @@ function AdminDashboard() {
             s.email?.split("@")?.[0] ||
             `User ${i}`,
           email: s.email || "",
+          contact:s.contact,
           profileImage: s.profileImage || s.pr || s.avatarUrl || "",
-          remindersCount:
-            typeof s.remindersCount === "number"
-              ? s.remindersCount
-              : s.reminderCount || (s.reminder ? 1 : 0),
-          reminder: !!(
-            s.reminder ||
-            (s.remindersCount && s.remindersCount > 0)
-          ),
-          subscribedAt: s.subscribedAt || s.createdAt || null,
+           
+          createdAt: s.createdAt || s.createdAt || null,
           banned: !!s.banned,
         }));
         setUsers(normalized);
@@ -2109,14 +2099,11 @@ function AdminDashboard() {
                             </TableCell>
                             <TableCell>{sermon.speaker}</TableCell>
                             <TableCell>
-                              {sermon.scripture ? (
+                              {sermon.scripture && sermon.scripture !== "no  scripture" ||sermon.scripture!=="no-scripture" && (
                                 <Badge variant="outline" className="text-xs">
                                   {sermon.scripture}
                                 </Badge>
-                              ) : (
-                                <span className="text-muted-foreground text-sm">
-                                  -
-                                </span>
+                               
                               )}
                             </TableCell>
                             <TableCell>
@@ -2203,8 +2190,8 @@ function AdminDashboard() {
             {/* Users Tab */}
             <TabsContent value="users">
               <div className="grid gap-8 md:grid-cols-3">
-                <div className="md:col-span-2">
-                  <Card>
+                <div className="md:col-span-2 ">
+                  <Card className="max-h-[400px] min-h-[400px] overflow-y-auto">
                     <CardHeader>
                       <CardTitle className="flex items-center">
                         <Users className="mr-2 h-5 w-5" />
@@ -2216,6 +2203,7 @@ function AdminDashboard() {
                         <TableHeader>
                           <TableRow>
                             <TableHead>User</TableHead>
+                            <TableHead>Contact</TableHead>
                             <TableHead>Subscribed</TableHead>
                             {users.filter((u) => u.reminder).length > 0 && (
                               <TableHead>Reminders</TableHead>
@@ -2247,19 +2235,18 @@ function AdminDashboard() {
                           ) : users && users.length > 0 ? (
                             users.map((user, index) => {
                               const key = user._id || index;
-                              // ensure we show 0 if remindersCount is 0; otherwise derive from reminders array or fallback to 0
-
+                             
                               // friendly fallback values
                               const displayName =
                                 user.name?.trim() || `User ${index + 1}`;
                               const displayEmail =
                                 user.email?.trim() || "Visitor";
-                              // const displayPhone = user.phone?.trim() || "—";
-                              const subscribedAt = user.subscribedAt
+                              const displayPhone = user.contact?.trim() || "no contact!";
+                              const subscribedAt = user.createdAt
                                 ? (() => {
                                     try {
                                       return format(
-                                        new Date(user.subscribedAt),
+                                        new Date(user.createdAt),
                                         "MMM d, yyyy"
                                       );
                                     } catch {
@@ -2295,18 +2282,20 @@ function AdminDashboard() {
                                     </div>
                                   </TableCell>
 
-                                  {/* Phone (keeps column alignment even if you don't use phone) */}
-                                  {/* <TableCell className="text-gray-400">{displayPhone}</TableCell> */}
+                                  
 
+                                  {/* contact */}
+                                  <TableCell className="text-gray-400 p-1">
+                                    {displayPhone}
+                                  </TableCell>
+
+                                  
                                   {/* Subscribed at */}
                                   <TableCell className="text-gray-400 p-1">
                                     {subscribedAt}
                                   </TableCell>
 
-                                  {/* Reminders count */}
-                                  {/* <TableCell className="text-center text-gray-400">
-          {remindersCount}
-        </TableCell> */}
+                                 
 
                                   {/* Actions */}
                                   <TableCell>
@@ -2390,7 +2379,6 @@ function AdminDashboard() {
                                     >
                                       Copy Invite Link
                                     </Button>
-                                    {/* <Button onClick={() => toast({ title: 'Import CSV not configured' })}>Import CSV</Button> */}
                                   </div>
                                 </div>
                               </TableCell>
@@ -2402,7 +2390,7 @@ function AdminDashboard() {
                               variant="outline"
                               onClick={() => {
                                 try {
-                                  const rootUrl = `${window.location.origin}/`; // ← only the base URL
+                                  const rootUrl = `${window.location.origin}/`; 
                                   navigator.clipboard?.writeText(rootUrl);
                                   toast({ title: "Invite link copied" });
                                 } catch (e) {
@@ -2415,7 +2403,6 @@ function AdminDashboard() {
                             >
                               Copy Invite Link
                             </Button>
-                            {/* <Button onClick={() => toast({ title: 'Import CSV not configured' })}>Import CSV</Button> */}
                           </div>
                         </TableBody>
                       </Table>
