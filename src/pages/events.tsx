@@ -21,7 +21,7 @@ interface EventItem {
   thumbnailUrl?: string;
   category: "general" | "service" | "youth" | "community";
   thumbnail: { url?: string; public_id?: string }
-  reminders: string[];
+  reminders?: string[];
 }
 
 export default function Events() {
@@ -151,7 +151,7 @@ export default function Events() {
           </Card>
         ))
       ) : currentEvents && currentEvents.length > 0 ? (
-        currentEvents.map((event) => <EventCard key={event._id} event={event} />)
+        currentEvents.map((event) => <EventCard key={event._id} event={{ ...event, id: event._id, reminders: event.reminders || [] }} />)
       ) : (
         <div className="col-span-full text-center py-12">
           <p className="text-muted-foreground text-lg" data-testid="no-events">
@@ -172,8 +172,8 @@ export default function Events() {
           containerClassName="flex gap-2 items-center"
           previousClassName="px-3 py-1 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
           nextClassName="px-3 py-1 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-          pageClassName="px-3 py-1 border rounded-md hover:bg-muted"
-          activeClassName="!bg-primary text-primary-foreground"
+          pageClassName="px-3 py-1  rounded-md hover:bg-muted"
+          activeClassName="!bg-primary  text-primary-foreground"
           disabledClassName="opacity-50 cursor-not-allowed"
           forcePage={currentPage}
         />
