@@ -1162,7 +1162,6 @@ function AdminDashboard() {
           error.response?.data?.err || error.message
         }`,
       });
-       
     } finally {
       setdeleteLoading("");
     }
@@ -1479,7 +1478,11 @@ function AdminDashboard() {
               >
                 Newsletter
               </TabsTrigger>
-              <TabsTrigger value="donations" data-testid="tab-donations">
+              <TabsTrigger
+                className="hidden"
+                value="donations"
+                data-testid="tab-donations"
+              >
                 Donations
               </TabsTrigger>
               <TabsTrigger value="gallery" data-testid="tab-gallery">
@@ -1770,14 +1773,15 @@ function AdminDashboard() {
                                   <AlertDialogTrigger asChild>
                                     <Button
                                       size="sm"
+                                      className=""
                                       variant="destructive"
                                       data-testid={`button-delete-event-${event._id}`}
                                     >
                                       {deleteLoading === event._id ? (
-                                        <LoaderCircle
+                                        <Loader
                                           size={20}
                                           color="white"
-                                          className="top-2 right-2 h-6 w-6 absolute mx-auto animate-spin"
+                                          className="animate-spin"
                                         />
                                       ) : (
                                         <Trash2 className="h-4 w-4" />
@@ -1803,15 +1807,7 @@ function AdminDashboard() {
                                         onClick={() => deleteEvent(event._id)}
                                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                       >
-                                        {deleteLoading === event._id ? (
-                                          <LoaderCircle
-                                            size={20}
-                                            color="white"
-                                            className=" top-2 right-2 h-6 w-6 aboslute mx-auto animate-spin"
-                                          />
-                                        ) : (
-                                          "Delete"
-                                        )}
+                                        Delete
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
                                   </AlertDialogContent>
@@ -2256,7 +2252,8 @@ function AdminDashboard() {
                               // friendly fallback values
                               const displayName =
                                 user.name?.trim() || `User ${index + 1}`;
-                              const displayEmail = user.email?.trim() || "—";
+                              const displayEmail =
+                                user.email?.trim() || "Visitor";
                               // const displayPhone = user.phone?.trim() || "—";
                               const subscribedAt = user.subscribedAt
                                 ? (() => {
@@ -2405,9 +2402,8 @@ function AdminDashboard() {
                               variant="outline"
                               onClick={() => {
                                 try {
-                                  navigator.clipboard?.writeText(
-                                    window.location.href
-                                  );
+                                  const rootUrl = `${window.location.origin}/`; // ← only the base URL
+                                  navigator.clipboard?.writeText(rootUrl);
                                   toast({ title: "Invite link copied" });
                                 } catch (e) {
                                   toast({
@@ -2455,20 +2451,22 @@ function AdminDashboard() {
                           if (!subject || !message) {
                             toast({
                               title: "Error",
-                              description: "Subject and message cannot be empty.",
+                              description:
+                                "Subject and message cannot be empty.",
                               variant: "destructive",
                             });
                             return;
                           }
 
-                          
-
                           try {
-                            const response = await axios.post(`${Configs.url}/api/news-letter/broadcast`, {
-                              subject,
-                              message,
-                              recipientCount: users.length
-                            });
+                            const response = await axios.post(
+                              `${Configs.url}/api/news-letter/broadcast`,
+                              {
+                                subject,
+                                message,
+                                recipientCount: users.length,
+                              }
+                            );
 
                             if (response.status === 200) {
                               toast({
@@ -2481,10 +2479,13 @@ function AdminDashboard() {
                             console.error("Broadcast error:", error);
                             toast({
                               title: "Error sending broadcast",
-                              description: "An error occurred while sending the broadcast. Please try again.",
+                              description:
+                                "An error occurred while sending the broadcast. Please try again.",
                               variant: "destructive",
                             });
-                          }finally{setLoading(false)}
+                          } finally {
+                            setLoading(false);
+                          }
                         }}
                       >
                         <div className="space-y-2">
@@ -2503,10 +2504,14 @@ function AdminDashboard() {
                           />
                         </div>
                         <Button type="submit" className="w-full">
-                          {loading ? <span className=" flex-row  flex items-center gap-2     p-3 text-xs text-white">
-                                                  
-                                                  Broadcasting Message...<Loader className="animate-spin" size={16} />
-                                                </span> : "Send Broadcast"}
+                          {loading ? (
+                            <span className=" flex-row  flex items-center gap-2     p-3 text-xs text-white">
+                              Broadcasting Message...
+                              <Loader className="animate-spin" size={16} />
+                            </span>
+                          ) : (
+                            "Send Broadcast"
+                          )}
                         </Button>
                       </form>
                     </CardContent>
@@ -2985,7 +2990,7 @@ function AdminDashboard() {
                         ))
                       ) : pastors && pastors.length > 0 ? (
                         pastors.map((pastor) => (
-                          <TableRow className="border-b-2 border-gray-400" key={pastor._id}>
+                          <TableRow className="p-10" key={pastor._id}>
                             <img
                               src={
                                 pastor.profileImg?.url ||
@@ -2993,7 +2998,7 @@ function AdminDashboard() {
                                 "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740&q=80"
                               }
                               alt={pastor.name}
-                              className="size-20 mt-5 shadow-md rounded-full object-cover"
+                              className="size-16  shadow-md rounded-full object-cover"
                             />
 
                             <TableCell className="font-medium">

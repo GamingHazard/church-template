@@ -54,9 +54,7 @@ export default function About() {
         setGalleryImages(res.data.gallery || []);
       }
     } catch (error) {
-      console.log("====================================");
-      console.log(error);
-      console.log("====================================");
+     
     }
   };
 
@@ -324,7 +322,7 @@ export default function About() {
                   </Card>
                 ))
               ) : pastors && pastors.length > 0 ? (
-                pastors.map((pastor) => (
+                pastors.slice(0,4).map((pastor) => (
                   <Card
                     key={pastor._id}
                     className="text-center"
@@ -333,8 +331,8 @@ export default function About() {
                     <CardContent className="pt-6">
                       <img
                         src={
-                          pastor.profileImg.url ||
-                          pastor.imageUrl ||
+                          pastor?.profileImg?.url ||
+                          pastor?.imageUrl ||
                           "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740&q=80"
                         }
                         alt={pastor.name}
